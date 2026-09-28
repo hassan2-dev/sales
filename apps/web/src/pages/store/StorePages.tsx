@@ -64,7 +64,7 @@ export function StoreHomePage() {
           <h2 className="text-2xl font-semibold tracking-tight text-fg">
             {locale === 'ar' ? 'التصنيفات' : 'Categories'}
           </h2>
-          {categories.isLoading ? <LoadingState /> : null}
+          {categories.isLoading ? <LoadingState variant="cards" /> : null}
           <div className="mt-6 grid gap-px overflow-hidden rounded-sm border border-line bg-[var(--border)] sm:grid-cols-2 lg:grid-cols-4">
             {(categories.data ?? []).map((c) => (
               <Link
@@ -94,7 +94,7 @@ export function StoreHomePage() {
               {locale === 'ar' ? 'كل المنتجات' : 'All products'}
             </Link>
           </div>
-          {featured.isLoading ? <LoadingState /> : null}
+          {featured.isLoading ? <LoadingState variant="products" /> : null}
           {featured.isError ? <ErrorState onRetry={() => void featured.refetch()} /> : null}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {(featured.data?.data ?? []).map((p) => (
@@ -156,7 +156,7 @@ export function StoreProductsPage() {
             </Button>
           </form>
         </div>
-        {query.isLoading ? <LoadingState /> : null}
+        {query.isLoading ? <LoadingState variant="products" /> : null}
         {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(query.data?.data ?? []).map((p) => (
@@ -191,7 +191,7 @@ export function StoreCategoryPage() {
       (await catalogApi.products({ categoryId: category.data!.id, limit: 24 })).data,
   });
 
-  if (category.isLoading) return <LoadingState />;
+  if (category.isLoading) return <LoadingState variant="page" />;
   if (category.isError || !category.data) {
     return <ErrorState title="Category not found" />;
   }
@@ -202,7 +202,7 @@ export function StoreCategoryPage() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-semibold tracking-tight text-fg">{category.data.name}</h1>
         <p className="mt-2 text-muted">{category.data.description}</p>
-        {products.isLoading ? <LoadingState /> : null}
+        {products.isLoading ? <LoadingState variant="products" /> : null}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(products.data?.data ?? []).map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -229,7 +229,7 @@ export function StoreBrandPage() {
       (await catalogApi.products({ brandId: brand.data!.id, limit: 24 })).data,
   });
 
-  if (brand.isLoading) return <LoadingState />;
+  if (brand.isLoading) return <LoadingState variant="page" />;
   if (brand.isError || !brand.data) return <ErrorState title="Brand not found" />;
 
   return (
@@ -238,7 +238,7 @@ export function StoreBrandPage() {
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <h1 className="text-3xl font-semibold tracking-tight text-fg">{brand.data.name}</h1>
         <p className="mt-2 text-muted">{brand.data.description}</p>
-        {products.isLoading ? <LoadingState /> : null}
+        {products.isLoading ? <LoadingState variant="products" /> : null}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {(products.data?.data ?? []).map((p) => (
             <ProductCard key={p.id} product={p} />
@@ -262,7 +262,7 @@ export function ProductDetailPage() {
     queryFn: async () => (await catalogApi.productBySlug(slug)).data,
   });
 
-  if (query.isLoading) return <LoadingState />;
+  if (query.isLoading) return <LoadingState variant="page" />;
   if (query.isError || !query.data) {
     return <ErrorState title="Product not found" onRetry={() => void query.refetch()} />;
   }

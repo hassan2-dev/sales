@@ -336,7 +336,7 @@ export function HomePage() {
             </Link>
           </Reveal>
 
-          {services.isLoading ? <LoadingState /> : null}
+          {services.isLoading ? <LoadingState variant="cards" /> : null}
           {services.isError ? <ErrorState onRetry={() => void services.refetch()} /> : null}
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -383,8 +383,8 @@ export function HomePage() {
       </section>
 
       {featuredProducts.isLoading ? (
-        <div className="border-b border-line bg-page py-20">
-          <LoadingState />
+        <div className="border-b border-line bg-page px-4 py-20 sm:px-6 lg:px-10">
+          <LoadingState variant="carousel" />
         </div>
       ) : null}
       {featuredProducts.isError ? (
@@ -483,7 +483,7 @@ export function HomePage() {
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">{t.home.news}</p>
           </Reveal>
-          {news.isLoading ? <LoadingState /> : null}
+          {news.isLoading ? <LoadingState variant="cards" /> : null}
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             {newsItems.map((n, i) => (
               <Reveal key={n.id} delay={i}>

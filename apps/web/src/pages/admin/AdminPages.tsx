@@ -279,11 +279,13 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      {overview.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {overview.isLoading ? <LoadingState variant="dashboard" /> : null}
       {overview.isError ? (
         <p className="text-sm text-destructive">{t.admin.loadError}</p>
       ) : null}
 
+      {!overview.isLoading ? (
+      <>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {primaryCards.map((c) => (
           <KpiCard key={c.label} label={c.label} value={c.value} icon={c.icon} />
@@ -303,7 +305,7 @@ export function AdminDashboardPage() {
             <CardDescription>{t.admin.revenueTrendSub}</CardDescription>
           </CardHeader>
           <CardContent>
-            {trend.isLoading ? <LoadingState className="py-16" label={t.common.loading} /> : null}
+            {trend.isLoading ? <LoadingState variant="chart" /> : null}
             {trend.data?.series ? <RevenueTrendChart data={trend.data.series} /> : null}
           </CardContent>
         </Card>
@@ -313,9 +315,7 @@ export function AdminDashboardPage() {
             <CardTitle>{t.admin.ordersByStatus}</CardTitle>
           </CardHeader>
           <CardContent>
-            {orderStats.isLoading ? (
-              <LoadingState className="py-16" label={t.common.loading} />
-            ) : null}
+            {orderStats.isLoading ? <LoadingState variant="chart" /> : null}
             {chartStatuses.length ? (
               <OrdersStatusChart data={chartStatuses} />
             ) : !orderStats.isLoading ? (
@@ -331,7 +331,7 @@ export function AdminDashboardPage() {
             <CardTitle>{t.admin.salesMonth}</CardTitle>
           </CardHeader>
           <CardContent>
-            {sales.isLoading ? <LoadingState className="py-8" label={t.common.loading} /> : null}
+            {sales.isLoading ? <LoadingState variant="inline" /> : null}
             {sales.data ? (
               <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
                 <div>
@@ -397,6 +397,8 @@ export function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
+      </>
+      ) : null}
     </div>
   );
 }
@@ -433,7 +435,7 @@ export function AdminProductsPage() {
           </Link>
         </div>
       </div>
-      {query.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {query.isLoading ? <LoadingState variant="table" /> : null}
       <Card className="overflow-hidden py-0">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -583,7 +585,7 @@ export function AdminProductFormPage() {
     }
   }
 
-  if (!isNew && existing.isLoading) return <LoadingState label={t.common.loading} />;
+  if (!isNew && existing.isLoading) return <LoadingState variant="form" />;
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -751,7 +753,7 @@ export function AdminCategoriesPage() {
         </form>
       </Card>
 
-      {list.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
         {(list.data ?? []).map((row) => (
           <Card key={row.id} size="sm">
@@ -792,7 +794,7 @@ export function AdminOrdersPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-fg">{t.admin.orders}</h1>
-      {query.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {query.isLoading ? <LoadingState variant="table" /> : null}
       <div className="overflow-x-auto surface">
         <table className="min-w-full text-sm">
           <thead className="border-b border-line bg-black/[0.03] text-xs uppercase text-muted dark:bg-white/5">
@@ -842,7 +844,7 @@ export function AdminOrderDetailPage() {
   const [status, setStatus] = useState('');
   const [note, setNote] = useState('');
 
-  if (order.isLoading) return <LoadingState label={t.common.loading} />;
+  if (order.isLoading) return <LoadingState variant="page" />;
   if (!order.data) return <EmptyState title={t.admin.orderNotFound} />;
 
   async function saveStatus() {
@@ -931,7 +933,7 @@ function AdminListPage({
           </Link>
         ) : null}
       </div>
-      {query.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {query.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
         {(query.data as Record<string, unknown>[] | undefined)?.map((row, i) => (
           <Card key={String(row.id ?? i)} size="sm">
@@ -969,7 +971,7 @@ export function AdminCustomerDetailPage() {
     queryKey: ['admin-customer', id],
     queryFn: async () => (await customersApi.get(id)).data,
   });
-  if (customer.isLoading) return <LoadingState label={t.common.loading} />;
+  if (customer.isLoading) return <LoadingState variant="page" />;
   if (!customer.data) return <EmptyState title={t.admin.customerNotFound} />;
   return (
     <div className="space-y-4">
@@ -1006,7 +1008,7 @@ export function AdminQuoteDetailPage() {
     queryKey: ['admin-quote', id],
     queryFn: async () => (await quotesApi.get(id)).data,
   });
-  if (quote.isLoading) return <LoadingState label={t.common.loading} />;
+  if (quote.isLoading) return <LoadingState variant="page" />;
   if (!quote.data) return <EmptyState title={t.admin.quoteNotFound} />;
   return (
     <div className="space-y-4">
@@ -1064,7 +1066,7 @@ export function AdminSupportDetailPage() {
     }
   }
 
-  if (ticket.isLoading) return <LoadingState label={t.common.loading} />;
+  if (ticket.isLoading) return <LoadingState variant="page" />;
   if (!ticket.data) return <EmptyState title={t.admin.ticketNotFound} />;
 
   return (
@@ -1149,7 +1151,7 @@ function CmsCrudPage({
           {t.common.create}
         </Button>
       </form>
-      {list.isLoading ? <LoadingState label={t.common.loading} /> : null}
+      {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
         {(list.data as Record<string, unknown>[] | undefined)?.map((row) => (
           <div key={String(row.id)} className="surface p-3 text-sm">

@@ -1,23 +1,111 @@
-import { Loader2, Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { Button } from './Button';
 import { cn } from '@/lib/cn';
+import {
+  CardGridSkeleton,
+  CarouselSkeleton,
+  ChartSkeleton,
+  DashboardSkeleton,
+  FormSkeleton,
+  PageSkeleton,
+  Skeleton,
+  TableSkeleton,
+} from './skeleton';
+
+type LoadingVariant =
+  | 'default'
+  | 'page'
+  | 'cards'
+  | 'products'
+  | 'carousel'
+  | 'table'
+  | 'inline'
+  | 'dashboard'
+  | 'chart'
+  | 'form';
 
 export function LoadingState({
-  label = 'Loading…',
+  label: _label,
   className,
+  variant = 'default',
 }: {
   label?: string;
   className?: string;
+  variant?: LoadingVariant;
 }) {
+  if (variant === 'dashboard') {
+    return <DashboardSkeleton className={className} />;
+  }
+  if (variant === 'chart') {
+    return <ChartSkeleton className={className} />;
+  }
+  if (variant === 'form') {
+    return <FormSkeleton className={className} />;
+  }
+  if (variant === 'page') {
+    return <PageSkeleton className={className} />;
+  }
+  if (variant === 'cards') {
+    return (
+      <div className={cn('py-2', className)}>
+        <CardGridSkeleton count={6} variant="content" />
+      </div>
+    );
+  }
+  if (variant === 'products') {
+    return (
+      <div className={cn('py-2', className)}>
+        <CardGridSkeleton count={6} variant="product" />
+      </div>
+    );
+  }
+  if (variant === 'carousel') {
+    return (
+      <div className={cn('py-2', className)}>
+        <CarouselSkeleton />
+      </div>
+    );
+  }
+  if (variant === 'table') {
+    return (
+      <div className={cn(className)}>
+        <TableSkeleton />
+      </div>
+    );
+  }
+  if (variant === 'inline') {
+    return (
+      <div className={cn('flex items-center gap-3 py-6', className)}>
+        <Skeleton className="size-9 shrink-0 rounded-full" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-3 w-1/3 rounded-full" />
+          <Skeleton className="h-3 w-1/2 rounded-full" />
+        </div>
+      </div>
+    );
+  }
+
+  // Default ChatGPT-style message skeleton
   return (
     <div
-      className={cn(
-        'flex flex-col items-center justify-center gap-3 py-16 text-muted',
-        className,
-      )}
+      className={cn('mx-auto w-full max-w-2xl space-y-4 py-12', className)}
+      role="status"
+      aria-label="Loading"
     >
-      <Loader2 className="h-8 w-8 animate-spin text-accent" />
-      <p className="text-sm">{label}</p>
+      <div className="flex items-start gap-3">
+        <Skeleton className="mt-0.5 size-8 shrink-0 rounded-full" />
+        <div className="flex-1 space-y-3 pt-1">
+          <Skeleton className="h-3.5 w-[92%] rounded-full" />
+          <Skeleton className="h-3.5 w-[76%] rounded-full" />
+          <Skeleton className="h-3.5 w-[84%] rounded-full" />
+          <Skeleton className="h-3.5 w-[58%] rounded-full" />
+        </div>
+      </div>
+      <div className="flex gap-3 ps-11 pt-2">
+        <Skeleton className="h-24 flex-1 rounded-xl" />
+        <Skeleton className="h-24 flex-1 rounded-xl" />
+        <Skeleton className="hidden h-24 flex-1 rounded-xl sm:block" />
+      </div>
     </div>
   );
 }

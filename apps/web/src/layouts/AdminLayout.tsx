@@ -276,7 +276,7 @@ export function AdminLayout() {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
   }, [collapsed]);
 
-  if (loading) return <LoadingState label={t.admin.checkingSession} />;
+  if (loading) return <LoadingState variant="page" />;
   if (!isAuthenticated) return <Navigate to={adminPath('login')} replace />;
 
   const userLabel = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();

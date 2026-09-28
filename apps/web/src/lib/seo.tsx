@@ -22,12 +22,16 @@ export function Seo({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <link rel="canonical" href={url} />
+      <link rel="icon" href="/favicon.ico" sizes="any" />
+      <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+      <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+      <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:type" content="website" />
-      {image ? <meta property="og:image" content={image} /> : null}
-      <meta name="twitter:card" content="summary_large_image" />
+      <meta property="og:image" content={image || `${BASE}/apple-touch-icon.png`} />
+      <meta name="twitter:card" content="summary" />
     </Helmet>
   );
 }

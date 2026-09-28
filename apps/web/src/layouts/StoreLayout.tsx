@@ -79,7 +79,7 @@ export function StoreLayout() {
           </div>
         </div>
       </header>
-      <main className="flex-1">
+      <main className="flex min-h-[calc(100svh-4rem)] flex-1 flex-col">
         <Outlet />
       </main>
       <footer className="border-t border-line bg-elevated">

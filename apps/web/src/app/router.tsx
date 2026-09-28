@@ -1,10 +1,11 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { useEffect } from 'react';
 import { BrowserRouter, Navigate, Route, Routes, useParams } from 'react-router-dom';
 import { CorporateLayout } from '@/layouts/CorporateLayout';
 import { StoreLayout } from '@/layouts/StoreLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { LoadingState } from '@/components/ui/States';
 import { ADMIN_URL, STORE_URL, getAppSurface } from '@/lib/urls';
+import { HomePage } from '@/pages/corporate/HomePage';
 import {
   AboutPage,
   ServicesPage,
@@ -49,14 +50,6 @@ import {
   AdminSettingsPage,
 } from '@/pages/admin/AdminPages';
 
-const HomePage = lazy(() =>
-  import('@/pages/corporate/HomePage').then((m) => ({ default: m.HomePage })),
-);
-
-function Lazy({ children }: { children: React.ReactNode }) {
-  return <Suspense fallback={<LoadingState />}>{children}</Suspense>;
-}
-
 function ServiceDetailRoute() {
   const { slug = '' } = useParams();
   return <ServiceDetailPage slug={slug} />;
@@ -80,7 +73,7 @@ function ExternalRedirect({ to }: { to: string }) {
   useEffect(() => {
     window.location.replace(to);
   }, [to]);
-  return <LoadingState />;
+  return <LoadingState variant="page" />;
 }
 
 function storeRoutes() {
@@ -164,14 +157,7 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route element={<CorporateLayout />}>
-          <Route
-            index
-            element={
-              <Lazy>
-                <HomePage />
-              </Lazy>
-            }
-          />
+          <Route index element={<HomePage />} />
           <Route path="about" element={<AboutPage />} />
           <Route path="services" element={<ServicesPage />} />
           <Route path="services/:slug" element={<ServiceDetailRoute />} />
