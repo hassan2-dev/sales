@@ -11,44 +11,12 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Select } from '@/components/ui/Select';
 import { LoadingState, EmptyState, ErrorState, Pagination } from '@/components/ui/States';
+import { ProductCard } from '@/components/ProductCard';
 import { catalogApi, ordersApi } from '@/services/endpoints';
 import { useCart } from '@/stores/cart-context';
 import { formatMoney } from '@/lib/cn';
-import type { Product } from '@/types';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
-
-function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
-  const { locale } = useI18n();
-  return (
-    <div className="flex flex-col border border-line bg-[var(--card)]">
-      <Link to={storePath(`products/${product.slug}`)} className="block">
-        <div className="flex h-44 items-center justify-center bg-elevated text-xs text-muted">
-          {product.images?.[0]?.url ? (
-            <img src={product.images[0].url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            locale === 'ar' ? 'بدون صورة' : 'No image'
-          )}
-        </div>
-        <div className="p-4">
-          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
-            {product.brand?.name || product.sku}
-          </p>
-          <h3 className="mt-1.5 font-medium text-fg line-clamp-2">{product.name}</h3>
-          <p className="mt-2 text-sm font-semibold text-accent">
-            {formatMoney(product.price, product.currency)}
-          </p>
-        </div>
-      </Link>
-      <div className="mt-auto border-t border-line p-3">
-        <Button className="w-full rounded-sm" size="sm" onClick={() => void addItem(product.id, 1)}>
-          {locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
-        </Button>
-      </div>
-    </div>
-  );
-}
 
 export function StoreHomePage() {
   const { locale } = useI18n();

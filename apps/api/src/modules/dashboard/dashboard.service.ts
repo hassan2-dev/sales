@@ -170,4 +170,38 @@ export class DashboardService {
       })),
     };
   }
+
+  async getSalesTrend(days = 30) {
+    const safeDays = Math.min(Math.max(Number(days) || 30, 7), 90);
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    start.setDate(start.getDate() - (safeDays - 1));
+
+    const orders = await this.prisma.order.findMany({
+      where: { createdAt: { gte: start } },
+      select: { createdAt: true, total: true, status: true },
+    });
+
+    const buckets = new Map<string, { date: string; revenue: number; orders: number }>();
+    for (let i = 0; i < safeDays; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      buckets.set(key, { date: key, revenue: 0, orders: 0 });
+    }
+
+    for (const order of orders) {
+      const key = order.createdAt.toISOString().slice(0, 10);
+      const bucket = buckets.get(key);
+      if (!bucket) continue;
+      bucket.orders += 1;
+      bucket.revenue += Number(order.total ?? 0);
+    }
+
+    return {
+      days: safeDays,
+      currency: 'USD',
+      series: Array.from(buckets.values()),
+    };
+  }
 }

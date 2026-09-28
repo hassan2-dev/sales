@@ -50,7 +50,12 @@ export const catalogApi = {
     api.patch<Product>(`/products/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/products/${id}`),
   categories: () => api.get<Category[]>('/categories'),
+  categoriesAdmin: () => api.get<Category[]>('/categories/admin/all'),
   categoryBySlug: (slug: string) => api.get<Category>(`/categories/slug/${slug}`),
+  createCategory: (data: Record<string, unknown>) => api.post<Category>('/categories', data),
+  updateCategory: (id: string, data: Record<string, unknown>) =>
+    api.patch<Category>(`/categories/${id}`, data),
+  deleteCategory: (id: string) => api.delete(`/categories/${id}`),
   brands: () => api.get<Brand[]>('/brands'),
   brandBySlug: (slug: string) => api.get<Brand>(`/brands/slug/${slug}`),
 };
@@ -143,6 +148,12 @@ export const auditApi = {
 export const dashboardApi = {
   overview: () => api.get<DashboardOverview>('/dashboard/overview'),
   sales: (_days = 30) => api.get('/dashboard/sales'),
+  salesTrend: (days = 30) =>
+    api.get<{
+      days: number;
+      currency: string;
+      series: { date: string; revenue: number; orders: number }[];
+    }>('/dashboard/sales-trend', { params: { days } }),
   orders: () => api.get('/dashboard/orders'),
   recentActivity: () => auditApi.list({ limit: 10 }),
 };

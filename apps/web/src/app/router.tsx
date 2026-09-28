@@ -29,6 +29,7 @@ import {
   AdminDashboardPage,
   AdminProductsPage,
   AdminProductFormPage,
+  AdminCategoriesPage,
   AdminOrdersPage,
   AdminOrderDetailPage,
   AdminCustomersPage,
@@ -111,6 +112,7 @@ function adminRoutes(prefix = '') {
         <Route path="products" element={<AdminProductsPage />} />
         <Route path="products/new" element={<AdminProductFormPage />} />
         <Route path="products/:id" element={<AdminProductFormPage />} />
+        <Route path="categories" element={<AdminCategoriesPage />} />
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="orders/:id" element={<AdminOrderDetailPage />} />
         <Route path="customers" element={<AdminCustomersPage />} />

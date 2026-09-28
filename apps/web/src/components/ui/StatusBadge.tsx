@@ -1,30 +1,40 @@
 import { cn } from '@/lib/cn';
+import { useI18n } from '@/i18n/i18n-context';
+import { statusLabel } from '@/i18n/dictionaries';
 
 const tones: Record<string, string> = {
-  ACTIVE: 'bg-emerald-100 text-emerald-800',
-  PUBLISHED: 'bg-emerald-100 text-emerald-800',
-  COMPLETED: 'bg-emerald-100 text-emerald-800',
-  CONFIRMED: 'bg-sky-100 text-sky-800',
-  PROCESSING: 'bg-sky-100 text-sky-800',
-  PENDING: 'bg-amber/20 text-amber-900',
-  DRAFT: 'bg-navy/10 text-navy/70',
-  OPEN: 'bg-amber/20 text-amber-900',
-  CANCELLED: 'bg-red-100 text-red-800',
-  ARCHIVED: 'bg-navy/10 text-navy/50',
-  SHIPPED: 'bg-steel/15 text-steel',
-  READY: 'bg-steel/15 text-steel',
+  ACTIVE: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+  PUBLISHED: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+  COMPLETED: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+  CONFIRMED: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  PROCESSING: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  PENDING: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
+  DRAFT: 'bg-black/5 text-fg/70 dark:bg-white/10',
+  OPEN: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
+  CANCELLED: 'bg-red-500/15 text-red-700 dark:text-red-300',
+  ARCHIVED: 'bg-black/5 text-muted dark:bg-white/10',
+  SHIPPED: 'bg-accent/15 text-steel dark:text-accent-soft',
+  READY: 'bg-accent/15 text-steel dark:text-accent-soft',
+  IN_PROGRESS: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  WAITING_FOR_CUSTOMER: 'bg-amber-500/15 text-amber-800 dark:text-amber-300',
+  CLOSED: 'bg-black/5 text-muted dark:bg-white/10',
+  REVIEWING: 'bg-sky-500/15 text-sky-700 dark:text-sky-300',
+  QUOTED: 'bg-accent/15 text-steel dark:text-accent-soft',
+  ACCEPTED: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
+  REJECTED: 'bg-red-500/15 text-red-700 dark:text-red-300',
 };
 
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const { locale } = useI18n();
   return (
     <span
       className={cn(
-        'inline-flex rounded px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide',
-        tones[status] || 'bg-navy/10 text-navy/70',
+        'inline-flex px-2 py-0.5 text-[11px] font-semibold tracking-wide',
+        tones[status] || 'bg-black/5 text-fg/70 dark:bg-white/10',
         className,
       )}
     >
-      {status}
+      {statusLabel(locale, status)}
     </span>
   );
 }

@@ -6,24 +6,20 @@ type LogoProps = {
   href?: string;
   className?: string;
   imgClassName?: string;
-  /** When true, wraps logo on a dark plate so black-bg artwork stays clean on light surfaces */
-  plate?: boolean;
 };
 
-export function Logo({ to = '/', href, className, imgClassName, plate = false }: LogoProps) {
+/** AT wordmark image only — fixed in header/footer, never restyled with UI fonts. */
+export function Logo({ to = '/', href, className, imgClassName }: LogoProps) {
   const img = (
     <img
       src="/logo.png"
       alt="AT — For General Trading and Engineering Services Ltd."
-      className={cn('h-10 w-auto object-contain sm:h-11', imgClassName)}
+      className={cn(
+        'h-8 w-auto max-w-[160px] object-contain object-left sm:h-9 sm:max-w-[180px]',
+        imgClassName,
+      )}
       decoding="async"
     />
-  );
-
-  const inner = plate ? (
-    <span className="inline-flex items-center rounded-md bg-[#050505] px-2.5 py-1.5">{img}</span>
-  ) : (
-    img
   );
 
   const classes = cn('inline-flex shrink-0 items-center', className);
@@ -31,14 +27,14 @@ export function Logo({ to = '/', href, className, imgClassName, plate = false }:
   if (href) {
     return (
       <a href={href} className={classes} aria-label="AT Home">
-        {inner}
+        {img}
       </a>
     );
   }
 
   return (
     <Link to={to} className={classes} aria-label="AT Home">
-      {inner}
+      {img}
     </Link>
   );
 }

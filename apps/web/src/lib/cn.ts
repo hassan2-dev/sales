@@ -5,10 +5,14 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatMoney(value: number | string | null | undefined, currency = 'USD') {
+export function formatMoney(
+  value: number | string | null | undefined,
+  currency = 'USD',
+  locale: string = 'en-US',
+) {
   const amount = typeof value === 'string' ? Number(value) : value ?? 0;
   try {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency,
       maximumFractionDigits: 2,
