@@ -1,0 +1,23 @@
+{
+  "name": "energy-horizon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Energy Horizon / Afaq Al-Taqa — Oil & Gas digital platform",
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev -w @energy-horizon/api",
+    "dev:web": "npm run dev -w @energy-horizon/web",
+    "build:api": "npm run build -w @energy-horizon/api",
+    "build:web": "npm run build -w @energy-horizon/web",
+    "build": "npm run build:api && npm run build:web",
+    "db:generate": "npm run prisma:generate -w @energy-horizon/api",
+    "db:migrate": "npm run prisma:migrate -w @energy-horizon/api",
+    "db:seed": "npm run prisma:seed -w @energy-horizon/api",
+    "db:studio": "npm run prisma:studio -w @energy-horizon/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

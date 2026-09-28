@@ -1,0 +1,730 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum RoleCode {
+  ADMIN
+  EMPLOYEE
+  CUSTOMER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum Availability {
+  IN_STOCK
+  OUT_OF_STOCK
+  PRE_ORDER
+  MADE_TO_ORDER
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  READY
+  SHIPPED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  REFUNDED
+}
+
+enum QuoteStatus {
+  PENDING
+  REVIEWING
+  QUOTED
+  ACCEPTED
+  REJECTED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum MediaType {
+  IMAGE
+  DOCUMENT
+  PDF
+  OTHER
+}
+
+enum NotificationType {
+  NEW_ORDER
+  NEW_QUOTE
+  NEW_TICKET
+  ORDER_STATUS_CHANGED
+  TICKET_ASSIGNED
+  LOW_STOCK
+  SYSTEM
+}
+
+// ─── Auth & Users ────────────────────────────────────────────────────────────
+
+model User {
+  id           String     @id @default(uuid()) @db.Uuid
+  email        String     @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  phone        String?
+  avatarUrl    String?
+  status       UserStatus @default(ACTIVE)
+  roleId       String     @db.Uuid
+  lastLoginAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  role              Role               @relation(fields: [roleId], references: [id])
+  refreshTokens     RefreshToken[]
+  customer          Customer?
+  assignedQuotes    QuoteRequest[]     @relation("QuoteAssignee")
+  assignedTickets   SupportTicket[]    @relation("TicketAssignee")
+  ticketMessages    SupportMessage[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  mediaUploads      Media[]
+  orderNotes        OrderNote[]
+  createdOrders     Order[]            @relation("OrderCreatedBy")
+
+  @@index([roleId])
+  @@index([status])
+  @@index([email])
+}
+
+model Role {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        RoleCode @unique
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users           User[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  module      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@index([module])
+}
+
+model RolePermission {
+  id           String @id @default(uuid()) @db.Uuid
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─── Customers ───────────────────────────────────────────────────────────────
+
+model Customer {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @unique @db.Uuid
+  company   String?
+  firstName String
+  lastName  String
+  email     String
+  phone     String?
+  address   String?
+  city      String?
+  country   String?  @default("Iraq")
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User?           @relation(fields: [userId], references: [id])
+  orders   Order[]
+  quotes   QuoteRequest[]
+  tickets  SupportTicket[]
+
+  @@index([email])
+  @@index([company])
+}
+
+// ─── Catalog ─────────────────────────────────────────────────────────────────
+
+model Category {
+  id          String         @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String         @unique
+  description String?
+  imageUrl    String?
+  parentId    String?        @db.Uuid
+  sortOrder   Int            @default(0)
+  status      ContentStatus  @default(PUBLISHED)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+  @@index([status])
+}
+
+model Brand {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String        @unique
+  logo        String?
+  description String?
+  website     String?
+  status      ContentStatus @default(PUBLISHED)
+  sortOrder   Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  products Product[]
+
+  @@index([status])
+}
+
+model Product {
+  id               String       @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String       @unique
+  sku              String       @unique
+  description      String?
+  shortDescription String?
+  brandId          String?      @db.Uuid
+  categoryId       String?      @db.Uuid
+  price            Decimal      @db.Decimal(12, 2)
+  currency         String       @default("USD")
+  stock            Int          @default(0)
+  availability     Availability @default(IN_STOCK)
+  featured         Boolean      @default(false)
+  status           ProductStatus @default(DRAFT)
+  specifications   Json?
+  metaTitle        String?
+  metaDescription  String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  brand           Brand?            @relation(fields: [brandId], references: [id])
+  category        Category?         @relation(fields: [categoryId], references: [id])
+  images          ProductImage[]
+  documents       ProductDocument[]
+  inventory       Inventory?
+  orderItems      OrderItem[]
+  quoteItems      QuoteItem[]
+  cartItems       CartItem[]
+  relatedFrom     ProductRelation[] @relation("ProductFrom")
+  relatedTo       ProductRelation[] @relation("ProductTo")
+
+  @@index([brandId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([featured])
+  @@index([availability])
+  @@index([name])
+  @@index([sku])
+}
+
+model ProductImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  url       String
+  alt       String?
+  sortOrder Int      @default(0)
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductDocument {
+  id        String   @id @default(uuid()) @db.Uuid
+  productId String   @db.Uuid
+  name      String
+  url       String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model ProductRelation {
+  id               String @id @default(uuid()) @db.Uuid
+  productId        String @db.Uuid
+  relatedProductId String @db.Uuid
+
+  product        Product @relation("ProductFrom", fields: [productId], references: [id], onDelete: Cascade)
+  relatedProduct Product @relation("ProductTo", fields: [relatedProductId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, relatedProductId])
+  @@index([productId])
+  @@index([relatedProductId])
+}
+
+model Inventory {
+  id            String   @id @default(uuid()) @db.Uuid
+  productId     String   @unique @db.Uuid
+  quantity      Int      @default(0)
+  reserved      Int      @default(0)
+  lowStockAt    Int      @default(5)
+  warehouseNote String?
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// ─── Cart ────────────────────────────────────────────────────────────────────
+
+model Cart {
+  id         String   @id @default(uuid()) @db.Uuid
+  sessionId  String?  @unique
+  customerId String?  @db.Uuid
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  items CartItem[]
+
+  @@index([customerId])
+}
+
+model CartItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  cartId    String   @db.Uuid
+  productId String   @db.Uuid
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+  @@index([cartId])
+  @@index([productId])
+}
+
+// ─── Orders ──────────────────────────────────────────────────────────────────
+
+model Order {
+  id            String        @id @default(uuid()) @db.Uuid
+  orderNumber   String        @unique
+  customerId    String        @db.Uuid
+  createdById   String?       @db.Uuid
+  subtotal      Decimal       @db.Decimal(12, 2)
+  discount      Decimal       @default(0) @db.Decimal(12, 2)
+  shipping      Decimal       @default(0) @db.Decimal(12, 2)
+  total         Decimal       @db.Decimal(12, 2)
+  currency      String        @default("USD")
+  status        OrderStatus   @default(PENDING)
+  paymentStatus PaymentStatus @default(UNPAID)
+  shippingAddress String?
+  billingAddress  String?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  customer  Customer         @relation(fields: [customerId], references: [id])
+  createdBy User?            @relation("OrderCreatedBy", fields: [createdById], references: [id])
+  items     OrderItem[]
+  history   OrderStatusHistory[]
+  orderNotes OrderNote[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([createdAt])
+  @@index([orderNumber])
+}
+
+model OrderItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  orderId     String  @db.Uuid
+  productId   String  @db.Uuid
+  productName String
+  sku         String
+  unitPrice   Decimal @db.Decimal(12, 2)
+  quantity    Int
+  lineTotal   Decimal @db.Decimal(12, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id         String      @id @default(uuid()) @db.Uuid
+  orderId    String      @db.Uuid
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  note       String?
+  changedBy  String?     @db.Uuid
+  createdAt  DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model OrderNote {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @db.Uuid
+  userId    String   @db.Uuid
+  note      String
+  isInternal Boolean @default(true)
+  createdAt DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+}
+
+// ─── Quotes ──────────────────────────────────────────────────────────────────
+
+model QuoteRequest {
+  id           String      @id @default(uuid()) @db.Uuid
+  quoteNumber  String      @unique
+  customerId   String      @db.Uuid
+  message      String?
+  status       QuoteStatus @default(PENDING)
+  assignedToId String?     @db.Uuid
+  quotedAmount Decimal?    @db.Decimal(12, 2)
+  currency     String      @default("USD")
+  validUntil   DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  customer   Customer          @relation(fields: [customerId], references: [id])
+  assignedTo User?             @relation("QuoteAssignee", fields: [assignedToId], references: [id])
+  items      QuoteItem[]
+  attachments QuoteAttachment[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model QuoteItem {
+  id            String  @id @default(uuid()) @db.Uuid
+  quoteId       String  @db.Uuid
+  productId     String  @db.Uuid
+  productName   String
+  sku           String
+  quantity      Int
+  unitPriceHint Decimal? @db.Decimal(12, 2)
+
+  quote   QuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  product Product      @relation(fields: [productId], references: [id])
+
+  @@index([quoteId])
+  @@index([productId])
+}
+
+model QuoteAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  quoteId   String   @db.Uuid
+  url       String
+  fileName  String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+
+  quote QuoteRequest @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  @@index([quoteId])
+}
+
+// ─── Support ─────────────────────────────────────────────────────────────────
+
+model SupportTicket {
+  id           String         @id @default(uuid()) @db.Uuid
+  ticketNumber String         @unique
+  customerId   String         @db.Uuid
+  subject      String
+  description  String
+  priority     TicketPriority @default(MEDIUM)
+  status       TicketStatus   @default(OPEN)
+  assignedToId String?        @db.Uuid
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  customer   Customer         @relation(fields: [customerId], references: [id])
+  assignedTo User?            @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  messages   SupportMessage[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([createdAt])
+}
+
+model SupportMessage {
+  id         String   @id @default(uuid()) @db.Uuid
+  ticketId   String   @db.Uuid
+  senderId   String   @db.Uuid
+  message    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  ticket      SupportTicket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender      User                     @relation(fields: [senderId], references: [id])
+  attachments SupportMessageAttachment[]
+
+  @@index([ticketId])
+  @@index([senderId])
+}
+
+model SupportMessageAttachment {
+  id        String   @id @default(uuid()) @db.Uuid
+  messageId String   @db.Uuid
+  url       String
+  fileName  String
+  mimeType  String?
+  size      Int?
+  createdAt DateTime @default(now())
+
+  message SupportMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// ─── CMS ─────────────────────────────────────────────────────────────────────
+
+model Page {
+  id              String        @id @default(uuid()) @db.Uuid
+  title           String
+  slug            String        @unique
+  content         String?
+  excerpt         String?
+  coverImage      String?
+  metaTitle       String?
+  metaDescription String?
+  status          ContentStatus @default(DRAFT)
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model Service {
+  id               String        @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String        @unique
+  description      String?
+  shortDescription String?
+  image            String?
+  content          String?
+  status           ContentStatus @default(DRAFT)
+  sortOrder        Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+  @@index([sortOrder])
+}
+
+model Project {
+  id               String        @id @default(uuid()) @db.Uuid
+  title            String
+  slug             String        @unique
+  description      String?
+  shortDescription String?
+  coverImage       String?
+  content          String?
+  client           String?
+  location         String?
+  completedAt      DateTime?
+  featured         Boolean       @default(false)
+  status           ContentStatus @default(DRAFT)
+  sortOrder        Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([status])
+  @@index([featured])
+}
+
+model NewsArticle {
+  id          String        @id @default(uuid()) @db.Uuid
+  title       String
+  slug        String        @unique
+  excerpt     String?
+  content     String?
+  coverImage  String?
+  author      String?
+  category    String?
+  featured    Boolean       @default(false)
+  publishedAt DateTime?
+  status      ContentStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([status])
+  @@index([featured])
+  @@index([publishedAt])
+  @@index([category])
+}
+
+model Office {
+  id        String        @id @default(uuid()) @db.Uuid
+  name      String
+  city      String
+  country   String        @default("Iraq")
+  address   String?
+  phone     String?
+  email     String?
+  contactPerson String?
+  latitude  Decimal?      @db.Decimal(10, 7)
+  longitude Decimal?      @db.Decimal(10, 7)
+  status    ContentStatus @default(PUBLISHED)
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([status])
+}
+
+model CompanySetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+// ─── Media ───────────────────────────────────────────────────────────────────
+
+model Media {
+  id           String    @id @default(uuid()) @db.Uuid
+  fileName     String
+  originalName String
+  url          String
+  mimeType     String
+  size         Int
+  storageKey   String
+  type         MediaType @default(OTHER)
+  alt          String?
+  uploadedById String?   @db.Uuid
+  createdAt    DateTime  @default(now())
+
+  uploadedBy User? @relation(fields: [uploadedById], references: [id])
+
+  @@index([type])
+  @@index([uploadedById])
+  @@index([createdAt])
+}
+
+// ─── Notifications ───────────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean          @default(false)
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+// ─── Audit ───────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String?  @db.Uuid
+  action    String
+  entity    String
+  entityId  String?
+  metadata  Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+}
