@@ -35,6 +35,16 @@ export const authApi = {
       email,
       password,
     }),
+  requestOtp: (phone: string) =>
+    api.post<{ ok: boolean; phone: string; expiresInSec: number; devCode?: string }>(
+      '/auth/otp/request',
+      { phone },
+    ),
+  verifyOtp: (data: { phone: string; code: string; firstName: string; lastName: string }) =>
+    api.post<{ accessToken: string; refreshToken: string; user: AuthUser }>(
+      '/auth/otp/verify',
+      data,
+    ),
   refresh: (refreshToken: string) => api.post('/auth/refresh', { refreshToken }),
   logout: (refreshToken: string) => api.post('/auth/logout', { refreshToken }),
   me: () => api.get<AuthUser>('/auth/me'),
@@ -75,6 +85,10 @@ export const ordersApi = {
   create: (data: Record<string, unknown>) => api.post<Order>('/orders', data),
   list: (params?: Params) => api.get<Paginated<Order>>('/orders', { params: cleanParams(params) }),
   get: (id: string) => api.get<Order>(`/orders/${id}`),
+  track: (email: string, orderNumber: string) =>
+    api.get<Order>('/orders/track', { params: { email, orderNumber } }),
+  mine: () => api.get<{ data: Order[] }>('/orders/me'),
+  myOrder: (id: string) => api.get<Order>(`/orders/me/${id}`),
   updateStatus: (id: string, status: string, note?: string) =>
     api.patch(`/orders/${id}/status`, { status, note }),
   addNote: (id: string, note: string, isInternal = true) =>

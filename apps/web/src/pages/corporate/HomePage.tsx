@@ -526,6 +526,11 @@ export function HomePage() {
                   noBranch: t.home.noBranch,
                   hasBranch: t.home.hasBranch,
                   callOffice: t.home.callOffice,
+                  contactName: t.home.contactName,
+                  contactPhone: t.home.contactPhone,
+                  contactSubject: t.home.contactSubject,
+                  contactSendWhatsApp: t.home.contactSendWhatsApp,
+                  contactNeedPhone: t.home.contactNeedPhone,
                 }}
               />
             </Reveal>

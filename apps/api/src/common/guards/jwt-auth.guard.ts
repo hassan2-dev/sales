@@ -16,6 +16,11 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     ]);
 
     if (isPublic) {
+      // Attach user when a valid Bearer token is present; never block public routes.
+      const result = super.canActivate(context);
+      if (result instanceof Promise) {
+        return result.then(() => true).catch(() => true);
+      }
       return true;
     }
 

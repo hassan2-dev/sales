@@ -104,13 +104,19 @@ function ChartSkeleton({ className }: { className?: string }) {
 
 function ProductCardSkeleton({ className }: { className?: string }) {
   return (
-    <div className={cn('overflow-hidden rounded-xl border border-border/80 bg-card', className)}>
-      <Skeleton className="h-44 w-full rounded-none" />
-      <div className="space-y-3 p-4">
-        <Skeleton className="h-3 w-20 rounded-full" />
-        <Skeleton className="h-4 w-3/4 rounded-full" />
-        <Skeleton className="h-4 w-1/2 rounded-full" />
-        <Skeleton className="mt-2 h-4 w-16 rounded-full" />
+    <div className={cn('overflow-hidden rounded-2xl border border-border bg-card', className)}>
+      <Skeleton className="aspect-[4/3] w-full rounded-none" />
+      <div className="space-y-3 p-5">
+        <Skeleton className="h-3 w-24 rounded-full" />
+        <Skeleton className="h-5 w-4/5 rounded-full" />
+        <Skeleton className="h-4 w-full rounded-full" />
+        <div className="flex items-end justify-between border-t border-border/70 pt-4">
+          <Skeleton className="h-7 w-24 rounded-full" />
+          <Skeleton className="h-3 w-16 rounded-full" />
+        </div>
+      </div>
+      <div className="border-t border-border p-4">
+        <Skeleton className="h-11 w-full rounded-xl" />
       </div>
     </div>
   );

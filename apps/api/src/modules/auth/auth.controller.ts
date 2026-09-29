@@ -9,6 +9,7 @@ import {
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RefreshDto } from './dto/refresh.dto.js';
+import { RequestOtpDto, VerifyOtpDto } from './dto/otp.dto.js';
 import { Public } from '../../common/decorators/auth.decorators.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import type { AuthUser } from './types/jwt-payload.type.js';
@@ -22,6 +23,20 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Public()
+  @Post('otp/request')
+  @HttpCode(HttpStatus.OK)
+  requestOtp(@Body() dto: RequestOtpDto) {
+    return this.authService.requestOtp(dto.phone);
+  }
+
+  @Public()
+  @Post('otp/verify')
+  @HttpCode(HttpStatus.OK)
+  verifyOtp(@Body() dto: VerifyOtpDto) {
+    return this.authService.verifyOtp(dto);
   }
 
   @Public()

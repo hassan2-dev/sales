@@ -22,6 +22,13 @@ interface AuthContextValue {
   loading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  loginWithOtp: (data: {
+    phone: string;
+    code: string;
+    firstName: string;
+    lastName: string;
+  }) => Promise<void>;
+  requestOtp: (phone: string) => Promise<{ phone: string; devCode?: string }>;
   logout: () => Promise<void>;
   hasPermission: (code: string) => boolean;
   refreshUser: () => Promise<void>;
@@ -63,6 +70,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(data.user);
   }, []);
 
+  const requestOtp = useCallback(async (phone: string) => {
+    const { data } = await authApi.requestOtp(phone);
+    return { phone: data.phone, devCode: data.devCode };
+  }, []);
+
+  const loginWithOtp = useCallback(
+    async (payload: {
+      phone: string;
+      code: string;
+      firstName: string;
+      lastName: string;
+    }) => {
+      const { data } = await authApi.verifyOtp(payload);
+      setTokens(data.accessToken, data.refreshToken);
+      setUser(data.user);
+    },
+    [],
+  );
+
   const logout = useCallback(async () => {
     const refreshToken = getRefreshToken();
     try {
@@ -90,11 +116,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       isAuthenticated: Boolean(user),
       login,
+      loginWithOtp,
+      requestOtp,
       logout,
       hasPermission,
       refreshUser,
     }),
-    [user, loading, login, logout, hasPermission, refreshUser],
+    [user, loading, login, loginWithOtp, requestOtp, logout, hasPermission, refreshUser],
   );
 
   // Keep axios aware when tokens cleared elsewhere

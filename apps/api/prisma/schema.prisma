@@ -129,6 +129,7 @@ model User {
   @@index([roleId])
   @@index([status])
   @@index([email])
+  @@index([phone])
 }
 
 model Role {
@@ -183,6 +184,21 @@ model RefreshToken {
   @@index([expiresAt])
 }
 
+model OtpChallenge {
+  id          String    @id @default(uuid()) @db.Uuid
+  phone       String
+  codeHash    String
+  purpose     String    @default("login")
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(5)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([phone, purpose])
+  @@index([expiresAt])
+}
+
 // ─── Customers ───────────────────────────────────────────────────────────────
 
 model Customer {
@@ -206,6 +222,7 @@ model Customer {
   tickets  SupportTicket[]
 
   @@index([email])
+  @@index([phone])
   @@index([company])
 }
 

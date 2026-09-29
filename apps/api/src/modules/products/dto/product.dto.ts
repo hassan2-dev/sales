@@ -170,6 +170,10 @@ export class ProductQueryDto extends PaginationDto {
   brandId?: string;
 
   @IsOptional()
+  @IsUUID()
+  excludeId?: string;
+
+  @IsOptional()
   @IsEnum(Availability)
   availability?: Availability;
 

@@ -17,14 +17,19 @@ import {
   ProjectsPage,
 } from '@/pages/corporate/CmsPages';
 import {
-  StoreHomePage,
   StoreProductsPage,
+  StoreCategoriesPage,
   StoreCategoryPage,
   StoreBrandPage,
   ProductDetailPage,
   CartPage,
   CheckoutPage,
+  StoreLoginPage,
+  MyOrdersPage,
+  MyOrderDetailPage,
 } from '@/pages/store/StorePages';
+import { StoreHomePage } from '@/pages/store/StoreHome';
+import { FavoritesPage } from '@/pages/store/FavoritesPage';
 import {
   AdminLoginPage,
   AdminDashboardPage,
@@ -60,15 +65,6 @@ function NewsDetailRoute() {
   return <NewsDetailPage slug={slug} />;
 }
 
-function AccountPlaceholder() {
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-16">
-      <h1 className="text-2xl font-bold text-fg">Customer account</h1>
-      <p className="mt-2 text-muted">Reserved for the future CUSTOMER role.</p>
-    </div>
-  );
-}
-
 function ExternalRedirect({ to }: { to: string }) {
   useEffect(() => {
     window.location.replace(to);
@@ -82,14 +78,18 @@ function storeRoutes() {
       <Route index element={<StoreHomePage />} />
       <Route path="products" element={<StoreProductsPage />} />
       <Route path="products/:slug" element={<ProductDetailPage />} />
+      <Route path="categories" element={<StoreCategoriesPage />} />
       <Route path="categories/:slug" element={<StoreCategoryPage />} />
       <Route path="brands/:slug" element={<StoreBrandPage />} />
+      <Route path="favorites" element={<FavoritesPage />} />
       <Route path="cart" element={<CartPage />} />
       <Route path="checkout" element={<CheckoutPage />} />
-      <Route path="account" element={<AccountPlaceholder />} />
-      <Route path="account/orders" element={<AccountPlaceholder />} />
-      <Route path="account/quotes" element={<AccountPlaceholder />} />
-      <Route path="account/support" element={<AccountPlaceholder />} />
+      <Route path="account" element={<Navigate to="/account/orders" replace />} />
+      <Route path="account/login" element={<StoreLoginPage />} />
+      <Route path="account/orders" element={<MyOrdersPage />} />
+      <Route path="account/orders/:id" element={<MyOrderDetailPage />} />
+      <Route path="account/quotes" element={<Navigate to="/account/orders" replace />} />
+      <Route path="account/support" element={<Navigate to="/account/orders" replace />} />
     </Route>
   );
 }

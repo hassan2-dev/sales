@@ -278,6 +278,7 @@ export function AdminLayout() {
 
   if (loading) return <LoadingState variant="page" />;
   if (!isAuthenticated) return <Navigate to={adminPath('login')} replace />;
+  if (user?.role === 'CUSTOMER') return <Navigate to="/" replace />;
 
   const userLabel = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 

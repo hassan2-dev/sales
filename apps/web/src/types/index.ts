@@ -41,6 +41,8 @@ export interface Product {
   brand?: { id: string; name: string; slug: string } | null;
   category?: { id: string; name: string; slug: string } | null;
   specifications?: Record<string, unknown> | null;
+  similar?: Product[];
+  relatedFrom?: { relatedProduct: Product }[];
 }
 
 export interface Category {

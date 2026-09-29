@@ -14,6 +14,7 @@ import { generateOrderNumber } from '../../common/utils/order-number.util.js';
 export interface CreateOrderInput {
   customerId?: string;
   sessionId?: string;
+  userId?: string;
   shippingAddress?: string;
   billingAddress?: string;
   notes?: string;
@@ -62,23 +63,58 @@ export class OrdersService {
     }
 
     let customerId = dto.customerId;
+    if (!customerId && dto.userId) {
+      const linked = await this.prisma.customer.findUnique({
+        where: { userId: dto.userId },
+      });
+      if (linked) customerId = linked.id;
+    }
     if (!customerId) {
       if (!dto.email || !dto.firstName || !dto.lastName) {
         throw new BadRequestException(
           'customerId or guest customer details are required',
         );
       }
-      const customer = await this.prisma.customer.create({
-        data: {
-          email: dto.email,
-          firstName: dto.firstName,
-          lastName: dto.lastName,
-          phone: dto.phone,
-          company: dto.company,
-          address: dto.shippingAddress,
-        },
+      const email = dto.email.trim().toLowerCase();
+      const phone = dto.phone?.trim() || undefined;
+      const existing = await this.prisma.customer.findFirst({
+        where: phone
+          ? {
+              OR: [
+                { email: { equals: email, mode: 'insensitive' } },
+                { phone },
+              ],
+            }
+          : { email: { equals: email, mode: 'insensitive' } },
+        orderBy: { createdAt: 'asc' },
       });
-      customerId = customer.id;
+      if (existing) {
+        const customer = await this.prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            phone: phone ?? existing.phone,
+            company: dto.company ?? existing.company,
+            address: dto.shippingAddress ?? existing.address,
+            userId: dto.userId ?? existing.userId,
+          },
+        });
+        customerId = customer.id;
+      } else {
+        const customer = await this.prisma.customer.create({
+          data: {
+            email,
+            firstName: dto.firstName,
+            lastName: dto.lastName,
+            phone,
+            company: dto.company,
+            address: dto.shippingAddress,
+            userId: dto.userId,
+          },
+        });
+        customerId = customer.id;
+      }
     } else {
       const customer = await this.prisma.customer.findUnique({
         where: { id: customerId },
@@ -276,6 +312,134 @@ export class OrdersService {
     });
     if (!order) throw new NotFoundException('Order not found');
     return order;
+  }
+
+  /** Authenticated customer — orders linked to their Customer profile. */
+  async listForUser(userId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+    if (!customer) {
+      return { data: [] };
+    }
+
+    const data = await this.prisma.order.findMany({
+      where: { customerId: customer.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+            phone: true,
+          },
+        },
+        items: true,
+        _count: { select: { items: true } },
+      },
+    });
+
+    return { data };
+  }
+
+  async findOneForUser(userId: string, orderId: string) {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+    if (!customer) throw new NotFoundException('Order not found');
+
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, customerId: customer.id },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+            phone: true,
+          },
+        },
+        items: true,
+        history: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  /** Guest order lookup — email + order number must both match. */
+  async trackByEmailAndNumber(email: string, orderNumber: string) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    const normalizedNumber = orderNumber?.trim().toUpperCase();
+    if (!normalizedEmail || !normalizedNumber) {
+      throw new BadRequestException('email and orderNumber are required');
+    }
+
+    const order = await this.prisma.order.findFirst({
+      where: {
+        orderNumber: { equals: normalizedNumber, mode: 'insensitive' },
+        customer: {
+          email: { equals: normalizedEmail, mode: 'insensitive' },
+        },
+      },
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+            phone: true,
+          },
+        },
+        items: true,
+        history: { orderBy: { createdAt: 'asc' } },
+      },
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+    return order;
+  }
+
+  /** Guest list — recent orders for an email (capped). */
+  async listByEmail(email: string) {
+    const normalizedEmail = email?.trim().toLowerCase();
+    if (!normalizedEmail) {
+      throw new BadRequestException('email is required');
+    }
+
+    const data = await this.prisma.order.findMany({
+      where: {
+        customer: {
+          email: { equals: normalizedEmail, mode: 'insensitive' },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+      include: {
+        customer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            company: true,
+            phone: true,
+          },
+        },
+        items: true,
+        _count: { select: { items: true } },
+      },
+    });
+
+    return { data };
   }
 
   async updateStatus(

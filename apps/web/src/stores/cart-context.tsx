@@ -47,9 +47,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         await cartApi.addItem(productId, quantity);
         await refresh();
-        toast.success('Added to cart');
+        toast.success('تمت الإضافة للسلة');
       } catch {
-        toast.error('Could not add to cart');
+        toast.error('تعذّرت الإضافة للسلة');
         throw new Error('add failed');
       } finally {
         setBusy(false);

@@ -89,7 +89,6 @@ export class ProductsService {
     const skip = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = {
-      // Public catalog always returns ACTIVE products only
       status: ProductStatus.ACTIVE,
     };
 
@@ -102,13 +101,30 @@ export class ProductsService {
     }
     if (query.categoryId) where.categoryId = query.categoryId;
     if (query.brandId) where.brandId = query.brandId;
+    if (query.excludeId) where.id = { not: query.excludeId };
     if (query.availability) where.availability = query.availability;
-    if (query.featured !== undefined) where.featured = query.featured === true || query.featured === ('true' as unknown as boolean);
+    if (query.featured !== undefined)
+      where.featured =
+        query.featured === true ||
+        query.featured === ('true' as unknown as boolean);
     if (query.categorySlug) where.category = { slug: query.categorySlug };
     if (query.brandSlug) where.brand = { slug: query.brandSlug };
 
     const sortBy = query.sortBy || 'createdAt';
     const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+    const catalogInclude = {
+      brand: true,
+      category: true,
+      images: {
+        orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }],
+        take: 1,
+      },
+    };
+
+    if (sortBy === 'bestsellers' || sortBy === 'sales') {
+      return this.findBestsellers(where, page, limit, skip, catalogInclude);
+    }
+
     const allowedSort = ['createdAt', 'updatedAt', 'name', 'price', 'stock'];
     const orderBy = {
       [allowedSort.includes(sortBy) ? sortBy : 'createdAt']: sortOrder,
@@ -120,17 +136,60 @@ export class ProductsService {
         skip,
         take: limit,
         orderBy,
-        include: {
-          brand: true,
-          category: true,
-          images: {
-            orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
-            take: 1,
-          },
-        },
+        include: catalogInclude,
       }),
       this.prisma.product.count({ where }),
     ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
+  private async findBestsellers(
+    where: Prisma.ProductWhereInput,
+    page: number,
+    limit: number,
+    skip: number,
+    include: Prisma.ProductInclude,
+  ) {
+    const matching = await this.prisma.product.findMany({
+      where,
+      select: { id: true },
+    });
+    const matchingIds = matching.map((p) => p.id);
+    if (!matchingIds.length) {
+      return {
+        data: [],
+        meta: { total: 0, page, limit, totalPages: 1 },
+      };
+    }
+
+    const sales = await this.prisma.orderItem.groupBy({
+      by: ['productId'],
+      where: { productId: { in: matchingIds } },
+      _sum: { quantity: true },
+      orderBy: { _sum: { quantity: 'desc' } },
+    });
+
+    const soldIds = sales.map((s) => s.productId);
+    const unsoldIds = matchingIds.filter((id) => !soldIds.includes(id));
+    const rankedIds = [...soldIds, ...unsoldIds];
+    const total = rankedIds.length;
+    const pageIds = rankedIds.slice(skip, skip + limit);
+
+    const rows = await this.prisma.product.findMany({
+      where: { id: { in: pageIds } },
+      include,
+    });
+    const byId = new Map(rows.map((r) => [r.id, r]));
+    const data = pageIds.map((id) => byId.get(id)).filter(Boolean);
 
     return {
       data,
@@ -149,7 +208,35 @@ export class ProductsService {
       include: this.productInclude,
     });
     if (!product) throw new NotFoundException('Product not found');
-    return product;
+
+    const related = (product.relatedFrom ?? [])
+      .map((r) => r.relatedProduct)
+      .filter((p) => p && (p as { status?: ProductStatus }).status === ProductStatus.ACTIVE);
+
+    const excludeIds = [product.id, ...related.map((p) => p.id)];
+    const similarFromCategory = product.categoryId
+      ? await this.prisma.product.findMany({
+          where: {
+            status: ProductStatus.ACTIVE,
+            categoryId: product.categoryId,
+            id: { notIn: excludeIds },
+          },
+          take: Math.max(0, 8 - related.length),
+          orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
+          include: {
+            brand: true,
+            category: true,
+            images: {
+              orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
+              take: 1,
+            },
+          },
+        })
+      : [];
+
+    const similar = [...related, ...similarFromCategory].slice(0, 8);
+
+    return { ...product, similar };
   }
 
   async findOne(id: string) {

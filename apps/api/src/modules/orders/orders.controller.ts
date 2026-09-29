@@ -122,16 +122,37 @@ export class OrdersController {
     });
   }
 
-  @Public()
   @Post('checkout')
   checkout(
     @Body() dto: CreateOrderDto,
+    @CurrentUser() user: AuthUser,
     @Headers('x-session-id') sessionId?: string,
   ) {
     return this.ordersService.createFromCart({
       ...dto,
       sessionId: dto.sessionId || sessionId,
+      userId: user.id,
+      createdById: user.id,
     });
+  }
+
+  @Public()
+  @Get('track')
+  track(
+    @Query('email') email: string,
+    @Query('orderNumber') orderNumber: string,
+  ) {
+    return this.ordersService.trackByEmailAndNumber(email, orderNumber);
+  }
+
+  @Get('me')
+  myOrders(@CurrentUser() user: AuthUser) {
+    return this.ordersService.listForUser(user.id);
+  }
+
+  @Get('me/:id')
+  myOrder(@CurrentUser() user: AuthUser, @Param('id') id: string) {
+    return this.ordersService.findOneForUser(user.id, id);
   }
 
   @RequirePermissions('orders:read')
