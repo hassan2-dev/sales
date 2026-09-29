@@ -26,7 +26,20 @@ export class ProductsService {
     images: { orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }] },
     documents: true,
     inventory: true,
-    relatedFrom: { include: { relatedProduct: { include: { images: true } } } },
+    relatedFrom: {
+      include: {
+        relatedProduct: {
+          include: {
+            brand: true,
+            category: true,
+            images: {
+              orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }],
+              take: 1,
+            },
+          },
+        },
+      },
+    },
   };
 
   async create(dto: CreateProductDto) {
