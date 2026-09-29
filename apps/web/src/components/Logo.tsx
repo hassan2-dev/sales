@@ -8,14 +8,14 @@ type LogoProps = {
   imgClassName?: string;
 };
 
-/** AT wordmark — transparent SVG for dark headers/footers. */
+/** Energy Horizon brand mark — PNG for reliable header/footer rendering. */
 export function Logo({ to = '/', href, className, imgClassName }: LogoProps) {
   const img = (
     <img
-      src="/energy-horizon-logo.svg"
-      alt="AT — For General Trading and Engineering Services Ltd."
+      src="/energy-horizon-logo.png"
+      alt="Energy Horizon — افاق الطاقة"
       className={cn(
-        'h-8 w-auto max-w-[160px] object-contain object-left sm:h-9 sm:max-w-[180px]',
+        'h-10 w-auto max-w-[200px] object-contain object-left sm:h-11 sm:max-w-[220px]',
         imgClassName,
       )}
       decoding="async"
@@ -26,14 +26,14 @@ export function Logo({ to = '/', href, className, imgClassName }: LogoProps) {
 
   if (href) {
     return (
-      <a href={href} className={classes} aria-label="AT Home">
+      <a href={href} className={classes} aria-label="Energy Horizon Home">
         {img}
       </a>
     );
   }
 
   return (
-    <Link to={to} className={classes} aria-label="AT Home">
+    <Link to={to} className={classes} aria-label="Energy Horizon Home">
       {img}
     </Link>
   );

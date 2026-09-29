@@ -36,8 +36,8 @@ export function StoreHomePage() {
         <div className="absolute inset-0 hero-plane" />
         <div className="relative mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
           <img
-            src="/energy-horizon-logo.svg"
-            alt="AT"
+            src="/energy-horizon-logo.png"
+            alt="Energy Horizon"
             className="reveal mb-8 h-14 w-auto object-contain sm:h-16"
           />
           <h1 className="reveal reveal-delay-1 max-w-2xl text-4xl font-semibold tracking-tight sm:text-5xl">

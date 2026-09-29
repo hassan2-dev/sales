@@ -477,38 +477,64 @@ export function HomePage() {
         </div>
       </section>
 
-      <section className="bg-page text-fg">
-        <div className="mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-24">
-          <Reveal className="flex items-end justify-between gap-6">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">{t.home.offices}</h2>
-            <span className="font-kpi text-5xl text-accent/30 sm:text-6xl">IQ</span>
+      <section className="relative overflow-hidden border-t border-line bg-page text-fg">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.45] dark:opacity-[0.07]"
+          style={{
+            backgroundImage:
+              'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+            color: 'rgb(0 112 192 / 0.08)',
+          }}
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_80%_20%,rgb(0_112_192/0.14),transparent_60%)] dark:bg-[radial-gradient(ellipse_60%_50%_at_80%_20%,rgb(0_112_192/0.28),transparent_60%)]"
+          aria-hidden
+        />
+
+        <div className="relative mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
+          <Reveal className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-xl">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+                {t.home.offices}
+              </p>
+              <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+                {t.home.officesSub}
+              </h2>
+            </div>
+            <div className="flex items-end gap-3">
+              <span className="font-kpi text-6xl leading-none text-accent/40 sm:text-7xl dark:text-accent/35">
+                {String((offices.data ?? []).length || 0).padStart(2, '0')}
+              </span>
+              <span className="pb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
+                IQ
+              </span>
+            </div>
           </Reveal>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {(offices.data ?? []).map((o, i) => (
-              <Reveal key={o.id} delay={i}>
-                <Card className="card-lift">
-                  <CardHeader>
-                    <CardTitle className="text-xl">{o.name}</CardTitle>
-                    <CardDescription>
-                      {[o.city, o.country].filter(Boolean).join(', ')}
-                    </CardDescription>
-                  </CardHeader>
-                  {o.phone ? (
-                    <CardFooter className="border-0 bg-transparent">
-                      <a
-                        href={`tel:${o.phone.replace(/\s/g, '')}`}
-                        className="text-sm font-bold text-accent"
-                      >
-                        {o.phone}
-                      </a>
-                    </CardFooter>
-                  ) : null}
-                </Card>
-              </Reveal>
-            ))}
-          </div>
+
+          {(offices.data ?? []).length ? (
+            <Reveal delay={1}>
+              <IraqOfficesMap
+                offices={offices.data ?? []}
+                locale={locale}
+                labels={{
+                  offices: t.home.offices,
+                  officesSub: t.home.officesSub,
+                  selectGov: t.home.selectGov,
+                  selectGovHint: t.home.selectGovHint,
+                  noBranch: t.home.noBranch,
+                  hasBranch: t.home.hasBranch,
+                  callOffice: t.home.callOffice,
+                }}
+              />
+            </Reveal>
+          ) : null}
+
           {!offices.isLoading && !(offices.data ?? []).length ? (
-            <EmptyState title={locale === 'ar' ? 'لا توجد مكاتب' : 'No offices listed'} />
+            <div className="mt-12">
+              <EmptyState title={locale === 'ar' ? 'لا توجد مكاتب' : 'No offices listed'} />
+            </div>
           ) : null}
         </div>
       </section>
