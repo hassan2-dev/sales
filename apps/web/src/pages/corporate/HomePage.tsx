@@ -16,13 +16,14 @@ import { LoadingState, EmptyState, ErrorState } from '@/components/ui/States';
 import { catalogApi, cmsApi } from '@/services/endpoints';
 import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
-import type { Brand } from '@/types';
 import { FeaturedProductsCarousel } from '@/components/FeaturedProductsCarousel';
+import { PartnersSection } from '@/components/PartnersSection';
+import { NationwideCoverage } from '@/components/NationwideCoverage';
+import { IraqOfficesMap } from '@/components/IraqOfficesMap';
 import { CountUpStat } from '@/components/CountUpStat';
 import { Reveal } from '@/components/Reveal';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -47,84 +48,7 @@ const MARQUEE = [
   'FIELD READY',
 ];
 
-function PartnersSection({
-  brands,
-  clients,
-  labels,
-}: {
-  brands: Brand[];
-  clients: string[];
-  labels: {
-    partners: string;
-    partnersSub: string;
-    clients: string;
-    brands: string;
-  };
-}) {
-  return (
-    <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
-      <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
-        <Reveal className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-xl">
-            <div className="inline-flex items-center rounded-full bg-[#0a0a0a] px-5 py-2.5 text-xs font-bold uppercase tracking-[0.18em] text-white">
-              {labels.partners}
-            </div>
-            <p className="mt-5 text-lg font-medium text-muted">{labels.partnersSub}</p>
-          </div>
-        </Reveal>
-
-        {brands.length ? (
-          <div className="mt-12">
-            <p className="mb-6 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
-              {labels.brands}
-            </p>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
-              {brands.map((b, i) => (
-                <Reveal key={b.id} delay={i % 6}>
-                  <Link to={storePath(`brands/${b.slug}`)} className="block">
-                    <Card className="card-lift h-full min-h-[110px] items-center justify-center gap-2 py-5 text-center">
-                      <CardContent className="flex flex-col items-center gap-2 px-4">
-                        {b.logo ? (
-                          <img
-                            src={b.logo}
-                            alt={b.name}
-                            className="max-h-10 max-w-[120px] object-contain opacity-80 grayscale transition group-hover/card:grayscale-0 dark:brightness-0 dark:invert"
-                          />
-                        ) : (
-                          <span className="text-sm font-bold tracking-tight">{b.name}</span>
-                        )}
-                        {b.logo ? (
-                          <span className="text-[11px] font-medium text-muted">{b.name}</span>
-                        ) : null}
-                      </CardContent>
-                    </Card>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        ) : null}
-
-        {clients.length ? (
-          <div className="mt-14">
-            <p className="mb-6 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
-              {labels.clients}
-            </p>
-            <div className="flex flex-wrap gap-3">
-              {clients.map((name, i) => (
-                <Reveal key={name} delay={i % 8}>
-                  <Card className="card-lift gap-0 py-3 shadow-none">
-                    <CardContent className="px-4 py-0 text-sm font-semibold">{name}</CardContent>
-                  </Card>
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </section>
-  );
-}
+const SERVICE_ICONS = [HardHat, Wrench, ShieldCheck, Handshake] as const;
 
 export function HomePage() {
   const { t, locale, dir } = useI18n();
@@ -315,7 +239,7 @@ export function HomePage() {
         </div>
       </section>
 
-      {/* Services — shadcn cards */}
+      {/* Services — top 4 */}
       <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
         <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
           <Reveal className="mb-12 flex flex-wrap items-end justify-between gap-6">
@@ -323,7 +247,7 @@ export function HomePage() {
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
                 {t.home.services}
               </p>
-              <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                 {t.home.servicesSub}
               </h2>
             </div>
@@ -339,34 +263,49 @@ export function HomePage() {
           {services.isLoading ? <LoadingState variant="cards" /> : null}
           {services.isError ? <ErrorState onRetry={() => void services.refetch()} /> : null}
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {(services.data ?? []).map((s, i) => (
-              <Reveal key={s.id} delay={i % 6}>
-                <Card className="card-lift h-full">
-                  <CardHeader>
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="font-kpi text-sm text-accent">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {(services.data ?? []).slice(0, 4).map((s, i) => {
+              const Icon = SERVICE_ICONS[i % SERVICE_ICONS.length];
+              return (
+                <Reveal key={s.id} delay={i}>
+                  <Link
+                    to={`/services/${s.slug}`}
+                    className="service-card group relative flex h-full min-h-[300px] flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-6 sm:min-h-[340px] sm:p-7"
+                  >
+                    {s.imageUrl ? (
+                      <img
+                        src={s.imageUrl}
+                        alt=""
+                        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-[0.18]"
+                      />
+                    ) : (
+                      <div
+                        className="pointer-events-none absolute -end-10 -top-10 h-40 w-40 rounded-full bg-accent/10 blur-2xl transition duration-500 group-hover:bg-white/20"
+                        aria-hidden
+                      />
+                    )}
+                    <div className="relative z-10 flex items-start justify-between gap-3">
+                      <span className="service-card-num font-kpi text-4xl leading-none text-accent/35 sm:text-5xl">
                         {String(i + 1).padStart(2, '0')}
                       </span>
-                      <HardHat className="h-5 w-5 text-accent" aria-hidden />
+                      <span className="service-card-icon flex h-11 w-11 items-center justify-center rounded-lg border border-accent/25 bg-accent/10 text-accent transition duration-300">
+                        <Icon className="h-5 w-5" aria-hidden />
+                      </span>
                     </div>
-                    <CardTitle className="text-xl">{s.name}</CardTitle>
-                    <CardDescription className="line-clamp-3">
-                      {s.shortDescription || s.description}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardFooter className="border-0 bg-transparent">
-                    <Link
-                      to={`/services/${s.slug}`}
-                      className="group inline-flex items-center gap-1.5 text-sm font-bold text-accent"
-                    >
-                      {t.home.learnMore}
-                      <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </Link>
-                  </CardFooter>
-                </Card>
-              </Reveal>
-            ))}
+                    <div className="relative z-10 mt-auto pt-10">
+                      <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.name}</h3>
+                      <p className="service-card-muted mt-3 line-clamp-3 text-sm font-medium leading-relaxed text-muted">
+                        {s.shortDescription || s.description}
+                      </p>
+                      <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
+                        {t.home.learnMore}
+                        <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                      </span>
+                    </div>
+                  </Link>
+                </Reveal>
+              );
+            })}
           </div>
 
           {!services.isLoading && !(services.data ?? []).length ? (
@@ -381,6 +320,19 @@ export function HomePage() {
           ) : null}
         </div>
       </section>
+
+      <NationwideCoverage
+        locale={locale}
+        labels={{
+          coverage: t.home.coverage,
+          coverageTitle: t.home.coverageTitle,
+          coverageSub: t.home.coverageSub,
+          coverageCount: t.home.coverageCount,
+          coverageFrom: t.home.coverageFrom,
+          coverageTo: t.home.coverageTo,
+          coverageBadge: t.home.coverageBadge,
+        }}
+      />
 
       {featuredProducts.isLoading ? (
         <div className="border-b border-line bg-page px-4 py-20 sm:px-6 lg:px-10">

@@ -8,11 +8,11 @@ type LogoProps = {
   imgClassName?: string;
 };
 
-/** AT wordmark image only — fixed in header/footer, never restyled with UI fonts. */
+/** AT wordmark — transparent SVG for dark headers/footers. */
 export function Logo({ to = '/', href, className, imgClassName }: LogoProps) {
   const img = (
     <img
-      src="/logo.png"
+      src="/energy-horizon-logo.svg"
       alt="AT — For General Trading and Engineering Services Ltd."
       className={cn(
         'h-8 w-auto max-w-[160px] object-contain object-left sm:h-9 sm:max-w-[180px]',

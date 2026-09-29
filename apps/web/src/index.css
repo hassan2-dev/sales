@@ -368,6 +368,148 @@
     color: rgb(255 255 255 / 0.45);
   }
 
+  .service-card {
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.35s ease,
+      color 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.4s ease;
+  }
+
+  .service-card:hover {
+    transform: translateY(-8px);
+    background: #0070c0;
+    color: #fff;
+    border-color: #0070c0;
+    box-shadow: 0 22px 48px -18px rgb(0 112 192 / 0.45);
+  }
+
+  .service-card:hover .service-card-muted {
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .service-card:hover .service-card-num {
+    color: rgb(255 255 255 / 0.4);
+  }
+
+  .service-card:hover .service-card-icon {
+    border-color: rgb(255 255 255 / 0.35);
+    background: rgb(255 255 255 / 0.15);
+    color: #fff;
+  }
+
+  .trust-roster-row {
+    position: relative;
+    background: transparent;
+  }
+
+  .trust-roster-row::before {
+    content: '';
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    width: 3px;
+    background: transparent;
+    transition: background 0.25s ease;
+  }
+
+  .trust-roster-row:hover,
+  .trust-roster-row.is-active {
+    background: rgb(0 112 192 / 0.08);
+  }
+
+  .trust-roster-row.is-active::before {
+    background: #0070c0;
+  }
+
+  .trust-spotlight-title,
+  .trust-spotlight-logo {
+    animation: trust-fade 0.35s ease;
+  }
+
+  @keyframes trust-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .partner-logo-cell {
+    transition:
+      background 0.35s ease,
+      color 0.35s ease;
+  }
+
+  .partner-logo-cell:hover {
+    background: #0070c0;
+  }
+
+  .partner-logo-cell:hover img {
+    filter: brightness(0) invert(1);
+    opacity: 1;
+  }
+
+  .partner-client-cell:hover {
+    transform: translateY(-3px);
+  }
+
+  .partner-client-cell {
+    transition:
+      transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s ease,
+      background 0.3s ease;
+  }
+
+  .office-card {
+    transition:
+      background 0.35s ease,
+      color 0.35s ease;
+  }
+
+  .office-card:hover {
+    background: #0070c0;
+  }
+
+  .office-card:hover .office-card-num {
+    color: rgb(255 255 255 / 0.4);
+  }
+
+  .office-card:hover .office-card-icon {
+    border-color: rgb(255 255 255 / 0.35);
+    background: rgb(255 255 255 / 0.15);
+    color: #fff;
+  }
+
+  .office-card:hover .office-card-muted {
+    color: rgb(255 255 255 / 0.8);
+  }
+
+  .iraq-pin-pulse {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: iraq-pulse 2s ease-out infinite;
+  }
+
+  @keyframes iraq-pulse {
+    0% {
+      opacity: 0.7;
+      transform: scale(0.85);
+    }
+    70% {
+      opacity: 0;
+      transform: scale(1.55);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(1.55);
+    }
+  }
+
   .reveal {
     animation: var(--animate-fade-up);
   }
@@ -589,6 +731,19 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     letter-spacing: -0.03em;
+  }
+
+  /* Corporate site: hide page scrollbar; scroll still works */
+  html.site-hide-scrollbar,
+  html.site-hide-scrollbar body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  html.site-hide-scrollbar::-webkit-scrollbar,
+  html.site-hide-scrollbar body::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
   }
 
   /* Hide native scrollbars (legacy overflow carousels) */

@@ -6,11 +6,17 @@ import { useI18n } from '@/i18n/i18n-context';
 import { useTheme } from '@/stores/theme-context';
 import { ADMIN_URL, STORE_URL } from '@/lib/urls';
 import { Logo } from '@/components/Logo';
+import {
+  HeaderScrollProgress,
+  ScrollToTopButton,
+  useSiteScrollChrome,
+} from '@/components/SiteScrollChrome';
 
 export function CorporateLayout() {
   const [open, setOpen] = useState(false);
   const { t, locale, toggleLocale, dir } = useI18n();
   const { theme, toggleTheme } = useTheme();
+  const { progress, showTop } = useSiteScrollChrome();
 
   const links = [
     { to: '/about', label: t.nav.about },
@@ -119,11 +125,15 @@ export function CorporateLayout() {
             </div>
           </div>
         ) : null}
+
+        <HeaderScrollProgress progress={progress} />
       </header>
 
       <main className="flex min-h-[calc(100svh-4.25rem)] flex-1 flex-col">
         <Outlet />
       </main>
+
+      <ScrollToTopButton show={showTop} />
 
       <footer className="border-t border-white/10 bg-black text-white">
         <div className="mx-auto grid max-w-[90rem] gap-12 px-4 py-16 sm:px-6 lg:grid-cols-12 lg:px-10">
