@@ -38,7 +38,15 @@ export interface Product {
   description?: string | null;
   imageUrl?: string | null;
   images?: { id: string; url: string; isPrimary?: boolean }[];
+  documents?: {
+    id: string;
+    name: string;
+    url: string;
+    mimeType?: string | null;
+    size?: number | null;
+  }[];
   brand?: { id: string; name: string; slug: string } | null;
+  categoryId?: string | null;
   category?: { id: string; name: string; slug: string } | null;
   specifications?: Record<string, unknown> | null;
   similar?: Product[];
@@ -210,5 +218,17 @@ export interface Customer {
   lastName: string;
   company?: string | null;
   phone?: string | null;
+  address?: string | null;
+  city?: string | null;
+  country?: string | null;
+  notes?: string | null;
   createdAt?: string;
+  user?: {
+    id: string;
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string | null;
+  } | null;
+  _count?: { orders?: number; quotes?: number; tickets?: number };
 }

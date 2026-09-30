@@ -9,7 +9,7 @@ const variants: Record<Variant, string> = {
   primary:
     'btn-shine bg-accent text-white shadow-[0_8px_24px_-8px_rgb(0_112_192/0.55)] hover:bg-accent-soft hover:shadow-[0_12px_28px_-8px_rgb(0_112_192/0.7)] hover:-translate-y-0.5 active:translate-y-0',
   secondary:
-    'bg-[#0a0a0a] text-white shadow-md hover:bg-accent hover:-translate-y-0.5 active:translate-y-0 dark:bg-white dark:text-black dark:hover:bg-accent dark:hover:text-white',
+    'bg-navy text-white shadow-md hover:bg-accent hover:-translate-y-0.5 active:translate-y-0 dark:bg-white dark:text-navy dark:hover:bg-accent dark:hover:text-white',
   ghost: 'bg-transparent text-fg hover:bg-black/5 dark:hover:bg-white/5',
   outline:
     'border-2 border-line bg-transparent text-fg hover:border-accent hover:text-accent hover:-translate-y-0.5 active:translate-y-0',

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { FileText, GitCompareArrows, Heart, Minus, Plus } from 'lucide-react';
 import { LoadingState, EmptyState, ErrorState, Pagination } from '@/components/ui/States';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,9 +18,12 @@ import {
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ProductCard } from '@/components/ProductCard';
+import { AvailabilityBadge } from '@/components/store/StoreUI';
 import { catalogApi, ordersApi } from '@/services/endpoints';
 import { useCart } from '@/stores/cart-context';
 import { useAuth } from '@/stores/auth-context';
+import { useFavorites } from '@/stores/favorites-context';
+import { useCompare } from '@/stores/compare-context';
 import { formatMoney } from '@/lib/cn';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
@@ -30,15 +34,20 @@ import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Seo } from '@/lib/seo';
 import { appToast } from '@/lib/toast';
+import { cn } from '@/lib/utils';
+import { formatOrderDate } from '@/pages/store/AccountPages';
 
 export function StoreProductsPage() {
   const { locale } = useI18n();
   const [params, setParams] = useSearchParams();
   const page = Number(params.get('page') || 1);
   const search = params.get('q') || '';
-  const sort = params.get('sort') || 'newest';
+  const sortParam = params.get('sort');
+  const sort = sortParam || 'newest';
   const categorySlug = params.get('category') || '';
+  const brandSlug = params.get('brand') || '';
   const [q, setQ] = useState(search);
+  const [mobileFilters, setMobileFilters] = useState(false);
 
   useEffect(() => {
     setQ(search);
@@ -59,9 +68,13 @@ export function StoreProductsPage() {
     queryKey: ['store-categories'],
     queryFn: async () => (await catalogApi.categories()).data,
   });
+  const brands = useQuery({
+    queryKey: ['store-brands'],
+    queryFn: async () => (await catalogApi.brands()).data,
+  });
 
   const query = useQuery({
-    queryKey: ['store-products', page, search, sort, categorySlug],
+    queryKey: ['store-products', page, search, sort, categorySlug, brandSlug],
     queryFn: async () =>
       (
         await catalogApi.products({
@@ -71,6 +84,7 @@ export function StoreProductsPage() {
           sortBy,
           sortOrder,
           categorySlug: categorySlug || undefined,
+          brandSlug: brandSlug || undefined,
         })
       ).data,
   });
@@ -87,6 +101,7 @@ export function StoreProductsPage() {
       ...(search ? { q: search } : {}),
       ...(sort && sort !== 'newest' ? { sort } : {}),
       ...(categorySlug ? { category: categorySlug } : {}),
+      ...(brandSlug ? { brand: brandSlug } : {}),
       ...(page > 1 ? { page: String(page) } : {}),
     };
     for (const [k, v] of Object.entries(next)) {
@@ -100,6 +115,7 @@ export function StoreProductsPage() {
   }
 
   const activeCategory = (categories.data ?? []).find((c) => c.slug === categorySlug);
+  const activeBrand = (brands.data ?? []).find((b) => b.slug === brandSlug);
   const total = query.data?.meta.total ?? 0;
   const products = query.data?.data ?? [];
 
@@ -109,26 +125,146 @@ export function StoreProductsPage() {
       : 'Search results'
     : activeCategory
       ? activeCategory.name
-      : sort === 'bestsellers'
-        ? locale === 'ar'
-          ? 'الأكثر مبيعاً'
-          : 'Best sellers'
-        : locale === 'ar'
-          ? 'كل المنتجات'
-          : 'All products';
+      : activeBrand
+        ? activeBrand.name
+        : sort === 'bestsellers'
+          ? locale === 'ar'
+            ? 'الأكثر مبيعاً'
+            : 'Best sellers'
+          : sortParam === 'newest'
+            ? locale === 'ar'
+              ? 'وصل حديثاً'
+              : 'New arrivals'
+            : locale === 'ar'
+              ? 'كل المنتجات'
+              : 'All products';
+
+  const FiltersPanel = (
+    <div className="space-y-4">
+      <div className="store-surface p-4">
+        <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+          {locale === 'ar' ? 'ترتيب حسب' : 'Sort by'}
+        </p>
+        <div className="mt-3 flex flex-col gap-1.5">
+          {sortOptions.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              onClick={() => applyParams({ sort: f.id, page: '1' })}
+              className={
+                sort === f.id
+                  ? 'rounded-xl bg-accent px-3 py-2.5 text-start text-sm font-bold text-white'
+                  : 'rounded-xl px-3 py-2.5 text-start text-sm font-medium text-muted transition hover:bg-mist hover:text-fg dark:hover:bg-white/5'
+              }
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="store-surface p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+            {locale === 'ar' ? 'الأقسام' : 'Categories'}
+          </p>
+          {categorySlug ? (
+            <button
+              type="button"
+              className="text-[11px] font-bold text-accent"
+              onClick={() => applyParams({ category: null, page: '1' })}
+            >
+              {locale === 'ar' ? 'الكل' : 'All'}
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => applyParams({ category: null, page: '1' })}
+            className={
+              !categorySlug
+                ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
+            }
+          >
+            {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
+          </button>
+          {(categories.data ?? []).map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => applyParams({ category: c.slug, page: '1' })}
+              className={
+                categorySlug === c.slug
+                  ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                  : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
+              }
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="store-surface p-4">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+            {locale === 'ar' ? 'العلامات' : 'Brands'}
+          </p>
+          {brandSlug ? (
+            <button
+              type="button"
+              className="text-[11px] font-bold text-accent"
+              onClick={() => applyParams({ brand: null, page: '1' })}
+            >
+              {locale === 'ar' ? 'الكل' : 'All'}
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto">
+          <button
+            type="button"
+            onClick={() => applyParams({ brand: null, page: '1' })}
+            className={
+              !brandSlug
+                ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
+            }
+          >
+            {locale === 'ar' ? 'كل العلامات' : 'All brands'}
+          </button>
+          {(brands.data ?? []).map((b) => (
+            <button
+              key={b.id}
+              type="button"
+              onClick={() => applyParams({ brand: b.slug, page: '1' })}
+              className={
+                brandSlug === b.slug
+                  ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                  : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
+              }
+            >
+              {b.name}
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
       <Seo title={title} path={storePath('products')} />
       <div className="border-b border-border bg-card">
-        <div className="mx-auto max-w-[90rem] px-4 py-6 sm:px-6 lg:px-10">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
+        <div className="mx-auto max-w-[90rem] px-4 py-7 sm:px-6 lg:px-10">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent">
             {locale === 'ar' ? 'المتجر' : 'Store'}
           </p>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
             {title}
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1.5 text-sm text-muted">
             {search ? (
               locale === 'ar' ? (
                 <>
@@ -145,15 +281,20 @@ export function StoreProductsPage() {
                 {total} {locale === 'ar' ? 'منتج' : 'products'}
                 {activeCategory
                   ? locale === 'ar'
-                    ? ` في قسم ${activeCategory.name}`
+                    ? ` في ${activeCategory.name}`
                     : ` in ${activeCategory.name}`
+                  : ''}
+                {activeBrand
+                  ? locale === 'ar'
+                    ? ` · ${activeBrand.name}`
+                    : ` · ${activeBrand.name}`
                   : ''}
               </>
             )}
           </p>
 
           <form
-            className="mt-4 flex gap-2"
+            className="mt-5 flex flex-wrap gap-2"
             onSubmit={(e) => {
               e.preventDefault();
               applyParams({ q: q.trim(), page: '1' });
@@ -163,37 +304,41 @@ export function StoreProductsPage() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={
-                locale === 'ar' ? 'ابحث بالاسم أو SKU أو الوصف...' : 'Search name, SKU, description...'
+                locale === 'ar' ? 'ابحث بالاسم أو SKU...' : 'Search name or SKU...'
               }
               className="h-11 max-w-xl flex-1 rounded-xl"
             />
             <Button type="submit" className="h-11 rounded-xl px-5 font-bold">
               {locale === 'ar' ? 'بحث' : 'Search'}
             </Button>
-            {search ? (
+            {search || categorySlug || brandSlug || sortParam ? (
               <Button
                 type="button"
                 variant="outline"
                 className="h-11 rounded-xl"
                 onClick={() => {
                   setQ('');
-                  applyParams({ q: null, page: '1' });
+                  setParams({});
                 }}
               >
-                {locale === 'ar' ? 'مسح' : 'Clear'}
+                {locale === 'ar' ? 'مسح الفلاتر' : 'Clear filters'}
               </Button>
             ) : null}
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 rounded-xl lg:hidden"
+              onClick={() => setMobileFilters((v) => !v)}
+            >
+              {locale === 'ar' ? 'فلاتر' : 'Filters'}
+            </Button>
           </form>
-        </div>
-      </div>
 
-      <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-10 lg:py-10">
-        <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-              {locale === 'ar' ? 'ترتيب حسب' : 'Sort by'}
-            </p>
-            <div className="mt-3 flex flex-col gap-1.5">
+          <div className="mt-5 space-y-3">
+            <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+              <span className="shrink-0 text-xs font-bold text-muted">
+                {locale === 'ar' ? 'ترتيب:' : 'Sort:'}
+              </span>
               {sortOptions.map((f) => (
                 <button
                   key={f.id}
@@ -201,81 +346,60 @@ export function StoreProductsPage() {
                   onClick={() => applyParams({ sort: f.id, page: '1' })}
                   className={
                     sort === f.id
-                      ? 'rounded-xl bg-accent px-3 py-2.5 text-start text-sm font-bold text-white'
-                      : 'rounded-xl px-3 py-2.5 text-start text-sm font-medium text-muted transition hover:bg-muted hover:text-fg'
+                      ? 'shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-xs font-bold text-white'
+                      : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-accent/40 hover:text-fg'
                   }
                 >
                   {f.label}
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-                {locale === 'ar' ? 'الأقسام' : 'Categories'}
-              </p>
-              {categorySlug ? (
+            {(categories.data ?? []).length > 0 ? (
+              <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+                <span className="shrink-0 text-xs font-bold text-muted">
+                  {locale === 'ar' ? 'قسم:' : 'Category:'}
+                </span>
                 <button
                   type="button"
-                  className="text-[11px] font-bold text-accent"
                   onClick={() => applyParams({ category: null, page: '1' })}
+                  className={
+                    !categorySlug
+                      ? 'shrink-0 rounded-full bg-navy px-3.5 py-1.5 text-xs font-bold text-white'
+                      : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-navy/30 hover:text-fg'
+                  }
                 >
                   {locale === 'ar' ? 'الكل' : 'All'}
                 </button>
-              ) : null}
-            </div>
-            <div className="mt-3 flex max-h-72 flex-col gap-1 overflow-y-auto">
-              <button
-                type="button"
-                onClick={() => applyParams({ category: null, page: '1' })}
-                className={
-                  !categorySlug
-                    ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                    : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-muted hover:text-fg'
-                }
-              >
-                {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
-              </button>
-              {(categories.data ?? []).map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => applyParams({ category: c.slug, page: '1' })}
-                  className={
-                    categorySlug === c.slug
-                      ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                      : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-muted hover:text-fg'
-                  }
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
+                {(categories.data ?? []).map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => applyParams({ category: c.slug, page: '1' })}
+                    className={
+                      categorySlug === c.slug
+                        ? 'shrink-0 rounded-full bg-navy px-3.5 py-1.5 text-xs font-bold text-white'
+                        : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-navy/30 hover:text-fg'
+                    }
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
-        </aside>
+        </div>
+      </div>
+
+      <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-10 lg:py-10">
+        <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">{FiltersPanel}</aside>
+        {mobileFilters ? <div className="lg:hidden">{FiltersPanel}</div> : null}
 
         <div>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-2 lg:hidden">
-              {sortOptions.slice(0, 4).map((f) => (
-                <button
-                  key={f.id}
-                  type="button"
-                  onClick={() => applyParams({ sort: f.id, page: '1' })}
-                  className={
-                    sort === f.id
-                      ? 'rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-white'
-                      : 'rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted'
-                  }
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
+          <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
             <p className="text-sm font-semibold text-muted">
-              {locale === 'ar' ? `عرض ${products.length} من ${total}` : `Showing ${products.length} of ${total}`}
+              {locale === 'ar'
+                ? `عرض ${products.length} من ${total}`
+                : `Showing ${products.length} of ${total}`}
             </p>
           </div>
 
@@ -285,7 +409,7 @@ export function StoreProductsPage() {
           {!query.isLoading && !query.isError ? (
             products.length ? (
               <div
-                key={`${search}-${sort}-${categorySlug}-${page}`}
+                key={`${search}-${sort}-${categorySlug}-${brandSlug}-${page}`}
                 className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
               >
                 {products.map((p, i) => (
@@ -372,31 +496,40 @@ export function StoreCategoriesPage() {
         {categories.isLoading ? <LoadingState variant="cards" /> : null}
         {categories.isError ? <ErrorState onRetry={() => void categories.refetch()} /> : null}
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {(categories.data ?? []).map((c, i) => (
             <Link
               key={c.id}
               to={storePath(`categories/${c.slug}`)}
-              className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-xl border border-border bg-card p-5 transition hover:border-accent"
+              className="group store-surface overflow-hidden transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
             >
-              {c.imageUrl ? (
-                <img
-                  src={c.imageUrl}
-                  alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-20 transition group-hover:scale-105 group-hover:opacity-35"
-                />
-              ) : (
-                <div className="absolute inset-0 bg-gradient-to-br from-accent/15 to-transparent" />
-              )}
-              <span className="relative text-xs font-bold tabular-nums text-accent/60">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <p className="relative mt-2 text-lg font-bold text-fg group-hover:text-accent">
-                {c.name}
-              </p>
-              {c.description ? (
-                <p className="relative mt-1 line-clamp-2 text-sm text-muted">{c.description}</p>
-              ) : null}
+              <div className="relative aspect-4/3 overflow-hidden bg-mist dark:bg-muted/40">
+                {c.imageUrl ? (
+                  <img
+                    src={c.imageUrl}
+                    alt={c.name}
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center bg-linear-to-br from-accent/15 to-navy/10 text-accent">
+                    <span className="text-sm font-bold tabular-nums opacity-60">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-linear-to-t from-navy/80 via-navy/20 to-transparent" />
+                <span className="absolute start-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-navy">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+              </div>
+              <div className="p-4">
+                <p className="text-base font-bold text-fg transition group-hover:text-accent">
+                  {c.name}
+                </p>
+                {c.description ? (
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">{c.description}</p>
+                ) : null}
+              </div>
             </Link>
           ))}
         </div>
@@ -442,13 +575,40 @@ export function StoreCategoryPage() {
         >
           {locale === 'ar' ? '← كل الأقسام' : '← All categories'}
         </Link>
-        <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg">
-          {category.data.name}
-        </h1>
-        {category.data.description ? (
-          <p className="mt-1 max-w-2xl text-sm text-muted">{category.data.description}</p>
-        ) : null}
-        <p className="mt-3 text-sm font-semibold text-muted">
+
+        {category.data.imageUrl ? (
+          <div className="mt-5 overflow-hidden rounded-2xl border border-border">
+            <div className="relative aspect-[21/9] max-h-64 w-full sm:max-h-72">
+              <img
+                src={category.data.imageUrl}
+                alt={category.data.name}
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-linear-to-t from-navy/75 via-navy/20 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+                  {category.data.name}
+                </h1>
+                {category.data.description ? (
+                  <p className="mt-1 max-w-2xl text-sm text-white/75">
+                    {category.data.description}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg">
+              {category.data.name}
+            </h1>
+            {category.data.description ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted">{category.data.description}</p>
+            ) : null}
+          </>
+        )}
+
+        <p className="mt-5 text-sm font-semibold text-muted">
           {products.data?.meta.total ?? products.data?.data?.length ?? 0}{' '}
           {locale === 'ar' ? 'منتج في هذا القسم' : 'products in this category'}
         </p>
@@ -508,7 +668,13 @@ export function ProductDetailPage() {
   const { locale } = useI18n();
   const { slug = '' } = useParams();
   const { cart, addItem, updateItem, removeItem } = useCart();
+  const { isFavorite, toggle } = useFavorites();
+  const { isCompared, toggle: toggleCompare } = useCompare();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [qty, setQty] = useState(1);
+  const [activeImage, setActiveImage] = useState(0);
+
   const query = useQuery({
     queryKey: ['product', slug],
     queryFn: async () => (await catalogApi.productBySlug(slug)).data,
@@ -527,6 +693,11 @@ export function ProductDetailPage() {
       ).data.data,
   });
 
+  useEffect(() => {
+    setActiveImage(0);
+    setQty(1);
+  }, [slug]);
+
   if (query.isLoading) return <LoadingState variant="page" />;
   if (query.isError || !query.data) {
     return (
@@ -543,6 +714,15 @@ export function ProductDetailPage() {
   const inCartQty = line?.quantity ?? 0;
   const maxStock = Math.max(1, Number(p.stock ?? 99));
   const outOfStock = p.availability === 'OUT_OF_STOCK' || Number(p.stock ?? 0) <= 0;
+  const images =
+    p.images?.length ? p.images.map((i) => i.url) : p.imageUrl ? [p.imageUrl] : [];
+  const specs =
+    p.specifications && typeof p.specifications === 'object'
+      ? Object.entries(p.specifications)
+      : [];
+  const docs = p.documents ?? [];
+  const fav = isFavorite(p.id);
+  const compared = isCompared(p.id);
 
   return (
     <>
@@ -552,20 +732,40 @@ export function ProductDetailPage() {
         description={p.shortDescription || undefined}
       />
       <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <div className="flex min-h-64 items-center justify-center overflow-hidden rounded-lg border border-border bg-card">
-            {p.images?.[0]?.url ? (
-              <img
-                src={p.images[0].url}
-                alt={p.name}
-                className="max-h-[380px] w-full object-contain"
-              />
-            ) : (
-              <span className="text-muted">
-                {locale === 'ar' ? 'بدون صورة' : 'No product image'}
-              </span>
-            )}
+        <div className="grid gap-10 lg:grid-cols-2">
+          <div>
+            <div className="store-surface flex aspect-4/3 items-center justify-center overflow-hidden bg-mist/60 p-4 sm:aspect-square dark:bg-muted/30">
+              {images[activeImage] ? (
+                <img
+                  src={images[activeImage]}
+                  alt={p.name}
+                  className="max-h-full w-full object-contain"
+                />
+              ) : (
+                <span className="text-muted">
+                  {locale === 'ar' ? 'بدون صورة' : 'No product image'}
+                </span>
+              )}
+            </div>
+            {images.length > 1 ? (
+              <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                {images.map((url, i) => (
+                  <button
+                    key={url + i}
+                    type="button"
+                    onClick={() => setActiveImage(i)}
+                    className={cn(
+                      'h-16 w-16 shrink-0 overflow-hidden rounded-xl border-2 bg-card',
+                      activeImage === i ? 'border-accent' : 'border-transparent',
+                    )}
+                  >
+                    <img src={url} alt="" className="h-full w-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
+
           <div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
               {p.category ? (
@@ -579,45 +779,58 @@ export function ProductDetailPage() {
               {p.brand ? (
                 <>
                   <span>·</span>
-                  <span>{p.brand.name}</span>
+                  <Link
+                    to={storePath(`brands/${p.brand.slug}`)}
+                    className="hover:text-accent"
+                  >
+                    {p.brand.name}
+                  </Link>
                 </>
               ) : null}
               <span>·</span>
-              <span>SKU {p.sku}</span>
+              <span className="font-mono text-xs">SKU {p.sku}</span>
             </div>
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+
+            <h1 className="mt-3 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
               {p.name}
             </h1>
-            <p className="mt-3 text-xl font-bold text-accent">
-              {formatMoney(p.price, p.currency)}
-            </p>
-            <p className="mt-2 text-sm text-muted">
-              {locale === 'ar' ? 'المخزون' : 'Stock'}: {p.stock}
-            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <p className="text-2xl font-extrabold tabular-nums text-navy dark:text-accent">
+                {formatMoney(p.price, p.currency)}
+              </p>
+              <AvailabilityBadge
+                availability={p.availability}
+                stock={p.stock}
+                locale={locale}
+              />
+            </div>
+
             <p className="mt-4 text-sm leading-relaxed text-muted">
               {p.shortDescription || p.description}
             </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3">
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               {inCartQty > 0 && line ? (
-                <div className="flex h-10 items-center rounded-md border border-border bg-page px-1">
+                <div className="flex h-11 w-full items-center justify-center rounded-xl border border-border bg-page px-1 sm:w-auto">
                   <button
                     type="button"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-30"
                     disabled={inCartQty <= 1}
                     onClick={() => void updateItem(line.id, inCartQty - 1)}
                   >
-                    −
+                    <Minus className="h-4 w-4" />
                   </button>
                   <span className="min-w-8 text-center text-sm font-bold tabular-nums">
                     {inCartQty}
                   </span>
                   <button
                     type="button"
-                    className="inline-flex h-8 w-8 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg hover:bg-muted disabled:opacity-30"
                     disabled={inCartQty >= maxStock}
                     onClick={() => void updateItem(line.id, inCartQty + 1)}
                   >
-                    +
+                    <Plus className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
@@ -637,10 +850,10 @@ export function ProductDetailPage() {
                     onChange={(e) =>
                       setQty(Math.min(maxStock, Math.max(1, Number(e.target.value) || 1)))
                     }
-                    className="w-20 rounded-md"
+                    className="h-11 w-full rounded-xl sm:w-20"
                   />
                   <Button
-                    className="rounded-md"
+                    className="h-11 w-full rounded-xl sm:w-auto"
                     disabled={outOfStock}
                     onClick={() => void addItem(p.id, qty, p)}
                   >
@@ -654,22 +867,124 @@ export function ProductDetailPage() {
                   </Button>
                 </>
               )}
-              {p.category ? (
-                <Link to={storePath(`categories/${p.category.slug}`)}>
-                  <Button variant="outline" className="rounded-md">
-                    {locale === 'ar' ? `منتجات ${p.category.name}` : `${p.category.name} products`}
-                  </Button>
-                </Link>
-              ) : null}
+              <Link to={`${storePath('quote')}?product=${p.id}`} className="w-full sm:w-auto">
+                <Button variant="outline" className="h-11 w-full rounded-xl sm:w-auto">
+                  <FileText className="h-4 w-4" />
+                  {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+                </Button>
+              </Link>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    const ok = toggle(p.id);
+                    if (!ok) {
+                      navigate(
+                        `${storePath('account/login')}?next=${encodeURIComponent(
+                          storePath(`products/${p.slug}`),
+                        )}`,
+                      );
+                    }
+                    return;
+                  }
+                  toggle(p.id);
+                }}
+                className={cn(
+                  'inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold transition hover:border-accent',
+                  fav && 'border-accent bg-accent/5 text-accent',
+                )}
+              >
+                <Heart className={cn('h-4 w-4', fav && 'fill-current')} />
+                {locale === 'ar' ? 'المفضلة' : 'Wishlist'}
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleCompare(p.id, p.category?.id || p.categoryId)}
+                className={cn(
+                  'inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-sm font-semibold transition hover:border-accent',
+                  compared && 'border-navy bg-navy/5 text-navy dark:text-accent',
+                )}
+              >
+                <GitCompareArrows className="h-4 w-4" />
+                {locale === 'ar' ? 'مقارنة' : 'Compare'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-12 grid gap-6 lg:grid-cols-3">
+          <div className="store-surface p-5 lg:col-span-2">
+            <h2 className="text-lg font-bold text-fg">
+              {locale === 'ar' ? 'الوصف' : 'Description'}
+            </h2>
+            <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">
+              {p.description || p.shortDescription || (locale === 'ar' ? 'لا يوجد وصف' : 'No description')}
+            </p>
+          </div>
+
+          <div className="space-y-6">
+            <div className="store-surface p-5">
+              <h2 className="text-lg font-bold text-fg">
+                {locale === 'ar' ? 'المواصفات' : 'Specifications'}
+              </h2>
+              {specs.length ? (
+                <dl className="mt-3 divide-y divide-border">
+                  {specs.map(([key, value]) => (
+                    <div
+                      key={key}
+                      className="flex flex-col gap-1 py-2.5 text-sm sm:flex-row sm:items-start sm:justify-between sm:gap-3"
+                    >
+                      <dt className="shrink-0 font-semibold text-muted">{key}</dt>
+                      <dd className="min-w-0 break-words font-medium text-fg sm:text-end">
+                        {String(value)}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              ) : (
+                <p className="mt-3 text-sm text-muted">
+                  {locale === 'ar' ? 'لا توجد مواصفات' : 'No specifications listed'}
+                </p>
+              )}
+            </div>
+
+            <div className="store-surface p-5">
+              <h2 className="text-lg font-bold text-fg">
+                {locale === 'ar' ? 'المستندات الفنية' : 'Technical documents'}
+              </h2>
+              {docs.length ? (
+                <ul className="mt-3 space-y-2">
+                  {docs.map((doc) => (
+                    <li key={doc.id}>
+                      <a
+                        href={doc.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-soft"
+                      >
+                        <FileText className="h-4 w-4" />
+                        {doc.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-muted">
+                  {locale === 'ar' ? 'لا توجد مستندات' : 'No documents available'}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         {similar.length > 0 ? (
-          <div className="mt-12 border-t border-border pt-10">
-            <div className="mb-4 flex items-end justify-between gap-3">
-              <h2 className="text-xl font-bold">
-                {locale === 'ar' ? 'منتجات مشابهة' : 'Similar products'}
+          <div className="mt-14 border-t border-border pt-10">
+            <div className="mb-5 flex items-end justify-between gap-3">
+              <h2 className="text-xl font-extrabold tracking-tight">
+                {locale === 'ar' ? 'منتجات ذات صلة' : 'Related products'}
               </h2>
               {p.category ? (
                 <Link
@@ -680,7 +995,7 @@ export function ProductDetailPage() {
                 </Link>
               ) : null}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {similar.map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}
@@ -738,7 +1053,10 @@ export function CartPage() {
       lastName: user.lastName || '',
       email: user.email?.endsWith('@customers.local') ? '' : user.email || '',
       phone: user.phone || '',
+      company: form.getValues('company') || '',
       shippingAddress: form.getValues('shippingAddress') || '',
+      billingAddress: form.getValues('billingAddress') || '',
+      notes: form.getValues('notes') || '',
     });
   }, [user, form]);
 
@@ -759,9 +1077,29 @@ export function CartPage() {
       saveStoreOrder(data);
       appToast.success('orderPlaced', { orderNumber: data.orderNumber });
       navigate(storePath(`account/orders/${data.id}`));
-    } catch {
+    } catch (err: unknown) {
+      const message =
+        err &&
+        typeof err === 'object' &&
+        'response' in err &&
+        err.response &&
+        typeof err.response === 'object' &&
+        'data' in err.response &&
+        err.response.data &&
+        typeof err.response.data === 'object' &&
+        'message' in err.response.data
+          ? String((err.response.data as { message: unknown }).message)
+          : null;
       appToast.error('orderFailed');
+      if (message) {
+        // surface API reason in console for debugging; toast stays user-friendly
+        console.warn('Checkout failed:', message);
+      }
     }
+  }
+
+  function onInvalid() {
+    appToast.error('orderValidationFailed');
   }
 
   return (
@@ -807,38 +1145,40 @@ export function CartPage() {
                 return (
                   <div
                     key={item.id}
-                    className="flex gap-3 rounded-lg border border-border bg-card p-3 sm:items-center"
+                    className="store-surface flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:p-4"
                   >
-                    <Link
-                      to={storePath(`products/${item.product?.slug || ''}`)}
-                      className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted/40"
-                    >
-                      {img ? (
-                        <img src={img} alt="" className="h-full w-full object-cover" />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-[10px] text-muted">
-                          SKU
-                        </div>
-                      )}
-                    </Link>
-                    <div className="min-w-0 flex-1">
+                    <div className="flex min-w-0 flex-1 gap-3">
                       <Link
                         to={storePath(`products/${item.product?.slug || ''}`)}
-                        className="line-clamp-2 text-sm font-semibold text-fg hover:text-accent"
+                        className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted/40"
                       >
-                        {item.product?.name || 'Product'}
+                        {img ? (
+                          <img src={img} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-[10px] text-muted">
+                            SKU
+                          </div>
+                        )}
                       </Link>
-                      <p className="mt-0.5 text-xs text-muted">{item.product?.sku}</p>
-                      <p className="mt-1 text-sm font-bold text-accent">
-                        {formatMoney(unit, item.product?.currency)}
-                      </p>
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          to={storePath(`products/${item.product?.slug || ''}`)}
+                          className="line-clamp-2 text-sm font-semibold text-fg hover:text-accent"
+                        >
+                          {item.product?.name || 'Product'}
+                        </Link>
+                        <p className="mt-0.5 text-xs text-muted">{item.product?.sku}</p>
+                        <p className="mt-1 text-sm font-bold text-accent">
+                          {formatMoney(unit, item.product?.currency)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <div className="flex h-9 items-center rounded-md border border-border bg-page px-1">
+                    <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end sm:gap-2">
+                      <div className="flex h-10 items-center rounded-md border border-border bg-page px-1">
                         <button
                           type="button"
                           disabled={item.quantity <= 1}
-                          className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
                           onClick={() => void updateItem(item.id, item.quantity - 1)}
                           aria-label={locale === 'ar' ? 'تقليل' : 'Decrease'}
                         >
@@ -849,23 +1189,25 @@ export function CartPage() {
                         </span>
                         <button
                           type="button"
-                          className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                          className="inline-flex h-9 w-9 items-center justify-center rounded hover:bg-muted"
                           onClick={() => void updateItem(item.id, item.quantity + 1)}
                           aria-label={locale === 'ar' ? 'زيادة' : 'Increase'}
                         >
                           +
                         </button>
                       </div>
-                      <p className="text-sm font-semibold text-fg">
-                        {formatMoney(lineTotal, item.product?.currency)}
-                      </p>
-                      <button
-                        type="button"
-                        className="text-xs font-semibold text-red-600 hover:underline"
-                        onClick={() => void removeItem(item.id)}
-                      >
-                        {locale === 'ar' ? 'حذف' : 'Remove'}
-                      </button>
+                      <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
+                        <p className="text-sm font-semibold text-fg">
+                          {formatMoney(lineTotal, item.product?.currency)}
+                        </p>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-red-600 hover:underline"
+                          onClick={() => void removeItem(item.id)}
+                        >
+                          {locale === 'ar' ? 'حذف' : 'Remove'}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -879,7 +1221,7 @@ export function CartPage() {
             </div>
 
             <aside className="lg:col-span-5">
-              <div className="sticky top-20 space-y-4 rounded-lg border border-border bg-card p-4 sm:p-5">
+              <div className="store-surface sticky top-20 space-y-4 p-4 sm:p-5 lg:top-28">
                 <div>
                   <h2 className="text-base font-bold">
                     {locale === 'ar' ? 'ملخص الطلب' : 'Order summary'}
@@ -920,7 +1262,7 @@ export function CartPage() {
                     </Button>
                   </div>
                 ) : (
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                  <form onSubmit={form.handleSubmit(onSubmit, onInvalid)} className="space-y-3">
                     <div className="rounded-xl border border-accent/20 bg-accent/5 px-3 py-2 text-sm">
                       {locale === 'ar' ? 'حساب موثّق:' : 'Verified:'}{' '}
                       <strong>
@@ -928,15 +1270,36 @@ export function CartPage() {
                       </strong>{' '}
                       · {user?.phone}
                     </div>
+                    <p className="text-xs text-muted">
+                      {locale === 'ar'
+                        ? 'أكمل عنوان الشحن ثم اضغط تأكيد الطلب'
+                        : 'Enter a shipping address, then place the order'}
+                    </p>
                     <div className="grid gap-3 sm:grid-cols-2">
-                      <Input
-                        placeholder={locale === 'ar' ? 'الاسم الأول' : 'First name'}
-                        {...form.register('firstName')}
-                      />
-                      <Input
-                        placeholder={locale === 'ar' ? 'اسم العائلة' : 'Last name'}
-                        {...form.register('lastName')}
-                      />
+                      <div>
+                        <Input
+                          placeholder={locale === 'ar' ? 'الاسم الأول *' : 'First name *'}
+                          {...form.register('firstName')}
+                          className={form.formState.errors.firstName ? 'border-red-500' : ''}
+                        />
+                        {form.formState.errors.firstName ? (
+                          <p className="mt-1 text-[11px] font-semibold text-red-600">
+                            {locale === 'ar' ? 'مطلوب' : 'Required'}
+                          </p>
+                        ) : null}
+                      </div>
+                      <div>
+                        <Input
+                          placeholder={locale === 'ar' ? 'اسم العائلة *' : 'Last name *'}
+                          {...form.register('lastName')}
+                          className={form.formState.errors.lastName ? 'border-red-500' : ''}
+                        />
+                        {form.formState.errors.lastName ? (
+                          <p className="mt-1 text-[11px] font-semibold text-red-600">
+                            {locale === 'ar' ? 'مطلوب' : 'Required'}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
                     <Input
                       placeholder={locale === 'ar' ? 'الهاتف' : 'Phone'}
@@ -948,10 +1311,24 @@ export function CartPage() {
                       placeholder={locale === 'ar' ? 'الشركة (اختياري)' : 'Company (optional)'}
                       {...form.register('company')}
                     />
-                    <Textarea
-                      placeholder={locale === 'ar' ? 'عنوان الشحن *' : 'Shipping address *'}
-                      {...form.register('shippingAddress')}
-                    />
+                    <div>
+                      <Textarea
+                        placeholder={
+                          locale === 'ar'
+                            ? 'عنوان الشحن * (مثال: بغداد، الكرادة...)'
+                            : 'Shipping address * (e.g. Baghdad, Karrada...)'
+                        }
+                        {...form.register('shippingAddress')}
+                        className={form.formState.errors.shippingAddress ? 'border-red-500' : ''}
+                      />
+                      {form.formState.errors.shippingAddress ? (
+                        <p className="mt-1 text-[11px] font-semibold text-red-600">
+                          {locale === 'ar'
+                            ? 'عنوان الشحن مطلوب (5 أحرف على الأقل)'
+                            : 'Shipping address required (min 5 characters)'}
+                        </p>
+                      ) : null}
+                    </div>
                     <Textarea
                       placeholder={locale === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (optional)'}
                       {...form.register('notes')}

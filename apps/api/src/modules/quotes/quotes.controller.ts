@@ -7,44 +7,46 @@ import {
   QuoteQueryDto,
   UpdateQuoteStatusDto,
 } from './dto/quote.dto.js';
-import {
-  Public,
-  RequirePermissions,
-} from '../../common/decorators/auth.decorators.js';
+import { RequirePermissions } from '../../common/decorators/auth.decorators.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
+import type { AuthUser } from '../auth/types/jwt-payload.type.js';
 
 @ApiTags('quotes')
+@ApiBearerAuth()
 @Controller('quotes')
 export class QuotesController {
   constructor(private readonly quotesService: QuotesService) {}
 
-  @Public()
+  /** Authenticated B2B store quote — OTP account required */
   @Post()
-  create(@Body() dto: CreateQuoteDto) {
-    return this.quotesService.create(dto);
+  create(@Body() dto: CreateQuoteDto, @CurrentUser() user: AuthUser) {
+    return this.quotesService.create(dto, user.id);
   }
 
-  @ApiBearerAuth()
+  /** Customer's own quote requests */
+  @Get('me')
+  myQuotes(@CurrentUser() user: AuthUser) {
+    return this.quotesService.listForUser(user.id);
+  }
+
   @RequirePermissions('quotes:read')
   @Get()
   findAll(@Query() query: QuoteQueryDto) {
     return this.quotesService.findAll(query);
   }
 
-  @ApiBearerAuth()
   @RequirePermissions('quotes:read')
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.quotesService.findOne(id);
   }
 
-  @ApiBearerAuth()
   @RequirePermissions('quotes:update')
   @Patch(':id/assign')
   assign(@Param('id') id: string, @Body() dto: AssignQuoteDto) {
     return this.quotesService.assign(id, dto.assignedToId);
   }
 
-  @ApiBearerAuth()
   @RequirePermissions('quotes:update')
   @Patch(':id/status')
   updateStatus(@Param('id') id: string, @Body() dto: UpdateQuoteStatusDto) {

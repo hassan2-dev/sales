@@ -70,6 +70,136 @@ export class CustomersService {
     return customer;
   }
 
+  async findMe(userId: string) {
+    let customer = await this.prisma.customer.findUnique({
+      where: { userId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            status: true,
+          },
+        },
+        _count: { select: { orders: true, quotes: true, tickets: true } },
+      },
+    });
+
+    if (!customer) {
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new NotFoundException('Customer profile not found');
+
+      const byPhone = user.phone
+        ? await this.prisma.customer.findFirst({
+            where: { phone: user.phone },
+            orderBy: { createdAt: 'asc' },
+          })
+        : null;
+
+      if (byPhone && !byPhone.userId) {
+        customer = await this.prisma.customer.update({
+          where: { id: byPhone.id },
+          data: {
+            userId: user.id,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+                status: true,
+              },
+            },
+            _count: { select: { orders: true, quotes: true, tickets: true } },
+          },
+        });
+      } else if (!byPhone) {
+        customer = await this.prisma.customer.create({
+          data: {
+            userId: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            phone: user.phone,
+          },
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                firstName: true,
+                lastName: true,
+                phone: true,
+                status: true,
+              },
+            },
+            _count: { select: { orders: true, quotes: true, tickets: true } },
+          },
+        });
+      } else {
+        // Phone already linked to another userId — still expose that row if same user
+        throw new NotFoundException('Customer profile not found');
+      }
+    }
+
+    return customer;
+  }
+
+  async updateMe(userId: string, dto: UpdateCustomerDto) {
+    const customer = await this.findMe(userId);
+
+    const email =
+      dto.email?.trim() && !dto.email.trim().endsWith('@customers.local')
+        ? dto.email.trim().toLowerCase()
+        : undefined;
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.firstName !== undefined ? { firstName: dto.firstName } : {}),
+        ...(dto.lastName !== undefined ? { lastName: dto.lastName } : {}),
+        ...(email ? { email } : {}),
+      },
+    });
+
+    return this.prisma.customer.update({
+      where: { id: customer.id },
+      data: {
+        ...(dto.firstName !== undefined ? { firstName: dto.firstName } : {}),
+        ...(dto.lastName !== undefined ? { lastName: dto.lastName } : {}),
+        ...(dto.company !== undefined ? { company: dto.company } : {}),
+        ...(dto.phone !== undefined ? { phone: dto.phone } : {}),
+        ...(dto.address !== undefined ? { address: dto.address } : {}),
+        ...(dto.city !== undefined ? { city: dto.city } : {}),
+        ...(dto.country !== undefined ? { country: dto.country } : {}),
+        ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
+        ...(email ? { email } : {}),
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true,
+            status: true,
+          },
+        },
+        _count: { select: { orders: true, quotes: true, tickets: true } },
+      },
+    });
+  }
+
   async update(id: string, dto: UpdateCustomerDto) {
     await this.findOne(id);
     return this.prisma.customer.update({

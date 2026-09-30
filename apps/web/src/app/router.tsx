@@ -25,11 +25,21 @@ import {
   CartPage,
   CheckoutPage,
   StoreLoginPage,
-  MyOrdersPage,
   MyOrderDetailPage,
 } from '@/pages/store/StorePages';
 import { StoreHomePage } from '@/pages/store/StoreHome';
 import { FavoritesPage } from '@/pages/store/FavoritesPage';
+import { RequestQuotePage } from '@/pages/store/RequestQuotePage';
+import { ComparePage } from '@/pages/store/ComparePage';
+import {
+  AccountShell,
+  AccountProfilePage,
+  AccountOrdersPage,
+  AccountQuotesPage,
+  AccountSupportPage,
+  AccountNotificationsPage,
+  AccountDocumentsPage,
+} from '@/pages/store/AccountPages';
 import {
   AdminLoginPage,
   AdminDashboardPage,
@@ -82,14 +92,20 @@ function storeRoutes() {
       <Route path="categories/:slug" element={<StoreCategoryPage />} />
       <Route path="brands/:slug" element={<StoreBrandPage />} />
       <Route path="favorites" element={<FavoritesPage />} />
+      <Route path="compare" element={<ComparePage />} />
+      <Route path="quote" element={<RequestQuotePage />} />
       <Route path="cart" element={<CartPage />} />
       <Route path="checkout" element={<CheckoutPage />} />
-      <Route path="account" element={<Navigate to="/account/orders" replace />} />
       <Route path="account/login" element={<StoreLoginPage />} />
-      <Route path="account/orders" element={<MyOrdersPage />} />
+      <Route path="account" element={<AccountShell />}>
+        <Route index element={<AccountProfilePage />} />
+        <Route path="orders" element={<AccountOrdersPage />} />
+        <Route path="quotes" element={<AccountQuotesPage />} />
+        <Route path="support" element={<AccountSupportPage />} />
+        <Route path="notifications" element={<AccountNotificationsPage />} />
+        <Route path="documents" element={<AccountDocumentsPage />} />
+      </Route>
       <Route path="account/orders/:id" element={<MyOrderDetailPage />} />
-      <Route path="account/quotes" element={<Navigate to="/account/orders" replace />} />
-      <Route path="account/support" element={<Navigate to="/account/orders" replace />} />
     </Route>
   );
 }

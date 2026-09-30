@@ -53,6 +53,14 @@ export class CreateQuoteDto {
 
   @IsOptional()
   @IsString()
+  address?: string;
+
+  @IsOptional()
+  @IsString()
+  city?: string;
+
+  @IsOptional()
+  @IsString()
   message?: string;
 
   @IsArray()

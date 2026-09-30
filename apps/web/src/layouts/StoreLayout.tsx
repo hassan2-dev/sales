@@ -1,64 +1,84 @@
-﻿import { useEffect, useState, type FormEvent } from 'react';
-import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
+﻿import { useState, type FormEvent } from 'react';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
+  FileText,
   Globe,
+  Heart,
   Menu,
   Moon,
   Search,
   ShoppingCart,
   Sun,
-  Truck,
   UserRound,
-  X,
 } from 'lucide-react';
 import { useCart } from '@/stores/cart-context';
 import { useTheme } from '@/stores/theme-context';
 import { useAuth } from '@/stores/auth-context';
+import { useFavorites } from '@/stores/favorites-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { SITE_URL, storePath } from '@/lib/urls';
 import { Logo } from '@/components/Logo';
+import { MobileNavPanel } from '@/components/MobileNavPanel';
 import { catalogApi } from '@/services/endpoints';
+import { CompareBar } from '@/components/store/CompareBar';
+import { useCompare } from '@/stores/compare-context';
 import { cn } from '@/lib/cn';
-
-const PROMO_KEY = 'eh_store_promo_dismissed';
 
 export function StoreLayout() {
   const [open, setOpen] = useState(false);
-  const [promoOpen, setPromoOpen] = useState(true);
   const [q, setQ] = useState('');
-  const location = useLocation();
   const navigate = useNavigate();
   const { itemCount } = useCart();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
+  const { ids: favIds } = useFavorites();
+  const { count: compareCount } = useCompare();
   const { locale, toggleLocale, dir, t } = useI18n();
 
+  const location = useLocation();
   const categories = useQuery({
     queryKey: ['store-categories'],
     queryFn: async () => (await catalogApi.categories()).data,
   });
 
-  useEffect(() => {
-    if (sessionStorage.getItem(PROMO_KEY) === '1') setPromoOpen(false);
-  }, []);
-
+  const productsPath = storePath('products');
   const nav = [
-    { to: '/', label: locale === 'ar' ? 'الرئيسية' : 'Home', end: true },
-    { to: '/products', label: locale === 'ar' ? 'كل المنتجات' : 'All products' },
+    { to: storePath(), label: locale === 'ar' ? 'الرئيسية' : 'Home', end: true as boolean | undefined },
     {
-      to: '/products?sort=bestsellers',
+      to: productsPath,
+      label: locale === 'ar' ? 'المنتجات' : 'Products',
+      match: 'products-all' as const,
+    },
+    {
+      to: `${productsPath}?sort=bestsellers`,
       label: locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers',
+      match: 'bestsellers' as const,
     },
     {
-      to: '/products?sort=newest',
-      label: locale === 'ar' ? 'منتجات جديدة' : 'New arrivals',
+      to: `${productsPath}?sort=newest`,
+      label: locale === 'ar' ? 'وصل حديثاً' : 'New arrivals',
+      match: 'newest' as const,
     },
-    { to: '/categories', label: locale === 'ar' ? 'الأقسام' : 'Categories' },
-    { to: '/favorites', label: locale === 'ar' ? 'المفضلة' : 'Favorites' },
+    { to: storePath('categories'), label: locale === 'ar' ? 'الأقسام' : 'Categories' },
+    { to: storePath('quote'), label: locale === 'ar' ? 'طلب عرض سعر' : 'Request quote' },
   ];
 
-  const accountTo = isAuthenticated ? '/account/orders' : '/account/login';
+  function isNavActive(match?: 'products-all' | 'bestsellers' | 'newest') {
+    const path = location.pathname.replace(/\/+$/, '') || '/';
+    const productsBase = productsPath.replace(/\/+$/, '') || '/products';
+    const onProducts = path === productsBase;
+    const sort = new URLSearchParams(location.search).get('sort');
+
+    if (match === 'bestsellers') return onProducts && sort === 'bestsellers';
+    if (match === 'newest') return onProducts && sort === 'newest';
+    if (match === 'products-all') {
+      return onProducts && sort !== 'bestsellers' && sort !== 'newest';
+    }
+    return false;
+  }
+
+  const accountTo = isAuthenticated ? storePath('account') : storePath('account/login');
   const accountLabel = locale === 'ar' ? 'حسابي' : 'Account';
   const accountName =
     isAuthenticated && user?.firstName && user.firstName !== 'Customer'
@@ -66,12 +86,7 @@ export function StoreLayout() {
       : accountLabel;
 
   const iconBtn =
-    'inline-flex h-10 w-10 items-center justify-center rounded-lg text-white/70 hover:bg-white/10 hover:text-white';
-
-  function dismissPromo() {
-    sessionStorage.setItem(PROMO_KEY, '1');
-    setPromoOpen(false);
-  }
+    'inline-flex h-10 w-10 items-center justify-center rounded-xl text-navy/70 transition hover:bg-mist hover:text-navy dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white';
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -84,91 +99,112 @@ export function StoreLayout() {
     setOpen(false);
   }
 
-  return (
-    <div className="flex min-h-screen flex-col bg-page text-fg" dir={dir}>
-      {promoOpen ? (
-        <div className="relative z-[60] bg-accent text-white">
-          <div className="mx-auto flex max-w-[90rem] items-center justify-center gap-3 px-4 py-2 text-center text-xs font-semibold sm:text-sm lg:px-10">
-            <Truck className="hidden h-4 w-4 shrink-0 sm:block" />
-            <p>
-              {locale === 'ar'
-                ? 'طلب صناعي موثّق — سجّل حسابك بالهاتف وأكّد OTP لإتمام الطلب بسرعة'
-                : 'Verified industrial orders — register with phone OTP and checkout fast'}
-            </p>
-            <Link
-              to={storePath('products')}
-              className="hidden underline underline-offset-2 hover:text-white/90 sm:inline"
-            >
-              {locale === 'ar' ? 'تسوق الآن' : 'Shop now'}
-            </Link>
-            <button
-              type="button"
-              onClick={dismissPromo}
-              className="absolute end-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md hover:bg-white/15"
-              aria-label="Close"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </div>
-      ) : null}
+  const storeActions = [
+    {
+      label: locale === 'ar' ? 'طلب عرض سعر' : 'Request quote',
+      to: storePath('quote'),
+      variant: 'primary' as const,
+    },
+    {
+      label: accountLabel,
+      to: accountTo,
+      variant: 'secondary' as const,
+    },
+    ...(isAuthenticated
+      ? [
+          {
+            label: locale === 'ar' ? 'خروج' : 'Sign out',
+            variant: 'ghost' as const,
+            onClick: () => {
+              void logout();
+            },
+          },
+        ]
+      : []),
+  ];
 
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-black">
-        <div className="mx-auto flex h-16 max-w-[90rem] items-center gap-3 px-4 sm:px-6 lg:px-10">
-          <Logo to="/" imgClassName="h-9 sm:h-10" />
+  return (
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-page text-fg" dir={dir}>
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
+        <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center gap-1.5 px-3 sm:h-[4.25rem] sm:gap-3 sm:px-6 lg:px-10">
+          <Logo to="/" imgClassName="h-8 sm:h-10" className="min-w-0 shrink" />
 
           <form onSubmit={onSearch} className="mx-2 hidden min-w-0 flex-1 md:flex">
-            <div className="flex h-11 w-full max-w-xl overflow-hidden rounded-lg border border-white/15 bg-white/5 focus-within:border-accent">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder={
-                  locale === 'ar' ? 'ابحث عن منتج أو SKU...' : 'Search product or SKU...'
-                }
-                className="min-w-0 flex-1 bg-transparent px-3 text-sm text-white outline-none placeholder:text-white/40"
-              />
+            <div className="store-search w-full max-w-2xl">
+              <div className="flex min-w-0 flex-1 items-center gap-2 px-3.5">
+                <Search className="h-4 w-4 shrink-0 text-muted" />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder={
+                    locale === 'ar'
+                      ? 'ابحث بالمنتج أو SKU أو المواصفات...'
+                      : 'Search products, SKU, or specs...'
+                  }
+                  className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-muted"
+                />
+              </div>
               <button
                 type="submit"
-                className="inline-flex h-full items-center gap-1.5 bg-accent px-4 text-sm font-semibold text-white hover:bg-accent-soft"
+                className="inline-flex h-full shrink-0 items-center gap-1.5 bg-accent px-4 text-sm font-bold text-white transition hover:bg-accent-soft sm:px-5"
               >
-                <Search className="h-4 w-4" />
-                <span className="hidden lg:inline">{locale === 'ar' ? 'بحث' : 'Search'}</span>
+                {locale === 'ar' ? 'بحث' : 'Search'}
               </button>
             </div>
           </form>
 
-          <div className="ms-auto flex items-center gap-1">
-            <button type="button" onClick={toggleLocale} className={cn(iconBtn, 'text-[11px] font-bold')}>
+          <div className="ms-auto flex shrink-0 items-center gap-0 sm:gap-1">
+            <button
+              type="button"
+              onClick={toggleLocale}
+              className={cn(iconBtn, 'text-[11px] font-extrabold')}
+            >
               {locale === 'en' ? 'ع' : 'EN'}
             </button>
             <button
               type="button"
               onClick={toggleTheme}
-              className={iconBtn}
+              className={cn(iconBtn, 'hidden sm:inline-flex')}
               aria-label={theme === 'light' ? t.theme.dark : t.theme.light}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
-            <a href={SITE_URL} className={iconBtn} aria-label={locale === 'ar' ? 'الموقع' : 'Site'}>
+            <a
+              href={SITE_URL}
+              className={cn(iconBtn, 'hidden sm:inline-flex')}
+              aria-label={locale === 'ar' ? 'الموقع' : 'Site'}
+            >
               <Globe className="h-4 w-4" />
             </a>
             <Link
+              to={storePath('favorites')}
+              className={cn(iconBtn, 'relative hidden sm:inline-flex')}
+              aria-label="Wishlist"
+            >
+              <Heart className="h-4 w-4" />
+              {favIds.length > 0 ? (
+                <span className="absolute end-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[9px] font-bold text-white">
+                  {favIds.length > 9 ? '9+' : favIds.length}
+                </span>
+              ) : null}
+            </Link>
+            <Link
               to={accountTo}
-              className="hidden h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-semibold text-white hover:bg-white/10 sm:inline-flex"
+              className="hidden h-10 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold text-navy transition hover:bg-mist dark:text-white dark:hover:bg-white/10 md:inline-flex"
             >
               <UserRound className="h-4 w-4" />
               <span className="max-w-[6.5rem] truncate">{accountName}</span>
             </Link>
             <div className="relative">
               <Link
-                to="/cart"
-                className="inline-flex h-10 items-center gap-1.5 rounded-lg bg-accent px-3 text-sm font-semibold text-white hover:bg-accent-soft"
+                to={storePath('cart')}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-navy px-2.5 text-sm font-bold text-white transition hover:bg-accent sm:h-10 sm:px-3"
               >
                 <ShoppingCart className="h-4 w-4" />
                 <span className="hidden sm:inline">{locale === 'ar' ? 'السلة' : 'Cart'}</span>
               </Link>
               {itemCount > 0 ? (
-                <span className="absolute -end-1.5 -top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-black ring-2 ring-black">
+                <span className="absolute -end-1.5 -top-1.5 z-20 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white ring-2 ring-card">
                   {itemCount > 99 ? '99+' : itemCount}
                 </span>
               ) : null}
@@ -177,99 +213,135 @@ export function StoreLayout() {
               type="button"
               className={cn(iconBtn, 'md:hidden')}
               aria-label="Menu"
-              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              onClick={() => setOpen(true)}
             >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {open ? (
-          <div className="border-t border-white/10 bg-black px-4 py-3 md:hidden">
-            <form onSubmit={onSearch} className="mb-3 flex gap-2">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder={locale === 'ar' ? 'ابحث...' : 'Search...'}
-                className="h-10 flex-1 rounded-lg border border-white/15 bg-white/5 px-3 text-sm text-white outline-none"
-              />
-              <button
-                type="submit"
-                className="inline-flex h-10 items-center rounded-lg bg-accent px-3 text-white"
+        <nav className="hidden border-t border-border md:block">
+          <div className="mx-auto flex max-w-[90rem] items-center gap-1 overflow-x-auto px-4 sm:px-6 lg:px-10">
+            {nav.map((l) => {
+              const active =
+                'match' in l && l.match
+                  ? isNavActive(l.match)
+                  : undefined;
+              return (
+              <NavLink
+                key={l.to}
+                to={l.to}
+                end={'end' in l ? l.end : undefined}
+                className={({ isActive }) =>
+                  cn(
+                    'relative whitespace-nowrap px-3 py-3 text-sm font-semibold text-muted transition hover:text-navy dark:hover:text-white',
+                    (active ?? isActive) && 'text-navy dark:text-white',
+                  )
+                }
               >
-                <Search className="h-4 w-4" />
-              </button>
-            </form>
-            <div className="flex flex-col gap-1">
-              {nav.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    'rounded-md px-3 py-2.5 text-sm font-medium text-white/80',
-                    location.pathname === l.to.split('?')[0] && 'bg-white/10 text-white',
-                  )}
+                {({ isActive }) => (
+                  <>
+                    {l.label}
+                    {(active ?? isActive) ? (
+                      <span className="absolute inset-x-3 bottom-0 h-0.5 rounded-full bg-accent" />
+                    ) : null}
+                  </>
+                )}
+              </NavLink>
+              );
+            })}
+            <Link
+              to={storePath('quote')}
+              className="ms-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold text-accent transition hover:bg-accent/5"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              {locale === 'ar' ? 'عرض سعر سريع' : 'Quick quote'}
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      <MobileNavPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        logoTo={storePath()}
+        hideFrom="md"
+        links={nav.map(({ to, label }) => ({ to, label }))}
+        middle={
+          <>
+            <form onSubmit={onSearch} className="px-5 pt-2">
+              <div className="store-search h-12">
+                <div className="flex min-w-0 flex-1 items-center gap-2 px-3.5">
+                  <Search className="h-4 w-4 shrink-0 text-muted" />
+                  <input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder={locale === 'ar' ? 'ابحث...' : 'Search...'}
+                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="inline-flex h-full shrink-0 items-center bg-accent px-4 text-sm font-bold text-white"
                 >
-                  {l.label}
-                </Link>
-              ))}
-              <div className="my-2 border-t border-white/10 pt-2">
-                <p className="px-3 pb-1 text-[11px] font-bold uppercase tracking-wider text-white/35">
-                  {locale === 'ar' ? 'الأقسام' : 'Categories'}
-                </p>
-                {(categories.data ?? []).slice(0, 8).map((c) => (
+                  {locale === 'ar' ? 'بحث' : 'Go'}
+                </button>
+              </div>
+            </form>
+            {(categories.data ?? []).length > 0 ? (
+              <div className="mt-3 flex flex-wrap justify-center gap-2 px-5">
+                {(categories.data ?? []).slice(0, 6).map((c) => (
                   <Link
                     key={c.id}
                     to={storePath(`categories/${c.slug}`)}
                     onClick={() => setOpen(false)}
-                    className="block rounded-md px-3 py-2 text-sm text-white/70"
+                    className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-semibold text-muted dark:bg-white/5"
                   >
                     {c.name}
                   </Link>
                 ))}
               </div>
-              <Link
-                to={accountTo}
-                onClick={() => setOpen(false)}
-                className="rounded-md px-3 py-2.5 text-sm font-semibold text-accent"
-              >
-                {accountLabel}
-              </Link>
-              {isAuthenticated ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void logout();
-                    setOpen(false);
-                  }}
-                  className="rounded-md px-3 py-2.5 text-start text-sm text-white/50"
-                >
-                  {locale === 'ar' ? 'خروج' : 'Sign out'}
-                </button>
-              ) : null}
-            </div>
-          </div>
-        ) : null}
-      </header>
+            ) : null}
+          </>
+        }
+        extraTools={
+          <Link
+            to={storePath('favorites')}
+            onClick={() => setOpen(false)}
+            className="inline-flex h-10 items-center gap-1 rounded-xl px-3 text-sm font-bold text-muted hover:bg-black/5 dark:hover:bg-white/10"
+          >
+            <Heart className="h-4 w-4" />
+            {favIds.length || ''}
+          </Link>
+        }
+        actions={storeActions}
+      />
 
-      <main className="flex flex-1 flex-col">
+      <main
+        className={cn(
+          'flex min-w-0 flex-1 flex-col',
+          compareCount > 0 && 'pb-24',
+        )}
+      >
         <Outlet />
       </main>
 
-      <footer className="border-t border-white/10 bg-black text-white">
-        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-10 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10">
+      <CompareBar />
+
+      <footer className="mt-auto border-t border-white/10 bg-navy pb-[env(safe-area-inset-bottom)] text-white">
+        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10">
           <div>
             <Logo to="/" imgClassName="h-9 brightness-0 invert" />
-            <p className="mt-3 text-sm leading-relaxed text-white/50">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
               {locale === 'ar'
-                ? 'متجر افاق الطاقة — معدات ومنتجات صناعية للمشاريع والمقاولات.'
-                : 'Energy Horizon Store — industrial equipment for projects and contractors.'}
+                ? 'متجر افاق الطاقة — منصة B2B لمعدات النفط والغاز والصناعة في العراق.'
+                : 'Energy Horizon Store — B2B marketplace for oil, gas & industrial equipment in Iraq.'}
             </p>
           </div>
           <div>
             <p className="text-sm font-bold">{locale === 'ar' ? 'التسوق' : 'Shop'}</p>
-            <div className="mt-3 flex flex-col gap-2 text-sm text-white/55">
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
               <Link to={storePath('products')} className="hover:text-white">
                 {locale === 'ar' ? 'كل المنتجات' : 'All products'}
               </Link>
@@ -280,28 +352,31 @@ export function StoreLayout() {
                 {locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
               </Link>
               <Link to={storePath('favorites')} className="hover:text-white">
-                {locale === 'ar' ? 'المفضلة' : 'Favorites'}
+                {locale === 'ar' ? 'المفضلة' : 'Wishlist'}
               </Link>
             </div>
           </div>
           <div>
             <p className="text-sm font-bold">{locale === 'ar' ? 'الحساب' : 'Account'}</p>
-            <div className="mt-3 flex flex-col gap-2 text-sm text-white/55">
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
               <Link to={accountTo} className="hover:text-white">
                 {accountLabel}
               </Link>
               <Link to={storePath('cart')} className="hover:text-white">
                 {locale === 'ar' ? 'السلة' : 'Cart'}
               </Link>
+              <Link to={storePath('quote')} className="hover:text-white">
+                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+              </Link>
               <a href={SITE_URL} className="hover:text-white">
-                {locale === 'ar' ? 'الموقع الرئيسي' : 'Main website'}
+                {locale === 'ar' ? 'الموقع الرئيسي' : 'Corporate site'}
               </a>
             </div>
           </div>
           <div>
-            <p className="text-sm font-bold">{locale === 'ar' ? 'لماذا المتجر؟' : 'Why us?'}</p>
-            <ul className="mt-3 space-y-2 text-sm text-white/55">
-              <li>{locale === 'ar' ? 'طلب بحساب موثّق OTP' : 'OTP-verified checkout'}</li>
+            <p className="text-sm font-bold">{locale === 'ar' ? 'لماذا المتجر؟' : 'Why Energy Horizon'}</p>
+            <ul className="mt-3 space-y-2.5 text-sm text-white/55">
+              <li>{locale === 'ar' ? 'شراء مباشر أو عرض سعر' : 'Buy now or request quote'}</li>
               <li>{locale === 'ar' ? 'كتالوج صناعي محدّث' : 'Live industrial catalog'}</li>
               <li>{locale === 'ar' ? 'دعم مشاريع ومقاولات' : 'Project & contractor support'}</li>
             </ul>
@@ -309,8 +384,8 @@ export function StoreLayout() {
         </div>
         <div className="border-t border-white/10">
           <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-white/35 sm:px-6 lg:px-10">
-            <span>© {new Date().getFullYear()} Energy Horizon Store</span>
-            <span>{locale === 'ar' ? 'متجر صناعي' : 'Industrial store'}</span>
+            <span>© {new Date().getFullYear()} Energy Horizon · افاق الطاقة</span>
+            <span>{locale === 'ar' ? 'سوق صناعي B2B' : 'Industrial B2B marketplace'}</span>
           </div>
         </div>
       </footer>

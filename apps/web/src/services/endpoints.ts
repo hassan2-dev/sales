@@ -97,6 +97,7 @@ export const ordersApi = {
 
 export const quotesApi = {
   create: (data: Record<string, unknown>) => api.post<QuoteRequest>('/quotes', data),
+  mine: () => api.get<{ data: QuoteRequest[] }>('/quotes/me'),
   list: (params?: Params) =>
     api.get<Paginated<QuoteRequest> | QuoteRequest[]>('/quotes', { params: cleanParams(params) }),
   get: (id: string) => api.get<QuoteRequest>(`/quotes/${id}`),
@@ -142,6 +143,8 @@ export const supportApi = {
 };
 
 export const customersApi = {
+  me: () => api.get<Customer>('/customers/me'),
+  updateMe: (data: Record<string, unknown>) => api.patch<Customer>('/customers/me', data),
   list: (params?: Params) =>
     api.get<Paginated<Customer> | Customer[]>('/customers', { params: cleanParams(params) }),
   get: (id: string) => api.get<Customer>(`/customers/${id}`),

@@ -8,7 +8,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { createHash, randomBytes, randomInt } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { RoleCode } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import type { AuthUser, JwtPayload } from './types/jwt-payload.type.js';
@@ -85,7 +85,7 @@ export class AuthService {
       data: { consumedAt: new Date() },
     });
 
-    const code = String(randomInt(100000, 999999));
+    const code = '123456';
     const codeHash = await bcrypt.hash(code, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 

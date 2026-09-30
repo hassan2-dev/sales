@@ -5,6 +5,7 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from '@/stores/auth-context';
 import { CartProvider } from '@/stores/cart-context';
 import { FavoritesProvider } from '@/stores/favorites-context';
+import { CompareProvider } from '@/stores/compare-context';
 import { ThemeProvider } from '@/stores/theme-context';
 import { I18nProvider } from '@/i18n/i18n-context';
 import { AppToaster } from '@/components/AppToaster';
@@ -29,10 +30,12 @@ createRoot(document.getElementById('root')!).render(
           <I18nProvider>
             <AuthProvider>
               <FavoritesProvider>
-                <CartProvider>
-                  <AppRouter />
-                  <AppToaster />
-                </CartProvider>
+                <CompareProvider>
+                  <CartProvider>
+                    <AppRouter />
+                    <AppToaster />
+                  </CartProvider>
+                </CompareProvider>
               </FavoritesProvider>
             </AuthProvider>
           </I18nProvider>

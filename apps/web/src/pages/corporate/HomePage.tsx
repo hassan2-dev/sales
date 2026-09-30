@@ -135,7 +135,7 @@ export function HomePage() {
       />
 
       {/* Hero — industrial / safety */}
-      <section className="relative min-h-[calc(100svh-4rem)] overflow-hidden text-white">
+      <section className="relative min-h-[min(100svh,52rem)] overflow-x-clip overflow-y-hidden text-white sm:min-h-[calc(100svh-4rem)]">
         <img
           src={HERO_IMG}
           alt=""
@@ -144,26 +144,26 @@ export function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 dark:from-black/95 dark:via-black/80" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_20%_50%,rgb(0_112_192/0.35),transparent_65%)]" />
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(100svh-4rem)] max-w-[90rem] flex-col justify-center px-4 py-20 sm:px-6 lg:px-10">
+        <div className="relative z-10 mx-auto flex min-h-[min(100svh,52rem)] max-w-[90rem] flex-col justify-center px-4 py-14 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:py-20 lg:px-10">
           <div className="max-w-3xl">
-            <p className="reveal text-xs font-bold uppercase tracking-[0.28em] text-accent">
+            <p className="reveal text-[11px] font-bold uppercase tracking-[0.22em] text-accent sm:text-xs sm:tracking-[0.28em]">
               {t.hero.eyebrow}
             </p>
-            <h1 className="reveal reveal-delay-1 mt-5 text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl">
+            <h1 className="reveal reveal-delay-1 mt-4 text-[1.85rem] font-extrabold leading-[1.15] tracking-tight sm:mt-5 sm:text-5xl sm:leading-[1.05] lg:text-6xl xl:text-7xl">
               {t.hero.title}
             </h1>
-            <p className="reveal reveal-delay-2 mt-6 max-w-xl text-base font-medium leading-relaxed text-white/70 sm:text-lg">
+            <p className="reveal reveal-delay-2 mt-4 max-w-xl text-sm font-medium leading-relaxed text-white/70 sm:mt-6 sm:text-lg">
               {t.hero.subtitle}
             </p>
-            <div className="reveal reveal-delay-3 mt-10 flex flex-wrap gap-3">
+            <div className="reveal reveal-delay-3 mt-7 flex w-full flex-col gap-2.5 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
               <Link
                 to={storePath('products')}
-                className="btn-cta btn-cta-primary btn-shine group"
+                className="btn-cta btn-cta-primary btn-shine group w-full sm:w-auto"
               >
                 {t.hero.ctaStore}
                 <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
-              <Link to="/services" className="btn-cta btn-cta-ghost">
+              <Link to="/services" className="btn-cta btn-cta-ghost w-full sm:w-auto">
                 {t.hero.ctaContact}
               </Link>
             </div>
@@ -172,14 +172,14 @@ export function HomePage() {
       </section>
 
       {/* Safety values strip */}
-      <section className="border-b border-white/10 bg-[#0a0a0a] text-white">
+      <section className="overflow-x-clip border-b border-white/10 bg-[#0a0a0a] text-white">
         <div className="mx-auto grid max-w-[90rem] gap-px sm:grid-cols-2 lg:grid-cols-4">
           {values.map((v, i) => (
-            <Reveal key={v.title} delay={i} className="value-cell flex gap-4 px-6 py-8 sm:px-8">
-              <v.icon className="value-icon mt-0.5 h-6 w-6 shrink-0 text-accent" aria-hidden />
-              <div>
-                <h3 className="text-sm font-bold uppercase tracking-[0.12em]">{v.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55">{v.sub}</p>
+            <Reveal key={v.title} delay={i} className="value-cell flex gap-3 px-4 py-6 sm:gap-4 sm:px-8 sm:py-8">
+              <v.icon className="value-icon mt-0.5 h-5 w-5 shrink-0 text-accent sm:h-6 sm:w-6" aria-hidden />
+              <div className="min-w-0">
+                <h3 className="text-xs font-bold uppercase tracking-[0.12em] sm:text-sm">{v.title}</h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-white/55 sm:mt-2 sm:text-sm">{v.sub}</p>
               </div>
             </Reveal>
           ))}
@@ -201,21 +201,21 @@ export function HomePage() {
       </div>
 
       {/* About / capabilities */}
-      <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
-        <div className="mx-auto grid max-w-[90rem] items-center gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-10">
-          <Reveal variant="left" className="relative">
+      <section className="border-b border-line bg-page py-16 text-fg sm:py-28">
+        <div className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:gap-12 sm:px-6 sm:py-0 lg:grid-cols-2 lg:gap-16 lg:px-10">
+          <Reveal variant="left" className="relative mb-6 sm:mb-0">
             <img
               src={ABOUT_IMG}
               alt=""
-              className="aspect-[4/3] w-full rounded-2xl object-cover shadow-lg"
+              className="aspect-4/3 w-full rounded-2xl object-cover shadow-lg"
             />
-            <div className="absolute -bottom-5 start-5 flex items-center gap-3 rounded-xl bg-accent px-5 py-4 text-white shadow-lg sm:start-8">
-              <HardHat className="h-8 w-8 shrink-0" aria-hidden />
-              <div>
-                <p className="font-kpi text-3xl font-extrabold leading-none">
+            <div className="absolute -bottom-4 inset-x-4 flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-white shadow-lg sm:-bottom-5 sm:inset-x-auto sm:start-8 sm:px-5 sm:py-4">
+              <HardHat className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" aria-hidden />
+              <div className="min-w-0">
+                <p className="font-kpi text-2xl font-extrabold leading-none sm:text-3xl">
                   {t.home.experience}
                 </p>
-                <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-white/85">
+                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-white/85 sm:text-xs">
                   {t.home.experienceLabel}
                 </p>
               </div>

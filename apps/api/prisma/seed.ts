@@ -281,16 +281,45 @@ async function main() {
   });
 
   const categories = [
-    { name: 'Drilling Equipment', slug: 'drilling-equipment' },
-    { name: 'Hydraulic Systems', slug: 'hydraulic-systems' },
-    { name: 'Electrical & Instrumentation', slug: 'electrical-instrumentation' },
-    { name: 'Safety & PPE', slug: 'safety-ppe' },
+    {
+      name: 'Drilling Equipment',
+      slug: 'drilling-equipment',
+      description: 'Upstream drilling tools, BOP kits, and mud pump spares',
+      imageUrl:
+        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      name: 'Hydraulic Systems',
+      slug: 'hydraulic-systems',
+      description: 'HPUs, hose assemblies, and industrial fluid power',
+      imageUrl:
+        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      name: 'Electrical & Instrumentation',
+      slug: 'electrical-instrumentation',
+      description: 'Ex lighting, transmitters, and process instrumentation',
+      imageUrl:
+        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80',
+    },
+    {
+      name: 'Safety & PPE',
+      slug: 'safety-ppe',
+      description: 'Helmets, FR coveralls, gloves, and site PPE',
+      imageUrl:
+        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80',
+    },
   ];
 
   for (const cat of categories) {
     await prisma.category.upsert({
       where: { slug: cat.slug },
-      update: {},
+      update: {
+        name: cat.name,
+        description: cat.description,
+        imageUrl: cat.imageUrl,
+        status: ContentStatus.PUBLISHED,
+      },
       create: { ...cat, status: ContentStatus.PUBLISHED },
     });
   }

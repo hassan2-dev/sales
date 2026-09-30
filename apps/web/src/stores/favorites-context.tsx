@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from 'react';
 import { appToast } from '@/lib/toast';
+import { useAuth } from '@/stores/auth-context';
 
 const KEY = 'eh_store_favorites';
 
@@ -15,7 +16,8 @@ type FavoritesContextValue = {
   ids: string[];
   count: number;
   isFavorite: (productId: string) => boolean;
-  toggle: (productId: string) => void;
+  /** Returns false when auth is required / blocked */
+  toggle: (productId: string) => boolean;
   remove: (productId: string) => void;
   clear: () => void;
 };
@@ -34,6 +36,7 @@ function readIds(): string[] {
 }
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [ids, setIds] = useState<string[]>(() =>
     typeof window === 'undefined' ? [] : readIds(),
   );
@@ -42,19 +45,36 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(KEY, JSON.stringify(ids));
   }, [ids]);
 
+  // Clear wishlist when signed out (after auth has resolved)
+  useEffect(() => {
+    if (authLoading) return;
+    if (!isAuthenticated) {
+      setIds([]);
+      localStorage.removeItem(KEY);
+    }
+  }, [isAuthenticated, authLoading]);
+
   const isFavorite = useCallback((productId: string) => ids.includes(productId), [ids]);
 
-  const toggle = useCallback((productId: string) => {
-    setIds((prev) => {
-      const exists = prev.includes(productId);
-      if (exists) {
-        appToast.success('removedFromFavorites');
-        return prev.filter((id) => id !== productId);
+  const toggle = useCallback(
+    (productId: string) => {
+      if (!isAuthenticated) {
+        appToast.error('loginRequiredForFavorites');
+        return false;
       }
-      appToast.success('addedToFavorites');
-      return [productId, ...prev];
-    });
-  }, []);
+      setIds((prev) => {
+        const exists = prev.includes(productId);
+        if (exists) {
+          appToast.success('removedFromFavorites');
+          return prev.filter((id) => id !== productId);
+        }
+        appToast.success('addedToFavorites');
+        return [productId, ...prev];
+      });
+      return true;
+    },
+    [isAuthenticated],
+  );
 
   const remove = useCallback((productId: string) => {
     setIds((prev) => prev.filter((id) => id !== productId));

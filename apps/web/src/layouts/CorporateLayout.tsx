@@ -1,11 +1,12 @@
 ﻿import { Link, NavLink, Outlet } from 'react-router-dom';
-import { Menu, Moon, Sun, X } from 'lucide-react';
+import { Menu, Moon, Sun } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/i18n/i18n-context';
 import { useTheme } from '@/stores/theme-context';
 import { ADMIN_URL, STORE_URL } from '@/lib/urls';
 import { Logo } from '@/components/Logo';
+import { MobileNavPanel } from '@/components/MobileNavPanel';
 import {
   HeaderScrollProgress,
   ScrollToTopButton,
@@ -28,10 +29,14 @@ export function CorporateLayout() {
   ];
 
   return (
-    <div className="flex min-h-screen flex-col bg-page text-fg" dir={dir}>
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-page text-fg" dir={dir}>
       <header className="sticky top-0 z-50 border-b border-white/10 bg-black">
-        <div className="mx-auto flex h-[4.25rem] max-w-[90rem] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
-          <Logo to="/" />
+        <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center justify-between gap-2 px-3 sm:h-[4.25rem] sm:gap-4 sm:px-6 lg:px-10">
+          <Logo
+            to="/"
+            imgClassName="h-8 max-w-[120px] sm:h-10 sm:max-w-[200px]"
+            className="min-w-0 shrink"
+          />
 
           <nav className="hidden items-center gap-0.5 lg:flex">
             {links.map((l) => (
@@ -41,7 +46,8 @@ export function CorporateLayout() {
                 className={({ isActive }) =>
                   cn(
                     'relative px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-white/55 transition hover:text-white',
-                    isActive && 'text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent',
+                    isActive &&
+                      'text-white after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:bg-accent',
                   )
                 }
               >
@@ -50,7 +56,7 @@ export function CorporateLayout() {
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-2">
             <button
               type="button"
               onClick={toggleLocale}
@@ -61,75 +67,45 @@ export function CorporateLayout() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-white/70 transition hover:bg-white/5 hover:text-white"
+              className="hidden h-9 w-9 items-center justify-center rounded-md text-white/70 transition hover:bg-white/5 hover:text-white sm:inline-flex"
               aria-label={theme === 'light' ? t.theme.dark : t.theme.light}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
             <a
               href={STORE_URL}
-              className="btn-shine inline-flex h-9 items-center rounded-lg bg-accent px-4 text-[12px] font-semibold tracking-tight text-white shadow-[0_6px_16px_-6px_rgb(0_112_192/0.55)] transition hover:-translate-y-0.5 hover:bg-accent-soft hover:shadow-[0_10px_20px_-6px_rgb(0_112_192/0.7)]"
+              className="btn-shine hidden h-9 items-center rounded-lg bg-accent px-4 text-[12px] font-semibold tracking-tight text-white shadow-[0_6px_16px_-6px_rgb(0_112_192/0.55)] transition hover:bg-accent-soft sm:inline-flex"
             >
               {t.nav.store}
             </a>
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center text-white lg:hidden"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-white transition hover:bg-white/10 lg:hidden"
               aria-label="Menu"
-              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              onClick={() => setOpen(true)}
             >
-              {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        {open ? (
-          <div className="border-t border-white/10 bg-black px-4 py-4 lg:hidden">
-            <div className="flex flex-col">
-              {links.map((l) => (
-                <Link
-                  key={l.to}
-                  to={l.to}
-                  onClick={() => setOpen(false)}
-                  className="border-b border-white/5 py-3 text-sm text-white/85"
-                >
-                  {l.label}
-                </Link>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  toggleLocale();
-                  setOpen(false);
-                }}
-                className="border-b border-white/5 py-3 text-start text-sm text-white/85"
-              >
-                {locale === 'en' ? 'العربية' : 'English'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  toggleTheme();
-                  setOpen(false);
-                }}
-                className="border-b border-white/5 py-3 text-start text-sm text-white/85"
-              >
-                {theme === 'light' ? t.theme.dark : t.theme.light}
-              </button>
-              <a
-                href={STORE_URL}
-                className="mt-4 inline-flex h-10 items-center justify-center bg-accent text-sm font-semibold text-white"
-              >
-                {t.nav.openStore}
-              </a>
-            </div>
-          </div>
-        ) : null}
-
         <HeaderScrollProgress progress={progress} />
       </header>
 
-      <main className="flex min-h-[calc(100svh-4.25rem)] flex-1 flex-col">
+      <MobileNavPanel
+        open={open}
+        onClose={() => setOpen(false)}
+        logoTo="/"
+        hideFrom="lg"
+        links={links}
+        actions={[
+          { label: t.nav.openStore, href: STORE_URL, variant: 'primary' },
+          { label: t.nav.contact, to: '/contact', variant: 'secondary' },
+        ]}
+      />
+
+      <main className="flex min-h-[calc(100svh-3.5rem)] min-w-0 flex-1 flex-col overflow-x-clip sm:min-h-[calc(100svh-4.25rem)]">
         <Outlet />
       </main>
 
