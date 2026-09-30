@@ -4,8 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { Seo } from '@/lib/seo';
+import { appToast } from '@/lib/toast';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
@@ -273,6 +273,10 @@ export function StoreCategoryPage() {
         {category.data.description ? (
           <p className="mt-2 max-w-2xl text-muted">{category.data.description}</p>
         ) : null}
+        <p className="mt-3 text-sm font-semibold text-muted">
+          {products.data?.meta.total ?? products.data?.data?.length ?? 0}{' '}
+          {locale === 'ar' ? 'منتج في هذا القسم' : 'products in this category'}
+        </p>
         {products.isLoading ? <LoadingState variant="products" /> : null}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {(products.data?.data ?? []).map((p) => (
@@ -684,18 +688,10 @@ export function CheckoutPage() {
       });
       await clear();
       saveStoreOrder(data);
-      toast.success(
-        locale === 'ar'
-          ? `تم الطلب ${data.orderNumber}`
-          : `Order ${data.orderNumber} placed`,
-      );
+      appToast.success('orderPlaced', { orderNumber: data.orderNumber });
       navigate(storePath(`account/orders/${data.id}`));
     } catch {
-      toast.error(
-        locale === 'ar'
-          ? 'فشل إتمام الطلب. تحقق من السلة وأعد المحاولة.'
-          : 'Checkout failed. Confirm cart items and try again.',
-      );
+      appToast.error('orderFailed');
     }
   }
 
@@ -879,7 +875,7 @@ export function StoreLoginPage() {
       setPhone(res.phone);
       setDevCode(res.devCode);
       setStep('otp');
-      toast.success(locale === 'ar' ? 'تم إرسال رمز التحقق' : 'OTP sent');
+      appToast.success('otpSent');
     } catch {
       setError(locale === 'ar' ? 'تعذّر إرسال الرمز. تحقق من الرقم.' : 'Could not send OTP.');
     } finally {
@@ -898,7 +894,7 @@ export function StoreLoginPage() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
       });
-      toast.success(locale === 'ar' ? 'تم التحقق — حسابك جاهز' : 'Verified — account ready');
+      appToast.success('otpVerified');
       navigate(next);
     } catch {
       setError(locale === 'ar' ? 'رمز غير صحيح أو منتهي.' : 'Invalid or expired OTP.');

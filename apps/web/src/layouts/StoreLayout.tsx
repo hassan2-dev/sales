@@ -1,4 +1,4 @@
-﻿import { Link, NavLink, Outlet } from 'react-router-dom';
+﻿import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
   Globe,
   Menu,
@@ -19,11 +19,13 @@ import { cn } from '@/lib/cn';
 
 export function StoreLayout() {
   const [open, setOpen] = useState(false);
+  const location = useLocation();
   const { itemCount } = useCart();
   const { theme, toggleTheme } = useTheme();
   const { user, isAuthenticated, logout } = useAuth();
   const { locale, toggleLocale, dir, t } = useI18n();
 
+  const sort = new URLSearchParams(location.search).get('sort');
   const nav = [
     { to: '/', label: locale === 'ar' ? 'الرئيسية' : 'Home', end: true },
     { to: '/products', label: locale === 'ar' ? 'المنتجات' : 'Catalog' },
@@ -31,9 +33,16 @@ export function StoreLayout() {
     {
       to: '/products?sort=bestsellers',
       label: locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers',
+      match: 'bestsellers' as const,
     },
     { to: '/favorites', label: locale === 'ar' ? 'المفضلة' : 'Favorites' },
   ];
+
+  function navActive(l: (typeof nav)[number], isActive: boolean) {
+    if (l.match === 'bestsellers') return sort === 'bestsellers';
+    if (l.to === '/products') return isActive && sort !== 'bestsellers';
+    return isActive;
+  }
 
   const accountTo = isAuthenticated ? '/account/orders' : '/account/login';
   const accountLabel = locale === 'ar' ? 'حسابي' : 'My account';
@@ -60,7 +69,7 @@ export function StoreLayout() {
                   className={({ isActive }) =>
                     cn(
                       'relative rounded-lg px-3.5 py-2 text-[13px] font-semibold tracking-wide text-white/55 transition hover:bg-white/5 hover:text-white',
-                      isActive &&
+                      navActive(l, isActive) &&
                         'bg-white/10 text-white after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:rounded-full after:bg-accent',
                     )
                   }

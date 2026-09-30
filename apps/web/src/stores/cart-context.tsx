@@ -8,8 +8,8 @@ import {
   type ReactNode,
 } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
 import { cartApi } from '@/services/endpoints';
+import { appToast } from '@/lib/toast';
 import type { Cart } from '@/types';
 
 interface CartContextValue {
@@ -47,9 +47,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         await cartApi.addItem(productId, quantity);
         await refresh();
-        toast.success('تمت الإضافة للسلة');
+        appToast.success('addedToCart');
       } catch {
-        toast.error('تعذّرت الإضافة للسلة');
+        appToast.error('addToCartFailed');
         throw new Error('add failed');
       } finally {
         setBusy(false);
@@ -65,7 +65,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await cartApi.updateItem(itemId, quantity);
         await refresh();
       } catch {
-        toast.error('Could not update cart');
+        appToast.error('cartUpdateFailed');
       } finally {
         setBusy(false);
       }
@@ -79,9 +79,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         await cartApi.removeItem(itemId);
         await refresh();
-        toast.success('Removed from cart');
+        appToast.success('removedFromCart');
       } catch {
-        toast.error('Could not remove item');
+        appToast.error('removeFromCartFailed');
       } finally {
         setBusy(false);
       }
@@ -94,6 +94,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       await cartApi.clear();
       await refresh();
+      appToast.success('cartCleared');
     } finally {
       setBusy(false);
     }

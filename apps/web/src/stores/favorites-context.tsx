@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { appToast } from '@/lib/toast';
 
 const KEY = 'eh_store_favorites';
 
@@ -44,9 +45,15 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const isFavorite = useCallback((productId: string) => ids.includes(productId), [ids]);
 
   const toggle = useCallback((productId: string) => {
-    setIds((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [productId, ...prev],
-    );
+    setIds((prev) => {
+      const exists = prev.includes(productId);
+      if (exists) {
+        appToast.success('removedFromFavorites');
+        return prev.filter((id) => id !== productId);
+      }
+      appToast.success('addedToFavorites');
+      return [productId, ...prev];
+    });
   }, []);
 
   const remove = useCallback((productId: string) => {

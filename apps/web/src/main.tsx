@@ -2,12 +2,12 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { HelmetProvider } from 'react-helmet-async';
-import { Toaster } from 'sonner';
 import { AuthProvider } from '@/stores/auth-context';
 import { CartProvider } from '@/stores/cart-context';
 import { FavoritesProvider } from '@/stores/favorites-context';
 import { ThemeProvider } from '@/stores/theme-context';
 import { I18nProvider } from '@/i18n/i18n-context';
+import { AppToaster } from '@/components/AppToaster';
 import { AppRouter } from '@/app/router';
 import './index.css';
 
@@ -31,7 +31,7 @@ createRoot(document.getElementById('root')!).render(
               <FavoritesProvider>
                 <CartProvider>
                   <AppRouter />
-                  <Toaster richColors position="top-center" />
+                  <AppToaster />
                 </CartProvider>
               </FavoritesProvider>
             </AuthProvider>
