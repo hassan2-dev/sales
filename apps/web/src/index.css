@@ -1019,6 +1019,12 @@
   .carousel-side-btn:active {
     transform: translateY(-50%) scale(0.96);
   }
+
+  @media (max-width: 639px) {
+    .carousel-viewport {
+      padding-inline: 0.25rem;
+    }
+  }
 }
 
 /* shadcn / Sonner */

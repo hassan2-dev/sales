@@ -15,14 +15,14 @@ import { useI18n } from '@/i18n/i18n-context';
 
 function PageHero({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="relative overflow-hidden text-white">
+    <div className="relative overflow-x-clip text-white">
       <div className="absolute inset-0 hero-plane" />
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-28 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8">
-        <h1 className="reveal max-w-3xl text-4xl font-semibold tracking-tight sm:text-5xl">
+      <div className="relative mx-auto max-w-7xl px-4 pb-12 pt-24 sm:px-6 sm:pb-20 sm:pt-32 lg:px-8">
+        <h1 className="reveal max-w-3xl break-words text-3xl font-semibold tracking-tight sm:text-5xl">
           {title}
         </h1>
         {subtitle ? (
-          <p className="reveal reveal-delay-1 mt-4 max-w-xl text-base leading-relaxed text-white/60 sm:text-lg">
+          <p className="reveal reveal-delay-1 mt-4 max-w-xl text-sm leading-relaxed text-white/60 sm:text-lg">
             {subtitle}
           </p>
         ) : null}

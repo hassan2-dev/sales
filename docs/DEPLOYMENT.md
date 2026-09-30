@@ -7,7 +7,7 @@ Copy `.env.example` → `apps/api/.env` and set strong secrets:
 - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET` (≥ 32 random chars)
 - `DATABASE_URL`
 - `CORS_ORIGIN` — comma-separated list of the three frontend origins
-- S3 credentials (or local uploads volume)
+- Cloudflare R2 credentials (or leave empty for local `./uploads`)
 
 Each frontend: `VITE_API_URL` must point to the public API URL at **build** time.
 
@@ -69,6 +69,26 @@ server {
 }
 ```
 
+## Object storage (Cloudflare R2)
+
+Uploads go through `StorageService` → Cloudflare R2 when these are set in `apps/api/.env`:
+
+```env
+R2_ACCOUNT_ID=your_cloudflare_account_id
+R2_ACCESS_KEY_ID=your_r2_access_key
+R2_SECRET_ACCESS_KEY=your_r2_secret_key
+R2_BUCKET=energy-horizon
+R2_PUBLIC_URL=https://media.your-domain.com
+R2_REGION=auto
+```
+
+1. Cloudflare Dashboard → **R2** → create bucket  
+2. **Manage R2 API Tokens** → create Access Key ID + Secret  
+3. Enable a **public bucket URL** or attach a custom domain → put that in `R2_PUBLIC_URL`  
+4. Restart the API — logs should show: `Storage configured for Cloudflare R2`
+
+If `R2_ACCOUNT_ID` is empty, the API falls back to `S3_*` (MinIO/AWS) or local `./uploads`.
+
 ## Database migrations
 
 ```bash
@@ -81,7 +101,7 @@ npx prisma migrate deploy
 - [ ] Rotate JWT secrets
 - [ ] Change seed admin password
 - [ ] Enable HTTPS / TLS termination on all subdomains
-- [ ] Configure real S3/MinIO bucket + CORS
+- [ ] Configure Cloudflare R2 (`R2_ACCOUNT_ID`, keys, bucket, `R2_PUBLIC_URL`) + CORS on the public bucket/domain
 - [ ] Restrict `CORS_ORIGIN` to the three frontends + API
 - [ ] Set `NODE_ENV=production`
 - [ ] Backups for PostgreSQL

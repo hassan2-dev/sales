@@ -41,16 +41,16 @@ export function NationwideCoverage({
         aria-hidden
       />
 
-      <div className="relative mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
-        <div className="grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
-          <Reveal className="order-2 lg:order-1">
-            <div className="relative overflow-hidden rounded-xl border border-border bg-card p-4 shadow-sm sm:p-6 dark:border-white/10 dark:bg-[#0a0a0a] dark:shadow-none">
+      <div className="relative mx-auto max-w-[90rem] px-4 py-14 sm:px-6 sm:py-20 lg:px-10 lg:py-28">
+        <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
+          <Reveal className="order-2 min-w-0 lg:order-1">
+            <div className="relative overflow-hidden rounded-xl border border-border bg-card p-3 shadow-sm sm:p-6 dark:border-white/10 dark:bg-[#0a0a0a] dark:shadow-none">
               <div className="mb-3 flex items-center justify-between gap-3 px-1">
-                <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
-                  <Truck className="h-3.5 w-3.5" aria-hidden />
-                  {labels.coverageBadge}
+                <p className="inline-flex min-w-0 items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
+                  <Truck className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">{labels.coverageBadge}</span>
                 </p>
-                <p className="font-kpi text-sm text-muted dark:text-white/45">
+                <p className="max-w-[45%] truncate text-end font-kpi text-sm text-muted dark:text-white/45">
                   {activeName ?? `${total}/${total}`}
                 </p>
               </div>
@@ -69,22 +69,22 @@ export function NationwideCoverage({
             </div>
           </Reveal>
 
-          <div className="order-1 lg:order-2">
+          <div className="order-1 min-w-0 lg:order-2">
             <Reveal>
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
                 {labels.coverage}
               </p>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                 {labels.coverageTitle}
               </h2>
-              <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-muted sm:text-lg">
+              <p className="mt-5 max-w-xl text-sm font-medium leading-relaxed text-muted sm:text-lg">
                 {labels.coverageSub}
               </p>
             </Reveal>
 
-            <Reveal delay={1} className="mt-8 flex items-end gap-4">
-              <span className="font-kpi text-6xl leading-none text-accent sm:text-7xl">{total}</span>
-              <span className="pb-2 text-sm font-bold uppercase tracking-[0.18em] text-muted">
+            <Reveal delay={1} className="mt-8 flex flex-wrap items-end gap-x-4 gap-y-1">
+              <span className="font-kpi text-5xl leading-none text-accent sm:text-7xl">{total}</span>
+              <span className="pb-1 text-xs font-bold uppercase tracking-[0.18em] text-muted sm:pb-2 sm:text-sm">
                 {labels.coverageCount}
               </span>
             </Reveal>
@@ -101,7 +101,7 @@ export function NationwideCoverage({
                       onFocus={() => setHovered(g.id)}
                       onBlur={() => setHovered(null)}
                       className={cn(
-                        'coverage-chip group flex w-full items-center gap-2 rounded-lg border px-3 py-2.5 text-start transition duration-300',
+                        'coverage-chip group flex w-full min-w-0 items-center gap-1.5 rounded-lg border px-2.5 py-2.5 text-start transition duration-300 sm:gap-2 sm:px-3',
                         isHot
                           ? 'border-accent bg-accent text-white'
                           : 'border-border bg-card hover:border-accent/50 hover:bg-accent/10 dark:border-border/80',
@@ -114,7 +114,7 @@ export function NationwideCoverage({
                         )}
                         aria-hidden
                       />
-                      <span className="truncate text-sm font-bold tracking-tight">
+                      <span className="min-w-0 truncate text-xs font-bold tracking-tight sm:text-sm">
                         {locale === 'ar' ? g.nameAr : g.nameEn}
                       </span>
                     </button>

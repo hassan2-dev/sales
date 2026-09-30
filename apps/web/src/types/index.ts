@@ -50,6 +50,7 @@ export interface Product {
   category?: { id: string; name: string; slug: string } | null;
   specifications?: Record<string, unknown> | null;
   similar?: Product[];
+  variants?: Product[];
   relatedFrom?: { relatedProduct: Product }[];
 }
 
@@ -137,6 +138,7 @@ export interface CmsService {
   slug: string;
   shortDescription?: string | null;
   description?: string | null;
+  image?: string | null;
   imageUrl?: string | null;
   status?: string;
 }
@@ -147,6 +149,7 @@ export interface CmsProject {
   slug: string;
   shortDescription?: string | null;
   description?: string | null;
+  coverImage?: string | null;
   imageUrl?: string | null;
   client?: string | null;
   location?: string | null;

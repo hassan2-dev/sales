@@ -158,7 +158,7 @@ export function IraqOfficesMap({
   }
 
   return (
-    <div className="mt-12 grid items-stretch gap-6 lg:grid-cols-[1.15fr_0.85fr]" dir="ltr">
+    <div className="mt-10 grid min-w-0 items-stretch gap-6 lg:mt-12 lg:grid-cols-[1.15fr_0.85fr]" dir="ltr">
       <div className="relative overflow-hidden rounded-xl border border-border bg-card dark:border-white/10 dark:bg-black/35">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.06] dark:opacity-[0.08]"
@@ -207,7 +207,7 @@ export function IraqOfficesMap({
         </div>
       </div>
 
-      <aside className="relative flex min-h-[380px] flex-col overflow-hidden rounded-xl border border-border bg-card p-6 text-fg sm:p-8 dark:border-white/10 dark:bg-black/45 dark:text-white">
+      <aside className="relative flex min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card p-4 text-fg sm:min-h-[380px] sm:p-8 dark:border-white/10 dark:bg-black/45 dark:text-white">
         <div
           className="pointer-events-none absolute -end-16 -top-16 h-40 w-40 rounded-full bg-accent/15 blur-3xl dark:bg-accent/20"
           aria-hidden
@@ -216,27 +216,29 @@ export function IraqOfficesMap({
         {!selectedGov ? (
           <div className="flex flex-1 flex-col justify-center">
             <MapPin className="h-8 w-8 text-accent" aria-hidden />
-            <h3 className="mt-5 text-2xl font-extrabold tracking-tight">{labels.selectGov}</h3>
+            <h3 className="mt-5 text-xl font-extrabold tracking-tight sm:text-2xl">{labels.selectGov}</h3>
             <p className="mt-3 max-w-sm text-sm font-medium leading-relaxed text-muted dark:text-white/50">
               {labels.selectGovHint}
             </p>
           </div>
         ) : selectedOffice ? (
-          <div className="relative z-10 flex h-full flex-col" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
-            <div className="flex items-start justify-between gap-4">
-              <div>
+          <div className="relative z-10 flex h-full min-w-0 flex-col" dir={locale === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="flex items-start justify-between gap-3 sm:gap-4">
+              <div className="min-w-0 flex-1">
                 <p className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-accent">
-                  <MapPin className="h-3.5 w-3.5" aria-hidden />
-                  {locale === 'ar' ? selectedGov.nameAr : selectedGov.nameEn}
+                  <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="truncate">
+                    {locale === 'ar' ? selectedGov.nameAr : selectedGov.nameEn}
+                  </span>
                 </p>
-                <h3 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                <h3 className="mt-3 break-words text-xl font-extrabold tracking-tight sm:text-3xl">
                   {selectedOffice.name}
                 </h3>
                 <p className="mt-2 text-sm font-medium text-muted dark:text-white/50">
                   {[selectedOffice.city, selectedOffice.country].filter(Boolean).join(' · ')}
                 </p>
               </div>
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/10 text-accent dark:bg-accent/15">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-accent/30 bg-accent/10 text-accent sm:h-12 sm:w-12 dark:bg-accent/15">
                 <Building2 className="h-5 w-5" aria-hidden />
               </span>
             </div>
@@ -245,25 +247,25 @@ export function IraqOfficesMap({
               {selectedOffice.phone ? (
                 <a
                   href={`tel:${selectedOffice.phone.replace(/\s/g, '')}`}
-                  className="flex items-center gap-3 text-base font-bold text-accent transition hover:text-fg dark:hover:text-white"
+                  className="flex items-start gap-3 text-base font-bold text-accent transition hover:text-fg dark:hover:text-white"
                 >
-                  <Phone className="h-4 w-4 shrink-0" aria-hidden />
-                  {selectedOffice.phone}
+                  <Phone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span className="min-w-0 break-all">{selectedOffice.phone}</span>
                 </a>
               ) : null}
               {selectedOffice.email ? (
                 <a
                   href={`mailto:${selectedOffice.email}`}
-                  className="flex items-center gap-3 text-sm font-medium text-muted transition hover:text-fg dark:text-white/60 dark:hover:text-white"
+                  className="flex items-start gap-3 text-sm font-medium text-muted transition hover:text-fg dark:text-white/60 dark:hover:text-white"
                 >
-                  <Mail className="h-4 w-4 shrink-0" aria-hidden />
-                  {selectedOffice.email}
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span className="min-w-0 break-all">{selectedOffice.email}</span>
                 </a>
               ) : null}
               {selectedOffice.contactPerson ? (
-                <p className="flex items-center gap-3 text-sm font-medium text-muted dark:text-white/60">
-                  <UserRound className="h-4 w-4 shrink-0" aria-hidden />
-                  {selectedOffice.contactPerson}
+                <p className="flex items-start gap-3 text-sm font-medium text-muted dark:text-white/60">
+                  <UserRound className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span className="min-w-0 break-words">{selectedOffice.contactPerson}</span>
                 </p>
               ) : null}
             </div>

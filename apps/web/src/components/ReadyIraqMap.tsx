@@ -159,7 +159,7 @@ export function ReadyIraqMap({
       svg.style.display = 'block';
       svg.style.width = '100%';
       svg.style.height = 'auto';
-      svg.style.maxHeight = '520px';
+      svg.style.maxHeight = 'min(420px, 48vh)';
       if (!svg.getAttribute('viewBox') && svg.getAttribute('viewbox')) {
         svg.setAttribute('viewBox', svg.getAttribute('viewbox')!);
       }
@@ -179,9 +179,10 @@ export function ReadyIraqMap({
         path.style.strokeWidth = '1.25';
         path.style.strokeLinejoin = 'round';
 
-        path.addEventListener('mouseenter', () => onHoverRef.current(g.id));
-        path.addEventListener('mouseleave', () => onHoverRef.current(null));
+        path.addEventListener('pointerenter', () => onHoverRef.current(g.id));
+        path.addEventListener('pointerleave', () => onHoverRef.current(null));
         path.addEventListener('click', () => onSelectRef.current?.(g.id));
+        path.addEventListener('touchstart', () => onHoverRef.current(g.id), { passive: true });
       }
 
       paint();

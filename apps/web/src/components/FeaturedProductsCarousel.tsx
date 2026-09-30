@@ -122,7 +122,9 @@ export function FeaturedProductsCarousel({
   }, [dir, products]);
 
   function nudge(screenDir: 1 | -1) {
-    const step = (CARD_W + GAP) * screenDir;
+    const card = trackRef.current?.querySelector<HTMLElement>('[data-product-card]');
+    const cardW = card?.offsetWidth || CARD_W;
+    const step = (cardW + GAP) * screenDir;
     const from = offsetRef.current;
     const to = from + step;
     const start = performance.now();
@@ -202,21 +204,21 @@ export function FeaturedProductsCarousel({
   if (!products.length) return null;
 
   return (
-    <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
+    <section className="border-b border-line bg-page py-14 text-fg sm:py-28">
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
-        <Reveal className="mb-10 flex flex-wrap items-end justify-between gap-6">
-          <div className="max-w-2xl">
+        <Reveal className="mb-8 flex flex-col items-start gap-4 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+          <div className="max-w-2xl min-w-0">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
               {labels.mostRequested}
             </p>
-            <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl">
               {labels.featured}
             </h2>
-            <p className="mt-3 text-base font-medium text-muted">{labels.featuredSub}</p>
+            <p className="mt-3 text-sm font-medium text-muted sm:text-base">{labels.featuredSub}</p>
           </div>
           <Link
             to={storePath('products')}
-            className="btn-cta btn-cta-primary btn-shine h-11 px-5 text-sm"
+            className="btn-cta btn-cta-primary btn-shine h-11 w-full px-5 text-sm sm:w-auto"
           >
             {labels.viewCatalog}
             <ArrowUpRight className="h-4 w-4" />
@@ -233,11 +235,10 @@ export function FeaturedProductsCarousel({
             pausedRef.current = false;
           }}
         >
-          {/* Side arrows */}
           <button
             type="button"
             onClick={() => nudge(1)}
-            className="carousel-side-btn absolute start-0 top-1/2 z-20 -translate-y-1/2"
+            className="carousel-side-btn absolute start-0 top-1/2 z-20 hidden -translate-y-1/2 sm:inline-flex"
             aria-label={labels.prev}
           >
             <ChevronLeft className="h-5 w-5" />
@@ -245,13 +246,13 @@ export function FeaturedProductsCarousel({
           <button
             type="button"
             onClick={() => nudge(-1)}
-            className="carousel-side-btn absolute end-0 top-1/2 z-20 -translate-y-1/2"
+            className="carousel-side-btn absolute end-0 top-1/2 z-20 hidden -translate-y-1/2 sm:inline-flex"
             aria-label={labels.next}
           >
             <ChevronRight className="h-5 w-5" />
           </button>
 
-          <div className="carousel-viewport overflow-hidden px-12 sm:px-14">
+          <div className="carousel-viewport overflow-hidden px-1 sm:px-14">
             <div
               ref={trackRef}
               className={cn(
@@ -269,7 +270,7 @@ export function FeaturedProductsCarousel({
                 <div
                   key={`${p.id}-${i}`}
                   data-product-card
-                  className="w-[min(72vw,300px)] shrink-0 select-none sm:w-[300px]"
+                  className="w-[min(82vw,300px)] shrink-0 select-none sm:w-[300px]"
                   draggable={false}
                 >
                   <ProductCard

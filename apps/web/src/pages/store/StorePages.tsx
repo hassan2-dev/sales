@@ -710,6 +710,7 @@ export function ProductDetailPage() {
 
   const p = query.data;
   const similar = (p.similar?.length ? p.similar : similarFallback.data) ?? [];
+  const variants = p.variants ?? [];
   const line = cart?.items?.find((i) => i.productId === p.id || i.product?.id === p.id);
   const inCartQty = line?.quantity ?? 0;
   const maxStock = Math.max(1, Number(p.stock ?? 99));
@@ -718,11 +719,24 @@ export function ProductDetailPage() {
     p.images?.length ? p.images.map((i) => i.url) : p.imageUrl ? [p.imageUrl] : [];
   const specs =
     p.specifications && typeof p.specifications === 'object'
-      ? Object.entries(p.specifications)
+      ? Object.entries(p.specifications).filter(([key]) => key !== 'Variant')
       : [];
   const docs = p.documents ?? [];
+  const datasheet = docs[0];
+  const variantLabel =
+    p.specifications && typeof p.specifications === 'object'
+      ? String((p.specifications as Record<string, unknown>).Variant ?? '')
+      : '';
   const fav = isFavorite(p.id);
   const compared = isCompared(p.id);
+
+  function variantName(item: typeof p) {
+    const label =
+      item.specifications && typeof item.specifications === 'object'
+        ? String((item.specifications as Record<string, unknown>).Variant ?? '')
+        : '';
+    return label || item.name;
+  }
 
   return (
     <>
@@ -810,6 +824,44 @@ export function ProductDetailPage() {
               {p.shortDescription || p.description}
             </p>
 
+            {variants.length > 1 ? (
+              <div className="mt-6">
+                <p className="text-sm font-bold text-fg">
+                  {locale === 'ar' ? 'الخيار / القسم' : 'Variant / Category option'}
+                  {p.category ? (
+                    <span className="ms-2 font-medium text-muted">
+                      · {p.category.name}
+                    </span>
+                  ) : null}
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {variants.map((v) => {
+                    const active = v.id === p.id;
+                    return (
+                      <Link
+                        key={v.id}
+                        to={storePath(`products/${v.slug}`)}
+                        className={cn(
+                          'inline-flex min-h-10 items-center rounded-xl border px-3 py-2 text-sm font-semibold transition',
+                          active
+                            ? 'border-accent bg-accent/10 text-accent'
+                            : 'border-border bg-card text-fg hover:border-accent hover:text-accent',
+                        )}
+                      >
+                        {variantName(v)}
+                      </Link>
+                    );
+                  })}
+                </div>
+                {variantLabel ? (
+                  <p className="mt-2 text-xs text-muted">
+                    {locale === 'ar' ? 'الخيار الحالي:' : 'Selected:'}{' '}
+                    <span className="font-semibold text-fg">{variantLabel}</span>
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               {inCartQty > 0 && line ? (
                 <div className="flex h-11 w-full items-center justify-center rounded-xl border border-border bg-page px-1 sm:w-auto">
@@ -873,6 +925,19 @@ export function ProductDetailPage() {
                   {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
                 </Button>
               </Link>
+              {datasheet ? (
+                <a
+                  href={datasheet.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto"
+                >
+                  <Button variant="outline" className="h-11 w-full rounded-xl sm:w-auto">
+                    <FileText className="h-4 w-4" />
+                    {locale === 'ar' ? 'تحميل شيت المنتج' : 'Download datasheet'}
+                  </Button>
+                </a>
+              ) : null}
             </div>
 
             <div className="mt-4 flex flex-wrap gap-2">
@@ -953,7 +1018,7 @@ export function ProductDetailPage() {
 
             <div className="store-surface p-5">
               <h2 className="text-lg font-bold text-fg">
-                {locale === 'ar' ? 'المستندات الفنية' : 'Technical documents'}
+                {locale === 'ar' ? 'شيت المنتج / المستندات' : 'Product sheet / Documents'}
               </h2>
               {docs.length ? (
                 <ul className="mt-3 space-y-2">

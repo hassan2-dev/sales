@@ -226,30 +226,34 @@ export class ProductsService {
       .map((r) => r.relatedProduct)
       .filter((p) => p && (p as { status?: ProductStatus }).status === ProductStatus.ACTIVE);
 
-    const excludeIds = [product.id, ...related.map((p) => p.id)];
-    const similarFromCategory = product.categoryId
+    const categoryProductInclude = {
+      brand: true,
+      category: true,
+      images: {
+        orderBy: [{ isPrimary: 'desc' as const }, { sortOrder: 'asc' as const }],
+        take: 1,
+      },
+    };
+
+    const categoryVariants = product.categoryId
       ? await this.prisma.product.findMany({
           where: {
             status: ProductStatus.ACTIVE,
             categoryId: product.categoryId,
-            id: { notIn: excludeIds },
           },
-          take: Math.max(0, 8 - related.length),
-          orderBy: [{ featured: 'desc' }, { createdAt: 'desc' }],
-          include: {
-            brand: true,
-            category: true,
-            images: {
-              orderBy: [{ isPrimary: 'desc' }, { sortOrder: 'asc' }],
-              take: 1,
-            },
-          },
+          orderBy: [{ featured: 'desc' }, { name: 'asc' }],
+          include: categoryProductInclude,
         })
       : [];
 
+    const excludeIds = [product.id, ...related.map((p) => p.id)];
+    const similarFromCategory = categoryVariants
+      .filter((p) => !excludeIds.includes(p.id))
+      .slice(0, Math.max(0, 8 - related.length));
+
     const similar = [...related, ...similarFromCategory].slice(0, 8);
 
-    return { ...product, similar };
+    return { ...product, similar, variants: categoryVariants };
   }
 
   async findOne(id: string) {

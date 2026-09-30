@@ -28,10 +28,10 @@ export function PartnersSection({
     <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
         <Reveal className="max-w-2xl">
-          <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+          <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
             {labels.partners}
           </h2>
-          <p className="mt-5 text-base font-medium leading-relaxed text-muted sm:text-lg">
+          <p className="mt-5 text-sm font-medium leading-relaxed text-muted sm:text-lg">
             {labels.partnersSub}
           </p>
         </Reveal>

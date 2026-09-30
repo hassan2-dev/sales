@@ -203,13 +203,13 @@ export function HomePage() {
       {/* About / capabilities */}
       <section className="border-b border-line bg-page py-16 text-fg sm:py-28">
         <div className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:gap-12 sm:px-6 sm:py-0 lg:grid-cols-2 lg:gap-16 lg:px-10">
-          <Reveal variant="left" className="relative mb-6 sm:mb-0">
+          <Reveal variant="left" className="relative mb-10 pb-12 sm:mb-0 sm:pb-8">
             <img
               src={ABOUT_IMG}
               alt=""
               className="aspect-4/3 w-full rounded-2xl object-cover shadow-lg"
             />
-            <div className="absolute -bottom-4 inset-x-4 flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-white shadow-lg sm:-bottom-5 sm:inset-x-auto sm:start-8 sm:px-5 sm:py-4">
+            <div className="absolute inset-x-3 -bottom-5 flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-white shadow-lg sm:inset-x-auto sm:start-8 sm:px-5 sm:py-4">
               <HardHat className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" aria-hidden />
               <div className="min-w-0">
                 <p className="font-kpi text-2xl font-extrabold leading-none sm:text-3xl">
@@ -221,11 +221,11 @@ export function HomePage() {
               </div>
             </div>
           </Reveal>
-          <Reveal variant="right" delay={1} className="lg:ps-4">
+          <Reveal variant="right" delay={1} className="min-w-0 lg:ps-4">
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
               {t.home.valuesTitle}
             </p>
-            <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
               {t.home.capabilities}
             </h2>
             <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-muted sm:text-lg">
@@ -240,14 +240,14 @@ export function HomePage() {
       </section>
 
       {/* Services — top 4 */}
-      <section className="border-b border-line bg-page py-20 text-fg sm:py-28">
+      <section className="border-b border-line bg-page py-14 text-fg sm:py-28">
         <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
-          <Reveal className="mb-12 flex flex-wrap items-end justify-between gap-6">
-            <div className="max-w-2xl">
+          <Reveal className="mb-8 flex flex-col items-start gap-4 sm:mb-12 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+            <div className="max-w-2xl min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
                 {t.home.services}
               </p>
-              <h2 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                 {t.home.servicesSub}
               </h2>
             </div>
@@ -270,11 +270,11 @@ export function HomePage() {
                 <Reveal key={s.id} delay={i}>
                   <Link
                     to={`/services/${s.slug}`}
-                    className="service-card group relative flex h-full min-h-[300px] flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-6 sm:min-h-[340px] sm:p-7"
+                    className="service-card group relative flex h-full min-h-[240px] flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-5 sm:min-h-[340px] sm:p-7"
                   >
-                    {s.imageUrl ? (
+                    {s.imageUrl || s.image ? (
                       <img
-                        src={s.imageUrl}
+                        src={s.imageUrl || s.image || ''}
                         alt=""
                         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-[0.18]"
                       />
@@ -381,7 +381,7 @@ export function HomePage() {
         <div className="absolute inset-0 bg-[#0a0a0a]/85" />
         <div className="relative mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-24">
           <Reveal>
-            <h2 className="max-w-lg text-3xl font-extrabold tracking-tight sm:text-4xl">
+            <h2 className="max-w-lg text-2xl font-extrabold tracking-tight sm:text-4xl">
               {t.home.statsTitle}
             </h2>
           </Reveal>
@@ -417,7 +417,7 @@ export function HomePage() {
       !(brands.data?.length || clientNames.length) ? (
         <section className="border-b border-line bg-page px-4 py-16 text-fg">
           <div className="mx-auto max-w-[90rem]">
-            <h2 className="text-3xl font-extrabold tracking-tight">{t.home.partners}</h2>
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{t.home.partners}</h2>
             <EmptyState
               title={locale === 'ar' ? 'لا يوجد شركاء بعد' : 'No partners yet'}
               description={
@@ -430,13 +430,13 @@ export function HomePage() {
         </section>
       ) : null}
 
-      <section className="border-b border-line bg-page px-4 py-20 text-fg sm:px-6 lg:px-10 lg:py-28">
+      <section className="border-b border-line bg-page px-4 py-14 text-fg sm:px-6 sm:py-20 lg:px-10 lg:py-28">
         <div className="mx-auto max-w-[90rem]">
           <Reveal>
             <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">{t.home.news}</p>
           </Reveal>
           {news.isLoading ? <LoadingState variant="cards" /> : null}
-          <div className="mt-10 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-3">
             {newsItems.map((n, i) => (
               <Reveal key={n.id} delay={i}>
                 <Link to={`/news/${n.slug}`} className="block">
@@ -494,17 +494,17 @@ export function HomePage() {
         />
 
         <div className="relative mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-28">
-          <Reveal className="flex flex-wrap items-end justify-between gap-6">
-            <div className="max-w-xl">
+          <Reveal className="flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+            <div className="max-w-xl min-w-0">
               <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
                 {t.home.offices}
               </p>
-              <h2 className="mt-4 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
                 {t.home.officesSub}
               </h2>
             </div>
             <div className="flex items-end gap-3">
-              <span className="font-kpi text-6xl leading-none text-accent/40 sm:text-7xl dark:text-accent/35">
+              <span className="font-kpi text-5xl leading-none text-accent/40 sm:text-7xl dark:text-accent/35">
                 {String((offices.data ?? []).length || 0).padStart(2, '0')}
               </span>
               <span className="pb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
