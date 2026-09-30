@@ -37,12 +37,13 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLocale(locale === 'en' ? 'ar' : 'en');
   }, [locale, setLocale]);
 
-  const dir: 'ltr' | 'rtl' = locale === 'ar' ? 'rtl' : 'ltr';
+  const dir: 'ltr' | 'rtl' = 'rtl';
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    document.documentElement.dir = dir;
-  }, [locale, dir]);
+    // Keep layout RTL always so language toggle only changes text (no left/right jump).
+    document.documentElement.dir = 'rtl';
+  }, [locale]);
 
   const value = useMemo(
     () => ({

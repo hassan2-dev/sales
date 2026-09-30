@@ -332,7 +332,10 @@ export function StoreLayout() {
       <footer className="mt-auto border-t border-white/10 bg-navy pb-[env(safe-area-inset-bottom)] text-white">
         <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10">
           <div>
-            <Logo to="/" imgClassName="h-9 brightness-0 invert" />
+            <Logo
+              to={storePath()}
+              imgClassName="h-12 max-w-[180px] sm:h-14 sm:max-w-[200px]"
+            />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
               {locale === 'ar'
                 ? 'متجر افاق الطاقة — منصة B2B لمعدات النفط والغاز والصناعة في العراق.'
