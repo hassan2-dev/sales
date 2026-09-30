@@ -1,300 +1,380 @@
 import { Link } from 'react-router-dom';
-import { useQueries, useQuery } from '@tanstack/react-query';
-import { ArrowLeft, ArrowRight, Heart, Package, ShieldCheck, Truck } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import {
+  ArrowLeft,
+  ArrowRight,
+  BadgeCheck,
+  Headphones,
+  Package,
+  ShieldCheck,
+  Truck,
+} from 'lucide-react';
 import { Seo } from '@/lib/seo';
-import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
 import { LoadingState, EmptyState } from '@/components/ui/States';
 import { ProductCard } from '@/components/ProductCard';
-import { ProductSection } from '@/components/ProductSection';
-import { Reveal } from '@/components/Reveal';
 import { catalogApi } from '@/services/endpoints';
-import { useFavorites } from '@/stores/favorites-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
-import type { Product } from '@/types';
+import { cn } from '@/lib/cn';
 
-const BANNER_IMG =
-  'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=2400&q=80';
+function SectionHead({
+  title,
+  subtitle,
+  to,
+  linkLabel,
+}: {
+  title: string;
+  subtitle?: string;
+  to?: string;
+  linkLabel?: string;
+}) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h2 className="text-xl font-bold tracking-tight text-fg sm:text-2xl">{title}</h2>
+        {subtitle ? <p className="mt-1 text-sm text-muted">{subtitle}</p> : null}
+      </div>
+      {to ? (
+        <Link
+          to={to}
+          className="inline-flex items-center gap-1 text-sm font-semibold text-accent hover:text-accent-soft"
+        >
+          {linkLabel}
+          <ArrowLeft className="h-3.5 w-3.5 rtl:hidden" />
+          <ArrowRight className="hidden h-3.5 w-3.5 rtl:inline" />
+        </Link>
+      ) : null}
+    </div>
+  );
+}
 
 export function StoreHomePage() {
-  const { locale, dir } = useI18n();
-  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
-  const { ids: favIds } = useFavorites();
+  const { locale } = useI18n();
+  const Arrow = locale === 'ar' ? ArrowLeft : ArrowRight;
 
-  const bestsellers = useQuery({
-    queryKey: ['store-bestsellers'],
-    queryFn: async () =>
-      (await catalogApi.products({ sortBy: 'bestsellers', limit: 8 })).data,
-  });
-  const newest = useQuery({
-    queryKey: ['store-newest'],
-    queryFn: async () =>
-      (await catalogApi.products({ sortBy: 'createdAt', sortOrder: 'desc', limit: 8 })).data,
-  });
-  const featured = useQuery({
-    queryKey: ['store-featured'],
-    queryFn: async () => (await catalogApi.products({ featured: true, limit: 8 })).data,
-  });
   const categories = useQuery({
     queryKey: ['store-categories'],
     queryFn: async () => (await catalogApi.categories()).data,
   });
-
-  const favQueries = useQueries({
-    queries: favIds.slice(0, 8).map((id) => ({
-      queryKey: ['store-fav-product', id],
-      queryFn: async () => (await catalogApi.productById(id)).data as Product,
-      staleTime: 60_000,
-    })),
+  const brands = useQuery({
+    queryKey: ['store-brands'],
+    queryFn: async () => (await catalogApi.brands()).data,
   });
-  const favoriteProducts = favQueries
-    .map((q) => q.data)
-    .filter((p): p is Product => Boolean(p));
+  const newest = useQuery({
+    queryKey: ['store-home-newest'],
+    queryFn: async () =>
+      (await catalogApi.products({ sortBy: 'createdAt', sortOrder: 'desc', limit: 10 })).data,
+  });
+  const bestsellers = useQuery({
+    queryKey: ['store-home-bestsellers'],
+    queryFn: async () =>
+      (await catalogApi.products({ sortBy: 'bestsellers', sortOrder: 'desc', limit: 10 })).data,
+  });
 
-  const copy = {
-    eyebrow: locale === 'ar' ? 'متجر افاق الطاقة' : 'Energy Horizon Store',
-    title:
-      locale === 'ar'
-        ? 'معدات صناعية جاهزة للموقع'
-        : 'Field-ready industrial equipment',
-    sub:
-      locale === 'ar'
-        ? 'كتالوج حيّ — أقسام، الأكثر مبيعاً، والجديد. للطلب عبر حسابي الموثّق.'
-        : 'Live catalog — categories, bestsellers, and new arrivals. Order via verified My account.',
-    shop: locale === 'ar' ? 'تصفح المنتجات' : 'Shop products',
-    account: locale === 'ar' ? 'حسابي' : 'My account',
-    favorites: locale === 'ar' ? 'المفضلة' : 'Favorites',
-    cats: locale === 'ar' ? 'الأقسام' : 'Categories',
-    catsSub:
-      locale === 'ar'
-        ? 'اختر التصنيف المناسب لمشروعك'
-        : 'Pick the right category for your project',
-    all: locale === 'ar' ? 'عرض الكل' : 'View all',
-    favTitle: locale === 'ar' ? 'مفضلتك' : 'Your favorites',
-    favSub:
-      locale === 'ar'
-        ? 'احفظ ما تحتاجه وارجع له بسرعة'
-        : 'Save what you need and come back fast',
-    trust1: locale === 'ar' ? 'مخزون حيّ' : 'Live stock',
-    trust1s: locale === 'ar' ? 'أسعار وكميات من الخادم' : 'Server-side prices & qty',
-    trust2: locale === 'ar' ? 'توريد ميداني' : 'Field supply',
-    trust2s: locale === 'ar' ? 'دعم مواقع النفط والغاز' : 'Oil & gas site support',
-    trust3: locale === 'ar' ? 'حسابي موثّق' : 'Verified My account',
-    trust3s: locale === 'ar' ? 'اسم + هاتف + OTP' : 'Name + phone + OTP',
-  };
+  const cats = categories.data ?? [];
+  const brandList = brands.data ?? [];
 
   return (
     <>
-      <Seo title={locale === 'ar' ? 'المتجر' : 'Store'} path={storePath()} />
+      <Seo title={locale === 'ar' ? 'متجر افاق الطاقة' : 'Energy Horizon Store'} path={storePath()} />
 
-      <section className="relative min-h-[min(78svh,42rem)] overflow-hidden text-white">
-        <img src={BANNER_IMG} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-black/35 rtl:bg-gradient-to-l" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_30%_20%,rgb(0_112_192/0.35),transparent_55%)]" />
-
-        <div className="relative mx-auto flex min-h-[min(78svh,42rem)] max-w-[90rem] flex-col justify-end px-4 pb-16 pt-28 sm:px-6 sm:pb-20 lg:px-10">
-          <Reveal>
-            <Badge className="w-fit rounded-md border-0 bg-accent/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-accent hover:bg-accent/20">
-              {copy.eyebrow}
-            </Badge>
-            <h1 className="mt-5 max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-              {copy.title}
-            </h1>
-            <p className="mt-5 max-w-xl text-base font-medium leading-relaxed text-white/70 sm:text-lg">
-              {copy.sub}
+      {/* Hero banner — full bleed store style */}
+      <section className="relative overflow-hidden border-b border-border bg-[#05080c] text-white">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-40"
+          style={{
+            backgroundImage:
+              'radial-gradient(ellipse 80% 60% at 70% 40%, rgb(0 112 192 / 0.45), transparent 55%), linear-gradient(135deg, #05080c 0%, #0a1520 45%, #071018 100%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgb(255 255 255 / 0.08) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.08) 1px, transparent 1px)',
+            backgroundSize: '48px 48px',
+          }}
+        />
+        <div className="relative mx-auto grid max-w-[90rem] gap-8 px-4 py-14 sm:px-6 sm:py-16 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:px-10 lg:py-20">
+          <div className="reveal">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
+              Energy Horizon Store
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Link to={storePath('products')} className="btn-cta btn-cta-primary btn-shine">
-                {copy.shop}
+            <h1 className="mt-3 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+              {locale === 'ar' ? 'متجر المعدات الصناعية' : 'Industrial equipment store'}
+            </h1>
+            <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/65 sm:text-base">
+              {locale === 'ar'
+                ? 'تصفّح الأقسام، أضف للسلة، واطلب بحساب موثّق — كتالوج حي لمشاريع الطاقة والمقاولات.'
+                : 'Browse categories, add to cart, and order with a verified account — live catalog for energy and contracting projects.'}
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Link
+                to={storePath('products')}
+                className="inline-flex h-11 items-center gap-2 rounded-lg bg-accent px-5 text-sm font-bold text-white hover:bg-accent-soft"
+              >
+                {locale === 'ar' ? 'تسوق المنتجات' : 'Shop products'}
                 <Arrow className="h-4 w-4" />
               </Link>
               <Link
-                to={`${storePath('products')}?sort=bestsellers`}
-                className="inline-flex h-12 items-center gap-2 rounded-xl border border-accent/50 bg-accent/20 px-5 text-sm font-extrabold text-white backdrop-blur-sm transition hover:bg-accent"
+                to={storePath('categories')}
+                className="inline-flex h-11 items-center rounded-lg border border-white/20 px-5 text-sm font-semibold text-white hover:bg-white/10"
               >
-                {locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
+                {locale === 'ar' ? 'تصفح الأقسام' : 'Browse categories'}
               </Link>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 reveal reveal-delay-1">
+            {[
+              {
+                to: storePath('products') + '?sort=newest',
+                title: locale === 'ar' ? 'منتجات جديدة' : 'New arrivals',
+                sub: locale === 'ar' ? 'أحدث الإضافات' : 'Latest stock',
+              },
+              {
+                to: storePath('products') + '?sort=bestsellers',
+                title: locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers',
+                sub: locale === 'ar' ? 'طلب المشاريع' : 'Project picks',
+              },
+              {
+                to: storePath('categories'),
+                title: locale === 'ar' ? 'الأقسام' : 'Categories',
+                sub: locale === 'ar' ? `${cats.length || '—'} قسم` : `${cats.length || '—'} groups`,
+              },
+              {
+                to: storePath('account/login'),
+                title: locale === 'ar' ? 'حسابي' : 'My account',
+                sub: locale === 'ar' ? 'OTP سريع' : 'Fast OTP',
+              },
+            ].map((tile) => (
               <Link
-                to={storePath('account/login')}
-                className="inline-flex h-12 items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 text-sm font-semibold text-white backdrop-blur-sm transition hover:border-accent hover:bg-accent"
+                key={tile.to + tile.title}
+                to={tile.to}
+                className="rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm transition hover:border-accent/50 hover:bg-accent/10"
               >
-                {copy.account}
+                <p className="text-sm font-bold text-white">{tile.title}</p>
+                <p className="mt-1 text-xs text-white/45">{tile.sub}</p>
               </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      <section className="border-b border-line bg-elevated">
-        <div className="mx-auto grid max-w-[90rem] gap-px bg-[var(--border)] sm:grid-cols-3">
-          {[
-            { icon: Package, t: copy.trust1, s: copy.trust1s },
-            { icon: Truck, t: copy.trust2, s: copy.trust2s },
-            { icon: ShieldCheck, t: copy.trust3, s: copy.trust3s },
-          ].map((item) => (
-            <div key={item.t} className="flex items-start gap-4 bg-page px-5 py-6 sm:px-8">
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-accent/25 bg-accent/10 text-accent">
-                <item.icon className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-bold text-fg">{item.t}</p>
-                <p className="mt-1 text-sm text-muted">{item.s}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="mx-auto max-w-[90rem] space-y-20 px-4 py-16 sm:px-6 lg:px-10 lg:py-24">
-        <section>
-          <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-                {copy.cats}
-              </p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-                {copy.catsSub}
-              </h2>
-            </div>
-            <Link
-              to={storePath('categories')}
-              className="group inline-flex items-center gap-2 text-sm font-bold text-accent transition hover:gap-3"
-            >
-              {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
-              <Arrow className="h-4 w-4" />
-            </Link>
-          </Reveal>
-
-          {categories.isLoading ? <LoadingState variant="cards" /> : null}
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {(categories.data ?? []).slice(0, 8).map((c, i) => (
-              <Reveal key={c.id} delay={i % 4}>
-                <Link
-                  to={storePath(`categories/${c.slug}`)}
-                  className="group relative flex min-h-[9.5rem] flex-col justify-end overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[0_20px_40px_-28px_rgb(0_112_192/0.5)]"
-                >
-                  {c.imageUrl ? (
-                    <img
-                      src={c.imageUrl}
-                      alt=""
-                      className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-20"
-                    />
-                  ) : (
-                    <div
-                      className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-accent/10 blur-2xl transition group-hover:bg-accent/25"
-                      aria-hidden
-                    />
-                  )}
-                  <span className="relative font-kpi text-3xl text-accent/30 transition group-hover:text-accent/60">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  <p className="relative mt-3 text-lg font-extrabold tracking-tight text-fg">
-                    {c.name}
-                  </p>
-                  {c.description ? (
-                    <p className="relative mt-1 line-clamp-2 text-sm text-muted">{c.description}</p>
-                  ) : null}
-                </Link>
-              </Reveal>
             ))}
           </div>
-          {!categories.isLoading && !(categories.data ?? []).length ? (
-            <EmptyState title={locale === 'ar' ? 'لا توجد تصنيفات' : 'No categories yet'} />
+        </div>
+      </section>
+
+      {/* Wide promo strip under hero */}
+      <section className="border-b border-border bg-accent">
+        <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-white sm:px-6 lg:px-10">
+          <span>
+            {locale === 'ar'
+              ? 'عروض المشاريع: اطلب عبر السلة بعد توثيق الحساب'
+              : 'Project orders: checkout from cart after account verification'}
+          </span>
+          <Link
+            to={storePath('products')}
+            className="inline-flex items-center gap-1 rounded-md bg-black/20 px-3 py-1.5 text-xs font-bold hover:bg-black/30"
+          >
+            {locale === 'ar' ? 'ابدأ التسوق' : 'Start shopping'}
+            <Arrow className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </section>
+
+      <div className="mx-auto w-full max-w-[90rem] space-y-14 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
+        {/* Categories */}
+        <section>
+          <SectionHead
+            title={locale === 'ar' ? 'الأقسام' : 'Categories'}
+            subtitle={
+              locale === 'ar'
+                ? 'اختر القسم المناسب لمعدات مشروعك'
+                : 'Pick the right category for your project gear'
+            }
+            to={storePath('categories')}
+            linkLabel={locale === 'ar' ? 'كل الأقسام' : 'All categories'}
+          />
+          {categories.isLoading ? <LoadingState variant="cards" /> : null}
+          <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {cats.map((c, i) => (
+              <Link
+                key={c.id}
+                to={storePath(`categories/${c.slug}`)}
+                className={cn(
+                  'group relative flex min-h-[9.5rem] flex-col justify-end overflow-hidden rounded-xl border border-border bg-card p-4 transition hover:border-accent',
+                )}
+              >
+                {c.imageUrl ? (
+                  <img
+                    src={c.imageUrl}
+                    alt=""
+                    className="absolute inset-0 h-full w-full object-cover opacity-25 transition duration-500 group-hover:scale-105 group-hover:opacity-40"
+                  />
+                ) : (
+                  <div
+                    className="absolute inset-0 bg-gradient-to-br from-accent/15 via-transparent to-transparent"
+                    aria-hidden
+                  />
+                )}
+                <span className="relative text-[11px] font-bold tabular-nums text-accent/70">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <p className="relative mt-1 text-base font-bold text-fg group-hover:text-accent">
+                  {c.name}
+                </p>
+                {c.description ? (
+                  <p className="relative mt-0.5 line-clamp-2 text-xs text-muted">{c.description}</p>
+                ) : null}
+              </Link>
+            ))}
+          </div>
+          {!categories.isLoading && !cats.length ? (
+            <EmptyState title={locale === 'ar' ? 'لا توجد أقسام' : 'No categories'} />
           ) : null}
         </section>
 
-        <ProductSection
-          eyebrow={locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
-          title={
-            locale === 'ar' ? 'المنتجات الأعلى طلباً' : 'Most ordered products'
-          }
-          products={bestsellers.data?.data}
-          loading={bestsellers.isLoading}
-          error={bestsellers.isError}
-          onRetry={() => void bestsellers.refetch()}
-          emptyTitle={locale === 'ar' ? 'لا توجد مبيعات بعد' : 'No sales yet'}
-          viewAllTo={`${storePath('products')}?sort=bestsellers`}
-          viewAllLabel={copy.all}
-          badge={locale === 'ar' ? 'مبيعات' : 'Top'}
-        />
-
-        <ProductSection
-          eyebrow={locale === 'ar' ? 'وصل حديثاً' : 'New arrivals'}
-          title={locale === 'ar' ? 'المنتجات الجديدة' : 'Newest products'}
-          products={newest.data?.data}
-          loading={newest.isLoading}
-          error={newest.isError}
-          onRetry={() => void newest.refetch()}
-          emptyTitle={locale === 'ar' ? 'لا توجد منتجات جديدة' : 'No new products'}
-          viewAllTo={`${storePath('products')}?sort=newest`}
-          viewAllLabel={copy.all}
-          badge={locale === 'ar' ? 'جديد' : 'New'}
-        />
-
-        {(featured.data?.data?.length ?? 0) > 0 ? (
-          <ProductSection
-            eyebrow={locale === 'ar' ? 'مميز' : 'Featured'}
-            title={locale === 'ar' ? 'منتجات مميزة' : 'Featured picks'}
-            products={featured.data?.data}
-            loading={featured.isLoading}
-            viewAllTo={storePath('products')}
-            viewAllLabel={copy.all}
-            badge={locale === 'ar' ? 'مميز' : 'Featured'}
-          />
-        ) : null}
-
-        <section className="rounded-3xl border border-border bg-elevated p-6 sm:p-8 lg:p-10">
-          <Reveal className="mb-8 flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-                {copy.favTitle}
-              </p>
-              <h2 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl">
-                {copy.favSub}
-              </h2>
-            </div>
-            <Link
-              to={storePath('favorites')}
-              className="group inline-flex items-center gap-2 text-sm font-bold text-accent transition hover:gap-3"
-            >
-              {copy.favorites}
-              <Arrow className="h-4 w-4" />
-            </Link>
-          </Reveal>
-
-          {favIds.length === 0 ? (
-            <EmptyState
-              title={locale === 'ar' ? 'المفضلة فارغة' : 'No favorites yet'}
-              description={
-                locale === 'ar'
-                  ? 'اضغط القلب على أي منتج لحفظه هنا'
-                  : 'Tap the heart on any product to save it here'
+        {/* Brands */}
+        {brandList.length > 0 ? (
+          <section>
+            <SectionHead
+              title={locale === 'ar' ? 'البراندات' : 'Brands'}
+              subtitle={
+                locale === 'ar' ? 'علامات صناعية موثوقة' : 'Trusted industrial brands'
               }
-              action={{
-                label: copy.shop,
-                onClick: () => {
-                  window.location.assign(storePath('products'));
-                },
-              }}
             />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {favoriteProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
+            <div className="flex gap-3 overflow-x-auto pb-1">
+              {brandList.map((b) => (
+                <Link
+                  key={b.id}
+                  to={storePath(`brands/${b.slug}`)}
+                  className="flex h-20 w-36 shrink-0 items-center justify-center rounded-xl border border-border bg-card px-3 text-center transition hover:border-accent"
+                >
+                  {b.logo ? (
+                    <img src={b.logo} alt={b.name} className="max-h-10 max-w-full object-contain" />
+                  ) : (
+                    <span className="text-sm font-bold text-fg">{b.name}</span>
+                  )}
+                </Link>
               ))}
             </div>
-          )}
+          </section>
+        ) : null}
+
+        {/* New products */}
+        <section>
+          <SectionHead
+            title={locale === 'ar' ? 'منتجات جديدة' : 'New arrivals'}
+            subtitle={
+              locale === 'ar' ? 'آخر ما أُضيف للكتالوج' : 'Latest additions to the catalog'
+            }
+            to={storePath('products') + '?sort=newest'}
+            linkLabel={locale === 'ar' ? 'عرض الكل' : 'View all'}
+          />
+          {newest.isLoading ? <LoadingState variant="products" /> : null}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {(newest.data?.data ?? []).map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                badge={locale === 'ar' ? 'جديد' : 'New'}
+              />
+            ))}
+          </div>
+          {!newest.isLoading && !(newest.data?.data ?? []).length ? (
+            <EmptyState title={locale === 'ar' ? 'لا توجد منتجات' : 'No products'} />
+          ) : null}
         </section>
 
-        <div className="flex justify-center">
-          <Link to={storePath('products')}>
-            <Button size="lg" className="rounded-xl px-8">
-              <Heart className="h-4 w-4" />
-              {copy.all}
-            </Button>
-          </Link>
-        </div>
+        {/* Bestsellers */}
+        <section>
+          <SectionHead
+            title={locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
+            subtitle={
+              locale === 'ar' ? 'الأكثر طلباً من المشاريع' : 'Most ordered by projects'
+            }
+            to={storePath('products') + '?sort=bestsellers'}
+            linkLabel={locale === 'ar' ? 'عرض الكل' : 'View all'}
+          />
+          {bestsellers.isLoading ? <LoadingState variant="products" /> : null}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {(bestsellers.data?.data ?? []).map((p, i) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                index={i}
+                badge={locale === 'ar' ? 'مبيعات' : 'Top'}
+              />
+            ))}
+          </div>
+        </section>
+
+        {/* Trust strip */}
+        <section className="grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4 lg:p-5">
+          {[
+            {
+              icon: Truck,
+              title: locale === 'ar' ? 'توريد للمشاريع' : 'Project supply',
+              text: locale === 'ar' ? 'طلب منظم من السلة' : 'Organized cart checkout',
+            },
+            {
+              icon: ShieldCheck,
+              title: locale === 'ar' ? 'حساب موثّق' : 'Verified account',
+              text: locale === 'ar' ? 'OTP بالهاتف' : 'Phone OTP',
+            },
+            {
+              icon: Package,
+              title: locale === 'ar' ? 'كتالوج حي' : 'Live catalog',
+              text: locale === 'ar' ? 'مخزون محدّث' : 'Updated stock',
+            },
+            {
+              icon: Headphones,
+              title: locale === 'ar' ? 'دعم فني' : 'Support',
+              text: locale === 'ar' ? 'للاستفسارات الصناعية' : 'For industrial inquiries',
+            },
+          ].map((f) => (
+            <div key={f.title} className="flex items-start gap-3 rounded-xl p-2">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <f.icon className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-fg">{f.title}</p>
+                <p className="mt-0.5 text-xs text-muted">{f.text}</p>
+              </div>
+            </div>
+          ))}
+        </section>
+
+        {/* CTA band */}
+        <section className="overflow-hidden rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/15 via-card to-card p-6 sm:p-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-start gap-3">
+              <BadgeCheck className="mt-0.5 h-6 w-6 text-accent" />
+              <div>
+                <h3 className="text-lg font-bold text-fg">
+                  {locale === 'ar' ? 'جاهز للطلب؟' : 'Ready to order?'}
+                </h3>
+                <p className="mt-1 max-w-md text-sm text-muted">
+                  {locale === 'ar'
+                    ? 'أضف المنتجات للسلة وسجّل حسابك بالاسم ورقم الهاتف لإتمام الطلب.'
+                    : 'Add products to cart and register with name + phone to complete the order.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to={storePath('cart')}
+                className="inline-flex h-10 items-center rounded-lg bg-accent px-4 text-sm font-bold text-white hover:bg-accent-soft"
+              >
+                {locale === 'ar' ? 'السلة' : 'Cart'}
+              </Link>
+              <Link
+                to={storePath('account/login')}
+                className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm font-semibold hover:border-accent hover:text-accent"
+              >
+                {locale === 'ar' ? 'حسابي' : 'Account'}
+              </Link>
+            </div>
+          </div>
+        </section>
       </div>
     </>
   );

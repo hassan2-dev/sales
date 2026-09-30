@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Seo } from '@/lib/seo';
-import { appToast } from '@/lib/toast';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { Select } from '@/components/ui/Select';
 import { LoadingState, EmptyState, ErrorState, Pagination } from '@/components/ui/States';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -31,6 +25,11 @@ import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { saveStoreOrder } from '@/lib/store-orders';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Button } from '@/components/ui/Button';
+import { Seo } from '@/lib/seo';
+import { appToast } from '@/lib/toast';
 
 export function StoreProductsPage() {
   const { locale } = useI18n();
@@ -38,130 +37,310 @@ export function StoreProductsPage() {
   const page = Number(params.get('page') || 1);
   const search = params.get('q') || '';
   const sort = params.get('sort') || 'newest';
+  const categorySlug = params.get('category') || '';
   const [q, setQ] = useState(search);
 
+  useEffect(() => {
+    setQ(search);
+  }, [search]);
+
   const sortBy =
-    sort === 'bestsellers' ? 'bestsellers' : sort === 'price' ? 'price' : 'createdAt';
-  const sortOrder = sort === 'price' ? 'asc' : 'desc';
+    sort === 'bestsellers'
+      ? 'bestsellers'
+      : sort === 'price-low' || sort === 'price'
+        ? 'price'
+        : sort === 'name'
+          ? 'name'
+          : 'createdAt';
+  const sortOrder =
+    sort === 'price-low' || sort === 'price' || sort === 'name' ? 'asc' : 'desc';
+
+  const categories = useQuery({
+    queryKey: ['store-categories'],
+    queryFn: async () => (await catalogApi.categories()).data,
+  });
 
   const query = useQuery({
-    queryKey: ['store-products', page, search, sort],
+    queryKey: ['store-products', page, search, sort, categorySlug],
     queryFn: async () =>
       (
         await catalogApi.products({
           page,
-          limit: 12,
+          limit: 16,
           search: search || undefined,
           sortBy,
           sortOrder,
+          categorySlug: categorySlug || undefined,
         })
       ).data,
   });
 
-  const filters = [
+  const sortOptions = [
     { id: 'newest', label: locale === 'ar' ? 'الأحدث' : 'Newest' },
     { id: 'bestsellers', label: locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers' },
-    { id: 'price', label: locale === 'ar' ? 'السعر' : 'Price' },
+    { id: 'price-low', label: locale === 'ar' ? 'الأقل سعراً' : 'Price: low' },
+    { id: 'name', label: locale === 'ar' ? 'الاسم' : 'Name A–Z' },
   ];
 
-  function applyParams(next: Record<string, string>) {
+  function applyParams(next: Record<string, string | null | undefined>) {
     const merged: Record<string, string> = {
       ...(search ? { q: search } : {}),
       ...(sort && sort !== 'newest' ? { sort } : {}),
-      ...next,
+      ...(categorySlug ? { category: categorySlug } : {}),
+      ...(page > 1 ? { page: String(page) } : {}),
     };
-    if (merged.page === '1') delete merged.page;
-    if (merged.sort === 'newest') delete merged.sort;
+    for (const [k, v] of Object.entries(next)) {
+      if (v == null || v === '' || (k === 'sort' && v === 'newest') || (k === 'page' && v === '1')) {
+        delete merged[k];
+      } else {
+        merged[k] = v;
+      }
+    }
     setParams(merged);
   }
 
-  const title =
-    sort === 'bestsellers'
-      ? locale === 'ar'
-        ? 'الأكثر مبيعاً'
-        : 'Best sellers'
-      : locale === 'ar'
-        ? 'المنتجات'
-        : 'Products';
+  const activeCategory = (categories.data ?? []).find((c) => c.slug === categorySlug);
+  const total = query.data?.meta.total ?? 0;
+  const products = query.data?.data ?? [];
+
+  const title = search
+    ? locale === 'ar'
+      ? `نتائج البحث`
+      : 'Search results'
+    : activeCategory
+      ? activeCategory.name
+      : sort === 'bestsellers'
+        ? locale === 'ar'
+          ? 'الأكثر مبيعاً'
+          : 'Best sellers'
+        : locale === 'ar'
+          ? 'كل المنتجات'
+          : 'All products';
 
   return (
     <>
       <Seo title={title} path={storePath('products')} />
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-              {locale === 'ar' ? 'الكتالوج' : 'Catalog'}
-            </p>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-fg">{title}</h1>
-            <p className="mt-1 text-sm text-muted">
-              {locale === 'ar'
-                ? 'كتالوج حي من مخزون افاق الطاقة'
-                : 'Live catalog from Energy Horizon inventory'}
-            </p>
-          </div>
+      <div className="border-b border-border bg-card">
+        <div className="mx-auto max-w-[90rem] px-4 py-6 sm:px-6 lg:px-10">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-accent">
+            {locale === 'ar' ? 'المتجر' : 'Store'}
+          </p>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
+            {title}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            {search ? (
+              locale === 'ar' ? (
+                <>
+                  نتائج «<span className="font-semibold text-fg">{search}</span>» — {total} منتج
+                </>
+              ) : (
+                <>
+                  Results for «<span className="font-semibold text-fg">{search}</span>» — {total}{' '}
+                  products
+                </>
+              )
+            ) : (
+              <>
+                {total} {locale === 'ar' ? 'منتج' : 'products'}
+                {activeCategory
+                  ? locale === 'ar'
+                    ? ` في قسم ${activeCategory.name}`
+                    : ` in ${activeCategory.name}`
+                  : ''}
+              </>
+            )}
+          </p>
+
           <form
-            className="flex gap-2"
+            className="mt-4 flex gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              applyParams({ q, page: '1' });
+              applyParams({ q: q.trim(), page: '1' });
             }}
           >
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder={locale === 'ar' ? 'بحث بالاسم أو SKU' : 'Search SKU or name'}
-              className="w-56 rounded-xl"
+              placeholder={
+                locale === 'ar' ? 'ابحث بالاسم أو SKU أو الوصف...' : 'Search name, SKU, description...'
+              }
+              className="h-11 max-w-xl flex-1 rounded-xl"
             />
-            <Button type="submit" variant="secondary" className="rounded-xl">
+            <Button type="submit" className="h-11 rounded-xl px-5 font-bold">
               {locale === 'ar' ? 'بحث' : 'Search'}
             </Button>
+            {search ? (
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-xl"
+                onClick={() => {
+                  setQ('');
+                  applyParams({ q: null, page: '1' });
+                }}
+              >
+                {locale === 'ar' ? 'مسح' : 'Clear'}
+              </Button>
+            ) : null}
           </form>
         </div>
+      </div>
 
-        <div className="mb-8 flex flex-wrap gap-2">
-          {filters.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => applyParams({ sort: f.id, page: '1' })}
-              className={
-                sort === f.id
-                  ? 'rounded-xl bg-accent px-4 py-2 text-sm font-bold text-white'
-                  : 'rounded-xl border border-border bg-card px-4 py-2 text-sm font-semibold text-muted transition hover:border-accent hover:text-fg'
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+      <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-10 lg:py-10">
+        <aside className="space-y-5 lg:sticky lg:top-28 lg:self-start">
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+              {locale === 'ar' ? 'ترتيب حسب' : 'Sort by'}
+            </p>
+            <div className="mt-3 flex flex-col gap-1.5">
+              {sortOptions.map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => applyParams({ sort: f.id, page: '1' })}
+                  className={
+                    sort === f.id
+                      ? 'rounded-xl bg-accent px-3 py-2.5 text-start text-sm font-bold text-white'
+                      : 'rounded-xl px-3 py-2.5 text-start text-sm font-medium text-muted transition hover:bg-muted hover:text-fg'
+                  }
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {query.isLoading ? <LoadingState variant="products" /> : null}
-        {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {(query.data?.data ?? []).map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              badge={
-                sort === 'bestsellers'
-                  ? locale === 'ar'
-                    ? 'مبيعات'
-                    : 'Top'
-                  : undefined
-              }
+          <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                {locale === 'ar' ? 'الأقسام' : 'Categories'}
+              </p>
+              {categorySlug ? (
+                <button
+                  type="button"
+                  className="text-[11px] font-bold text-accent"
+                  onClick={() => applyParams({ category: null, page: '1' })}
+                >
+                  {locale === 'ar' ? 'الكل' : 'All'}
+                </button>
+              ) : null}
+            </div>
+            <div className="mt-3 flex max-h-72 flex-col gap-1 overflow-y-auto">
+              <button
+                type="button"
+                onClick={() => applyParams({ category: null, page: '1' })}
+                className={
+                  !categorySlug
+                    ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                    : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-muted hover:text-fg'
+                }
+              >
+                {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
+              </button>
+              {(categories.data ?? []).map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => applyParams({ category: c.slug, page: '1' })}
+                  className={
+                    categorySlug === c.slug
+                      ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
+                      : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-muted hover:text-fg'
+                  }
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        <div>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-2 lg:hidden">
+              {sortOptions.slice(0, 4).map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => applyParams({ sort: f.id, page: '1' })}
+                  className={
+                    sort === f.id
+                      ? 'rounded-full bg-accent px-3 py-1.5 text-xs font-bold text-white'
+                      : 'rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-muted'
+                  }
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-sm font-semibold text-muted">
+              {locale === 'ar' ? `عرض ${products.length} من ${total}` : `Showing ${products.length} of ${total}`}
+            </p>
+          </div>
+
+          {query.isLoading ? <LoadingState variant="products" /> : null}
+          {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
+
+          {!query.isLoading && !query.isError ? (
+            products.length ? (
+              <div
+                key={`${search}-${sort}-${categorySlug}-${page}`}
+                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+              >
+                {products.map((p, i) => (
+                  <ProductCard
+                    key={p.id}
+                    product={p}
+                    index={i}
+                    badge={
+                      sort === 'bestsellers'
+                        ? locale === 'ar'
+                          ? 'مبيعات'
+                          : 'Top'
+                        : sort === 'newest'
+                          ? locale === 'ar'
+                            ? 'جديد'
+                            : 'New'
+                          : undefined
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                title={
+                  search
+                    ? locale === 'ar'
+                      ? `لا نتائج لـ «${search}»`
+                      : `No results for «${search}»`
+                    : locale === 'ar'
+                      ? 'لا توجد منتجات'
+                      : 'No products found'
+                }
+                description={
+                  locale === 'ar'
+                    ? 'جرّب كلمة أخرى أو أزل الفلاتر'
+                    : 'Try another keyword or clear filters'
+                }
+                action={{
+                  label: locale === 'ar' ? 'إعادة ضبط' : 'Reset',
+                  onClick: () => {
+                    setQ('');
+                    setParams({});
+                  },
+                }}
+              />
+            )
+          ) : null}
+
+          <div className="mt-8">
+            <Pagination
+              page={query.data?.meta.page ?? page}
+              totalPages={query.data?.meta.totalPages ?? 1}
+              onChange={(p) => applyParams({ page: String(p) })}
             />
-          ))}
-        </div>
-        {!query.isLoading && !(query.data?.data ?? []).length ? (
-          <EmptyState title={locale === 'ar' ? 'لا توجد منتجات' : 'No products found'} />
-        ) : null}
-        <div className="mt-8">
-          <Pagination
-            page={query.data?.meta.page ?? page}
-            totalPages={query.data?.meta.totalPages ?? 1}
-            onChange={(p) => applyParams({ page: String(p) })}
-          />
+          </div>
         </div>
       </div>
     </>
@@ -178,47 +357,43 @@ export function StoreCategoriesPage() {
   return (
     <>
       <Seo title={locale === 'ar' ? 'الأقسام' : 'Categories'} path={storePath('categories')} />
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
-        <div className="mb-10">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-            {locale === 'ar' ? 'الكتالوج' : 'Catalog'}
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-fg sm:text-4xl">
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
             {locale === 'ar' ? 'الأقسام' : 'Categories'}
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted">
+          <p className="mt-1 text-sm text-muted">
             {locale === 'ar'
-              ? 'اختر القسم المناسب لمعدات مشروعك'
-              : 'Pick the right category for your project gear'}
+              ? 'تصفّح كل أقسام المتجر الصناعي'
+              : 'Browse every industrial store category'}
           </p>
         </div>
 
         {categories.isLoading ? <LoadingState variant="cards" /> : null}
         {categories.isError ? <ErrorState onRetry={() => void categories.refetch()} /> : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {(categories.data ?? []).map((c, i) => (
             <Link
               key={c.id}
               to={storePath(`categories/${c.slug}`)}
-              className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-2xl border border-border bg-card p-5 transition duration-300 hover:-translate-y-1 hover:border-accent hover:shadow-[0_20px_40px_-28px_rgb(0_112_192/0.5)]"
+              className="group relative flex min-h-40 flex-col justify-end overflow-hidden rounded-xl border border-border bg-card p-5 transition hover:border-accent"
             >
               {c.imageUrl ? (
                 <img
                   src={c.imageUrl}
                   alt=""
-                  className="absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-25"
+                  className="absolute inset-0 h-full w-full object-cover opacity-20 transition group-hover:scale-105 group-hover:opacity-35"
                 />
               ) : (
-                <div
-                  className="pointer-events-none absolute -end-8 -top-8 h-28 w-28 rounded-full bg-accent/10 blur-2xl transition group-hover:bg-accent/25"
-                  aria-hidden
-                />
+                <div className="absolute inset-0 bg-gradient-to-br from-accent/15 to-transparent" />
               )}
-              <span className="relative font-kpi text-3xl text-accent/30 transition group-hover:text-accent/60">
+              <span className="relative text-xs font-bold tabular-nums text-accent/60">
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <p className="relative mt-3 text-lg font-extrabold tracking-tight text-fg">{c.name}</p>
+              <p className="relative mt-2 text-lg font-bold text-fg group-hover:text-accent">
+                {c.name}
+              </p>
               {c.description ? (
                 <p className="relative mt-1 line-clamp-2 text-sm text-muted">{c.description}</p>
               ) : null}
@@ -260,25 +435,25 @@ export function StoreCategoryPage() {
   return (
     <>
       <Seo title={category.data.name} path={storePath(`categories/${slug}`)} />
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
         <Link
           to={storePath('categories')}
-          className="text-sm font-semibold text-accent hover:text-accent-soft"
+          className="text-sm font-semibold text-accent"
         >
           {locale === 'ar' ? '← كل الأقسام' : '← All categories'}
         </Link>
-        <h1 className="mt-4 text-3xl font-extrabold tracking-tight text-fg">
+        <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg">
           {category.data.name}
         </h1>
         {category.data.description ? (
-          <p className="mt-2 max-w-2xl text-muted">{category.data.description}</p>
+          <p className="mt-1 max-w-2xl text-sm text-muted">{category.data.description}</p>
         ) : null}
         <p className="mt-3 text-sm font-semibold text-muted">
           {products.data?.meta.total ?? products.data?.data?.length ?? 0}{' '}
           {locale === 'ar' ? 'منتج في هذا القسم' : 'products in this category'}
         </p>
         {products.isLoading ? <LoadingState variant="products" /> : null}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {(products.data?.data ?? []).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -312,7 +487,7 @@ export function StoreBrandPage() {
   return (
     <>
       <Seo title={brand.data.name} path={storePath(`brands/${slug}`)} />
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
         <h1 className="text-3xl font-semibold tracking-tight text-fg">{brand.data.name}</h1>
         <p className="mt-2 text-muted">{brand.data.description}</p>
         {products.isLoading ? <LoadingState variant="products" /> : null}
@@ -332,9 +507,8 @@ export function StoreBrandPage() {
 export function ProductDetailPage() {
   const { locale } = useI18n();
   const { slug = '' } = useParams();
-  const { cart, addItem, updateItem, removeItem, loading } = useCart();
+  const { cart, addItem, updateItem, removeItem } = useCart();
   const [qty, setQty] = useState(1);
-  const [busy, setBusy] = useState(false);
   const query = useQuery({
     queryKey: ['product', slug],
     queryFn: async () => (await catalogApi.productBySlug(slug)).data,
@@ -368,16 +542,7 @@ export function ProductDetailPage() {
   const line = cart?.items?.find((i) => i.productId === p.id || i.product?.id === p.id);
   const inCartQty = line?.quantity ?? 0;
   const maxStock = Math.max(1, Number(p.stock ?? 99));
-  const disabled = busy || loading;
-
-  async function run(action: () => Promise<void>) {
-    setBusy(true);
-    try {
-      await action();
-    } finally {
-      setBusy(false);
-    }
-  }
+  const outOfStock = p.availability === 'OUT_OF_STOCK' || Number(p.stock ?? 0) <= 0;
 
   return (
     <>
@@ -386,14 +551,14 @@ export function ProductDetailPage() {
         path={storePath(`products/${slug}`)}
         description={p.shortDescription || undefined}
       />
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
-        <div className="grid gap-10 lg:grid-cols-2">
-          <div className="flex min-h-72 items-center justify-center overflow-hidden rounded-2xl border border-line bg-[var(--card)]">
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-2">
+          <div className="flex min-h-64 items-center justify-center overflow-hidden rounded-lg border border-border bg-card">
             {p.images?.[0]?.url ? (
               <img
                 src={p.images[0].url}
                 alt={p.name}
-                className="max-h-[420px] w-full object-contain"
+                className="max-h-[380px] w-full object-contain"
               />
             ) : (
               <span className="text-muted">
@@ -420,50 +585,47 @@ export function ProductDetailPage() {
               <span>·</span>
               <span>SKU {p.sku}</span>
             </div>
-            <h1 className="mt-3 text-3xl font-extrabold tracking-tight text-fg sm:text-4xl">
+            <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg sm:text-3xl">
               {p.name}
             </h1>
-            <p className="mt-4 text-2xl font-extrabold text-accent">
+            <p className="mt-3 text-xl font-bold text-accent">
               {formatMoney(p.price, p.currency)}
             </p>
             <p className="mt-2 text-sm text-muted">
-              {locale === 'ar' ? 'التوفر' : 'Availability'}: {p.availability} ·{' '}
               {locale === 'ar' ? 'المخزون' : 'Stock'}: {p.stock}
             </p>
-            <p className="mt-4 leading-relaxed text-muted">
+            <p className="mt-4 text-sm leading-relaxed text-muted">
               {p.shortDescription || p.description}
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">
               {inCartQty > 0 && line ? (
-                <div className="flex h-11 items-center gap-2 rounded-xl border border-accent/35 bg-accent/10 px-2">
-                  <Button
+                <div className="flex h-10 items-center rounded-md border border-border bg-page px-1">
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled}
-                    className="h-8 w-8 rounded-lg p-0"
-                    onClick={() =>
-                      void run(async () => {
-                        if (inCartQty <= 1) await removeItem(line.id);
-                        else await updateItem(line.id, inCartQty - 1);
-                      })
-                    }
+                    className="inline-flex h-8 w-8 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                    disabled={inCartQty <= 1}
+                    onClick={() => void updateItem(line.id, inCartQty - 1)}
                   >
                     −
-                  </Button>
-                  <span className="min-w-10 text-center text-base font-extrabold tabular-nums">
+                  </button>
+                  <span className="min-w-8 text-center text-sm font-bold tabular-nums">
                     {inCartQty}
                   </span>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={disabled || inCartQty >= maxStock}
-                    className="h-8 w-8 rounded-lg p-0"
-                    onClick={() => void run(() => updateItem(line.id, inCartQty + 1))}
+                    className="inline-flex h-8 w-8 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                    disabled={inCartQty >= maxStock}
+                    onClick={() => void updateItem(line.id, inCartQty + 1)}
                   >
                     +
-                  </Button>
+                  </button>
+                  <button
+                    type="button"
+                    className="ms-1 px-2 text-xs font-semibold text-red-600 hover:underline"
+                    onClick={() => void removeItem(line.id)}
+                  >
+                    {locale === 'ar' ? 'حذف' : 'Remove'}
+                  </button>
                 </div>
               ) : (
                 <>
@@ -475,54 +637,50 @@ export function ProductDetailPage() {
                     onChange={(e) =>
                       setQty(Math.min(maxStock, Math.max(1, Number(e.target.value) || 1)))
                     }
-                    className="w-24 rounded-xl"
+                    className="w-20 rounded-md"
                   />
                   <Button
-                    className="rounded-xl"
-                    disabled={disabled}
-                    onClick={() => void run(() => addItem(p.id, qty))}
+                    className="rounded-md"
+                    disabled={outOfStock}
+                    onClick={() => void addItem(p.id, qty, p)}
                   >
-                    {locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
+                    {outOfStock
+                      ? locale === 'ar'
+                        ? 'غير متوفر'
+                        : 'Unavailable'
+                      : locale === 'ar'
+                        ? 'أضف للسلة'
+                        : 'Add to cart'}
                   </Button>
                 </>
               )}
               {p.category ? (
                 <Link to={storePath(`categories/${p.category.slug}`)}>
-                  <Button variant="outline" className="rounded-xl">
+                  <Button variant="outline" className="rounded-md">
                     {locale === 'ar' ? `منتجات ${p.category.name}` : `${p.category.name} products`}
                   </Button>
                 </Link>
               ) : null}
             </div>
-            {p.description && p.shortDescription ? (
-              <div className="mt-8 whitespace-pre-wrap border-t border-line pt-6 text-sm leading-relaxed text-muted">
-                {p.description}
-              </div>
-            ) : null}
           </div>
         </div>
 
         {similar.length > 0 ? (
-          <div className="mt-16 border-t border-line pt-12">
-            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-                  {locale === 'ar' ? 'ذات صلة' : 'Related'}
-                </p>
-                <h2 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
-                  {locale === 'ar' ? 'منتجات مشابهة' : 'Similar products'}
-                </h2>
-              </div>
+          <div className="mt-12 border-t border-border pt-10">
+            <div className="mb-4 flex items-end justify-between gap-3">
+              <h2 className="text-xl font-bold">
+                {locale === 'ar' ? 'منتجات مشابهة' : 'Similar products'}
+              </h2>
               {p.category ? (
                 <Link
                   to={storePath(`categories/${p.category.slug}`)}
-                  className="text-sm font-bold text-accent hover:text-accent-soft"
+                  className="text-sm font-semibold text-accent"
                 >
-                  {locale === 'ar' ? 'عرض كل القسم' : 'View category'}
+                  {locale === 'ar' ? 'عرض القسم' : 'View category'}
                 </Link>
               ) : null}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {similar.map((item) => (
                 <ProductCard key={item.id} product={item} />
               ))}
@@ -534,106 +692,6 @@ export function ProductDetailPage() {
   );
 }
 
-
-export function CartPage() {
-  const { locale } = useI18n();
-  const { isAuthenticated } = useAuth();
-  const { cart, loading, updateItem, removeItem } = useCart();
-  const items = cart?.items ?? [];
-  const subtotal = useMemo(() => {
-    if (cart?.subtotal != null) return Number(cart.subtotal);
-    return items.reduce((sum, i) => {
-      const price = Number(i.unitPrice ?? i.product?.price ?? 0);
-      return sum + price * i.quantity;
-    }, 0);
-  }, [cart, items]);
-
-  return (
-    <>
-      <Seo title={locale === 'ar' ? 'السلة' : 'Cart'} path={storePath('cart')} />
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-fg">
-          {locale === 'ar' ? 'سلتك' : 'Your cart'}
-        </h1>
-        {loading ? <LoadingState /> : null}
-        {!loading && !items.length ? (
-          <EmptyState
-            title={locale === 'ar' ? 'السلة فارغة' : 'Cart is empty'}
-            description={
-              locale === 'ar'
-                ? 'تصفّح الكتالوج وأضف المعدات للمتابعة.'
-                : 'Browse the catalog and add equipment to continue.'
-            }
-            action={{
-              label: locale === 'ar' ? 'تصفح المنتجات' : 'Browse products',
-              onClick: () => (window.location.href = storePath('products')),
-            }}
-          />
-        ) : null}
-        <div className="mt-6 divide-y divide-[var(--border)] border-y border-line">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-wrap items-center justify-between gap-4 py-5"
-            >
-              <div>
-                <Link
-                  to={storePath(`products/${item.product?.slug || ''}`)}
-                  className="font-medium text-fg hover:text-accent"
-                >
-                  {item.product?.name || 'Product'}
-                </Link>
-                <p className="text-sm text-muted">{item.product?.sku}</p>
-                <p className="mt-1 text-sm font-semibold text-accent">
-                  {formatMoney(item.unitPrice ?? item.product?.price, item.product?.currency)}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Input
-                  type="number"
-                  min={1}
-                  className="w-20"
-                  value={item.quantity}
-                  onChange={(e) => void updateItem(item.id, Math.max(1, Number(e.target.value) || 1))}
-                />
-                <Button variant="ghost" onClick={() => void removeItem(item.id)}>
-                  {locale === 'ar' ? 'حذف' : 'Remove'}
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-        {items.length ? (
-          <div className="mt-8 space-y-4 border-t border-line pt-6">
-            {!isAuthenticated ? (
-              <div className="rounded-xl border border-accent/25 bg-accent/5 px-4 py-3 text-sm text-fg">
-                {locale === 'ar'
-                  ? 'قبل إتمام الطلب: سجّل حسابي بالاسم ورقم الهاتف وأكد OTP.'
-                  : 'Before checkout: register My account with name + phone and confirm OTP.'}
-              </div>
-            ) : null}
-            <div className="flex flex-wrap items-center justify-between gap-4">
-              <p className="text-lg font-extrabold text-fg">
-                {locale === 'ar' ? 'المجموع' : 'Subtotal'}: {formatMoney(subtotal)}
-              </p>
-              <Link to={storePath('checkout')}>
-                <Button size="lg" className="rounded-xl px-8">
-                  {isAuthenticated
-                    ? locale === 'ar'
-                      ? 'إتمام الطلب'
-                      : 'Checkout'
-                    : locale === 'ar'
-                      ? 'متابعة — تسجيل حسابي'
-                      : 'Continue — create My account'}
-                </Button>
-              </Link>
-            </div>
-          </div>
-        ) : null}
-      </div>
-    </>
-  );
-}
 
 const checkoutSchema = z.object({
   firstName: z.string().min(1),
@@ -648,11 +706,20 @@ const checkoutSchema = z.object({
 
 type CheckoutForm = z.infer<typeof checkoutSchema>;
 
-export function CheckoutPage() {
+export function CartPage() {
   const { locale } = useI18n();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { cart, clear, itemCount } = useCart();
+  const { cart, loading, updateItem, removeItem, clear } = useCart();
+  const items = cart?.items ?? [];
+  const subtotal = useMemo(() => {
+    if (cart?.subtotal != null) return Number(cart.subtotal);
+    return items.reduce((sum, i) => {
+      const price = Number(i.unitPrice ?? i.product?.price ?? 0);
+      return sum + price * i.quantity;
+    }, 0);
+  }, [cart, items]);
+
   const form = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: {
@@ -660,6 +727,7 @@ export function CheckoutPage() {
       lastName: '',
       email: '',
       phone: '',
+      shippingAddress: '',
     },
   });
 
@@ -670,6 +738,7 @@ export function CheckoutPage() {
       lastName: user.lastName || '',
       email: user.email?.endsWith('@customers.local') ? '' : user.email || '',
       phone: user.phone || '',
+      shippingAddress: form.getValues('shippingAddress') || '',
     });
   }, [user, form]);
 
@@ -686,7 +755,7 @@ export function CheckoutPage() {
         phone: values.phone || user?.phone,
         billingAddress: values.billingAddress || values.shippingAddress,
       });
-      await clear();
+      await clear({ silent: true });
       saveStoreOrder(data);
       appToast.success('orderPlaced', { orderNumber: data.orderNumber });
       navigate(storePath(`account/orders/${data.id}`));
@@ -695,148 +764,226 @@ export function CheckoutPage() {
     }
   }
 
-  if (authLoading) return <LoadingState variant="page" />;
-
-  if (!itemCount && !(cart?.items?.length)) {
-    return (
-      <EmptyState
-        title={locale === 'ar' ? 'لا يوجد ما يُطلب' : 'Nothing to checkout'}
-        action={{
-          label: locale === 'ar' ? 'العودة للسلة' : 'Back to cart',
-          onClick: () => navigate(storePath('cart')),
-        }}
-      />
-    );
-  }
-
-  if (!isAuthenticated) {
-    return (
-      <>
-        <Seo title={locale === 'ar' ? 'تحقق مطلوب' : 'Verification required'} path={storePath('checkout')} />
-        <div className="mx-auto max-w-lg px-4 py-20 sm:px-6">
-          <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_24px_60px_-40px_rgb(0_112_192/0.45)]">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent/15 text-accent">
-              <span className="text-xl font-extrabold">OTP</span>
-            </div>
-            <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-fg">
-              {locale === 'ar' ? 'سجّل حسابك قبل الطلب' : 'Create your account before ordering'}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed text-muted">
-              {locale === 'ar'
-                ? 'للتأكد أنك شخص حقيقي: أدخل اسمك ورقم هاتفك، ثم أكّد برمز OTP. بعدها تقدر تكمّل الطلب ويُحفظ في حسابي.'
-                : 'To confirm you are a real person: enter your name and phone, verify with OTP, then complete checkout. Orders are saved under My account.'}
-            </p>
-            <Button
-              className="mt-8 w-full rounded-xl"
-              size="lg"
-              onClick={() =>
-                navigate(
-                  `${storePath('account/login')}?next=${encodeURIComponent(storePath('checkout'))}`,
-                )
-              }
-            >
-              {locale === 'ar' ? 'تسجيل الاسم والرقم' : 'Register with name & phone'}
-            </Button>
-            <Button
-              variant="ghost"
-              className="mt-2 w-full"
-              onClick={() => navigate(storePath('cart'))}
-            >
-              {locale === 'ar' ? 'العودة للسلة' : 'Back to cart'}
-            </Button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
   return (
     <>
-      <Seo title={locale === 'ar' ? 'إتمام الطلب' : 'Checkout'} path={storePath('checkout')} />
-      <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="rounded-2xl border border-accent/20 bg-accent/5 px-4 py-3 text-sm text-fg">
-          {locale === 'ar' ? 'حساب موثّق:' : 'Verified account:'}{' '}
-          <strong>
-            {user?.firstName} {user?.lastName}
-          </strong>{' '}
-          · {user?.phone}
+      <Seo title={locale === 'ar' ? 'السلة' : 'Cart'} path={storePath('cart')} />
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold tracking-tight text-fg">
+            {locale === 'ar' ? 'السلة' : 'Cart'}
+          </h1>
+          <p className="mt-1 text-sm text-muted">
+            {locale === 'ar'
+              ? 'راجع المنتجات وأكمل الطلب من هنا.'
+              : 'Review products and place your order here.'}
+          </p>
         </div>
-        <h1 className="mt-6 text-3xl font-extrabold tracking-tight text-fg">
-          {locale === 'ar' ? 'إتمام الطلب' : 'Checkout'}
-        </h1>
-        <p className="mt-2 text-sm text-muted">
-          {locale === 'ar'
-            ? 'أكمل عنوان الشحن. الطلب يُحفظ مباشرة في حسابي.'
-            : 'Complete shipping details. The order is saved to My account.'}
-        </p>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="mt-8 space-y-3 rounded-2xl border border-line bg-[var(--card)] p-6 sm:p-8"
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              placeholder={locale === 'ar' ? 'الاسم الأول' : 'First name'}
-              {...form.register('firstName')}
-            />
-            <Input
-              placeholder={locale === 'ar' ? 'اسم العائلة' : 'Last name'}
-              {...form.register('lastName')}
-            />
-          </div>
-          <Input
-            type="email"
-            placeholder={locale === 'ar' ? 'البريد (اختياري)' : 'Email (optional)'}
-            {...form.register('email')}
-          />
-          <Input
-            placeholder={locale === 'ar' ? 'الهاتف' : 'Phone'}
-            {...form.register('phone')}
-            readOnly
-            className="opacity-80"
-          />
-          <Input
-            placeholder={locale === 'ar' ? 'الشركة' : 'Company'}
-            {...form.register('company')}
-          />
-          <Textarea
-            placeholder={locale === 'ar' ? 'عنوان الشحن' : 'Shipping address'}
-            {...form.register('shippingAddress')}
-          />
-          <Textarea
-            placeholder={
-              locale === 'ar' ? 'عنوان الفوترة (اختياري)' : 'Billing address (optional)'
+
+        {loading || authLoading ? <LoadingState /> : null}
+
+        {!loading && !items.length ? (
+          <EmptyState
+            title={locale === 'ar' ? 'السلة فارغة' : 'Cart is empty'}
+            description={
+              locale === 'ar'
+                ? 'تصفّح المنتجات وأضف ما تحتاجه.'
+                : 'Browse products and add what you need.'
             }
-            {...form.register('billingAddress')}
+            action={{
+              label: locale === 'ar' ? 'تصفح المنتجات' : 'Browse products',
+              onClick: () => navigate(storePath('products')),
+            }}
           />
-          <Textarea
-            placeholder={locale === 'ar' ? 'ملاحظات الطلب' : 'Order notes'}
-            {...form.register('notes')}
-          />
-          <Select defaultValue="invoice">
-            <option value="invoice">
-              {locale === 'ar' ? 'طلب فاتورة / أمر شراء' : 'Request invoice / PO'}
-            </option>
-            <option value="card" disabled>
-              {locale === 'ar' ? 'بطاقة (قريباً)' : 'Card payment (coming soon)'}
-            </option>
-          </Select>
-          <Button type="submit" className="w-full rounded-xl" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting
-              ? locale === 'ar'
-                ? 'جارٍ إرسال الطلب…'
-                : 'Placing order…'
-              : locale === 'ar'
-                ? 'تأكيد الطلب'
-                : 'Place order'}
-          </Button>
-        </form>
+        ) : null}
+
+        {items.length ? (
+          <div className="grid gap-8 lg:grid-cols-12">
+            <div className="space-y-3 lg:col-span-7">
+              {items.map((item) => {
+                const unit = Number(item.unitPrice ?? item.product?.price ?? 0);
+                const lineTotal = unit * item.quantity;
+                const img =
+                  item.product?.images?.[0]?.url || item.product?.imageUrl || null;
+                return (
+                  <div
+                    key={item.id}
+                    className="flex gap-3 rounded-lg border border-border bg-card p-3 sm:items-center"
+                  >
+                    <Link
+                      to={storePath(`products/${item.product?.slug || ''}`)}
+                      className="h-20 w-20 shrink-0 overflow-hidden rounded-md bg-muted/40"
+                    >
+                      {img ? (
+                        <img src={img} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-[10px] text-muted">
+                          SKU
+                        </div>
+                      )}
+                    </Link>
+                    <div className="min-w-0 flex-1">
+                      <Link
+                        to={storePath(`products/${item.product?.slug || ''}`)}
+                        className="line-clamp-2 text-sm font-semibold text-fg hover:text-accent"
+                      >
+                        {item.product?.name || 'Product'}
+                      </Link>
+                      <p className="mt-0.5 text-xs text-muted">{item.product?.sku}</p>
+                      <p className="mt-1 text-sm font-bold text-accent">
+                        {formatMoney(unit, item.product?.currency)}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <div className="flex h-9 items-center rounded-md border border-border bg-page px-1">
+                        <button
+                          type="button"
+                          disabled={item.quantity <= 1}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted disabled:opacity-30"
+                          onClick={() => void updateItem(item.id, item.quantity - 1)}
+                          aria-label={locale === 'ar' ? 'تقليل' : 'Decrease'}
+                        >
+                          −
+                        </button>
+                        <span className="min-w-6 text-center text-sm font-bold tabular-nums">
+                          {item.quantity}
+                        </span>
+                        <button
+                          type="button"
+                          className="inline-flex h-7 w-7 items-center justify-center rounded hover:bg-muted"
+                          onClick={() => void updateItem(item.id, item.quantity + 1)}
+                          aria-label={locale === 'ar' ? 'زيادة' : 'Increase'}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <p className="text-sm font-semibold text-fg">
+                        {formatMoney(lineTotal, item.product?.currency)}
+                      </p>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold text-red-600 hover:underline"
+                        onClick={() => void removeItem(item.id)}
+                      >
+                        {locale === 'ar' ? 'حذف' : 'Remove'}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+              <Link
+                to={storePath('products')}
+                className="inline-flex text-sm font-semibold text-accent hover:text-accent-soft"
+              >
+                {locale === 'ar' ? '← متابعة التسوق' : '← Continue shopping'}
+              </Link>
+            </div>
+
+            <aside className="lg:col-span-5">
+              <div className="sticky top-20 space-y-4 rounded-lg border border-border bg-card p-4 sm:p-5">
+                <div>
+                  <h2 className="text-base font-bold">
+                    {locale === 'ar' ? 'ملخص الطلب' : 'Order summary'}
+                  </h2>
+                  <div className="mt-3 flex items-center justify-between text-sm">
+                    <span className="text-muted">
+                      {locale === 'ar' ? 'المنتجات' : 'Items'} ({items.length})
+                    </span>
+                    <span className="font-semibold">{formatMoney(subtotal)}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
+                    <span className="font-bold">
+                      {locale === 'ar' ? 'الإجمالي' : 'Total'}
+                    </span>
+                    <span className="text-xl font-bold text-accent">
+                      {formatMoney(subtotal)}
+                    </span>
+                  </div>
+                </div>
+
+                {!isAuthenticated ? (
+                  <div className="space-y-3 rounded-xl border border-accent/25 bg-accent/5 p-4">
+                    <p className="text-sm leading-relaxed text-fg">
+                      {locale === 'ar'
+                        ? 'لإتمام الطلب: سجّل حسابي بالاسم ورقم الهاتف وأكد OTP.'
+                        : 'To place the order: register My account with name + phone and confirm OTP.'}
+                    </p>
+                    <Button
+                      className="w-full rounded-xl"
+                      size="lg"
+                      onClick={() =>
+                        navigate(
+                          `${storePath('account/login')}?next=${encodeURIComponent(storePath('cart'))}`,
+                        )
+                      }
+                    >
+                      {locale === 'ar' ? 'تسجيل حسابي ثم الطلب' : 'Register My account then order'}
+                    </Button>
+                  </div>
+                ) : (
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 px-3 py-2 text-sm">
+                      {locale === 'ar' ? 'حساب موثّق:' : 'Verified:'}{' '}
+                      <strong>
+                        {user?.firstName} {user?.lastName}
+                      </strong>{' '}
+                      · {user?.phone}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        placeholder={locale === 'ar' ? 'الاسم الأول' : 'First name'}
+                        {...form.register('firstName')}
+                      />
+                      <Input
+                        placeholder={locale === 'ar' ? 'اسم العائلة' : 'Last name'}
+                        {...form.register('lastName')}
+                      />
+                    </div>
+                    <Input
+                      placeholder={locale === 'ar' ? 'الهاتف' : 'Phone'}
+                      {...form.register('phone')}
+                      readOnly
+                      className="opacity-80"
+                    />
+                    <Input
+                      placeholder={locale === 'ar' ? 'الشركة (اختياري)' : 'Company (optional)'}
+                      {...form.register('company')}
+                    />
+                    <Textarea
+                      placeholder={locale === 'ar' ? 'عنوان الشحن *' : 'Shipping address *'}
+                      {...form.register('shippingAddress')}
+                    />
+                    <Textarea
+                      placeholder={locale === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (optional)'}
+                      {...form.register('notes')}
+                    />
+                    <Button
+                      type="submit"
+                      className="w-full rounded-xl"
+                      size="lg"
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {form.formState.isSubmitting
+                        ? locale === 'ar'
+                          ? 'جارٍ إرسال الطلب…'
+                          : 'Placing order…'
+                        : locale === 'ar'
+                          ? 'تأكيد الطلب'
+                          : 'Place order'}
+                    </Button>
+                  </form>
+                )}
+              </div>
+            </aside>
+          </div>
+        ) : null}
       </div>
     </>
   );
 }
 
-function formatOrderDate(locale: string, value: string) {
-  return new Date(value).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB');
+
+export function CheckoutPage() {
+  return <Navigate to={storePath('cart')} replace />;
 }
 
 export function StoreLoginPage() {

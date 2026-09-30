@@ -93,6 +93,8 @@ const dict = {
     toast: {
       addedToCart: 'Added to cart',
       addToCartFailed: 'Could not add to cart',
+      qtyIncreased: 'Quantity increased',
+      qtyDecreased: 'Quantity decreased',
       cartUpdated: 'Cart updated',
       cartUpdateFailed: 'Could not update cart',
       removedFromCart: 'Removed from cart',
@@ -345,6 +347,8 @@ const dict = {
     toast: {
       addedToCart: 'تمت الإضافة إلى السلة',
       addToCartFailed: 'تعذّرت الإضافة إلى السلة',
+      qtyIncreased: 'تمت زيادة الكمية',
+      qtyDecreased: 'تم تقليل الكمية',
       cartUpdated: 'تم تحديث السلة',
       cartUpdateFailed: 'تعذّر تحديث السلة',
       removedFromCart: 'تم الحذف من السلة',

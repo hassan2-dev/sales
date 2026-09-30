@@ -20,14 +20,20 @@ export function toastMessage(key: ToastKey, vars?: Record<string, string | numbe
   return message;
 }
 
+const baseOpts = {
+  duration: 2600,
+} as const;
+
 export const appToast = {
   success(key: ToastKey, vars?: Record<string, string | number>) {
-    return sonnerToast.success(toastMessage(key, vars));
+    return sonnerToast.success(toastMessage(key, vars), baseOpts);
   },
   error(key: ToastKey, vars?: Record<string, string | number>) {
-    return sonnerToast.error(toastMessage(key, vars));
+    return sonnerToast.error(toastMessage(key, vars), {
+      duration: 3600,
+    });
   },
   message(key: ToastKey, vars?: Record<string, string | number>) {
-    return sonnerToast(toastMessage(key, vars));
+    return sonnerToast(toastMessage(key, vars), baseOpts);
   },
 };
