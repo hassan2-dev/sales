@@ -139,18 +139,23 @@ export function ErrorState({
   title = 'Something went wrong',
   description,
   onRetry,
+  retryLabel = 'Try again',
 }: {
   title?: string;
   description?: string;
   onRetry?: () => void;
+  retryLabel?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
-      <h3 className="text-lg font-semibold text-fg">{title}</h3>
+    <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card px-6 py-16 text-center shadow-sm">
+      <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+        <Inbox className="h-6 w-6" />
+      </div>
+      <h3 className="text-lg font-extrabold text-fg">{title}</h3>
       {description ? <p className="max-w-md text-sm text-muted">{description}</p> : null}
       {onRetry ? (
-        <Button variant="secondary" onClick={onRetry}>
-          Try again
+        <Button className="mt-1 rounded-xl font-bold" onClick={onRetry}>
+          {retryLabel}
         </Button>
       ) : null}
     </div>
@@ -161,27 +166,37 @@ export function Pagination({
   page,
   totalPages,
   onChange,
+  locale = 'en',
 }: {
   page: number;
   totalPages: number;
   onChange: (page: number) => void;
+  locale?: string;
 }) {
   if (totalPages <= 1) return null;
+  const ar = locale === 'ar';
   return (
     <div className="flex items-center justify-center gap-3">
-      <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onChange(page - 1)}>
-        Previous
+      <Button
+        variant="outline"
+        size="sm"
+        className="rounded-xl"
+        disabled={page <= 1}
+        onClick={() => onChange(page - 1)}
+      >
+        {ar ? 'السابق' : 'Previous'}
       </Button>
-      <span className="text-sm text-muted">
-        Page {page} of {totalPages}
+      <span className="text-sm font-semibold text-muted">
+        {ar ? `صفحة ${page} من ${totalPages}` : `Page ${page} of ${totalPages}`}
       </span>
       <Button
         variant="outline"
         size="sm"
+        className="rounded-xl"
         disabled={page >= totalPages}
         onClick={() => onChange(page + 1)}
       >
-        Next
+        {ar ? 'التالي' : 'Next'}
       </Button>
     </div>
   );

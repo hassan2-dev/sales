@@ -330,48 +330,115 @@ async function main() {
     },
   });
 
-  const categories = [
+  // Parent groups (كروبات) + leaf categories
+  const categoryGroups = [
     {
-      name: 'Drilling Equipment',
-      slug: 'drilling-equipment',
-      description: 'Upstream drilling tools, BOP kits, and mud pump spares',
+      name: 'Upstream & Drilling',
+      slug: 'upstream-drilling',
+      description: 'Drilling tools, BOP, mud systems and wellsite equipment',
       imageUrl:
         'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+      sortOrder: 1,
+      children: [
+        {
+          name: 'Drilling Equipment',
+          slug: 'drilling-equipment',
+          description: 'Upstream drilling tools, BOP kits, and mud pump spares',
+          imageUrl:
+            'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+          sortOrder: 1,
+        },
+      ],
     },
     {
-      name: 'Hydraulic Systems',
-      slug: 'hydraulic-systems',
-      description: 'HPUs, hose assemblies, and industrial fluid power',
+      name: 'Industrial Systems',
+      slug: 'industrial-systems',
+      description: 'Hydraulic power, fluid systems, and process control',
       imageUrl:
         'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
+      sortOrder: 2,
+      children: [
+        {
+          name: 'Hydraulic Systems',
+          slug: 'hydraulic-systems',
+          description: 'HPUs, hose assemblies, and industrial fluid power',
+          imageUrl:
+            'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
+          sortOrder: 1,
+        },
+        {
+          name: 'Electrical & Instrumentation',
+          slug: 'electrical-instrumentation',
+          description: 'Ex lighting, transmitters, and process instrumentation',
+          imageUrl:
+            'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80',
+          sortOrder: 2,
+        },
+      ],
     },
     {
-      name: 'Electrical & Instrumentation',
-      slug: 'electrical-instrumentation',
-      description: 'Ex lighting, transmitters, and process instrumentation',
-      imageUrl:
-        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80',
-    },
-    {
-      name: 'Safety & PPE',
-      slug: 'safety-ppe',
-      description: 'Helmets, FR coveralls, gloves, and site PPE',
+      name: 'Safety & Site',
+      slug: 'safety-site',
+      description: 'PPE and field safety for oil & gas crews',
       imageUrl:
         'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80',
+      sortOrder: 3,
+      children: [
+        {
+          name: 'Safety & PPE',
+          slug: 'safety-ppe',
+          description: 'Helmets, FR coveralls, gloves, and site PPE',
+          imageUrl:
+            'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80',
+          sortOrder: 1,
+        },
+      ],
     },
   ];
 
-  for (const cat of categories) {
-    await prisma.category.upsert({
-      where: { slug: cat.slug },
+  for (const group of categoryGroups) {
+    const parent = await prisma.category.upsert({
+      where: { slug: group.slug },
       update: {
-        name: cat.name,
-        description: cat.description,
-        imageUrl: cat.imageUrl,
+        name: group.name,
+        description: group.description,
+        imageUrl: group.imageUrl,
+        sortOrder: group.sortOrder,
+        parentId: null,
         status: ContentStatus.PUBLISHED,
       },
-      create: { ...cat, status: ContentStatus.PUBLISHED },
+      create: {
+        name: group.name,
+        slug: group.slug,
+        description: group.description,
+        imageUrl: group.imageUrl,
+        sortOrder: group.sortOrder,
+        status: ContentStatus.PUBLISHED,
+      },
     });
+
+    for (const child of group.children) {
+      await prisma.category.upsert({
+        where: { slug: child.slug },
+        update: {
+          name: child.name,
+          description: child.description,
+          imageUrl: child.imageUrl,
+          sortOrder: child.sortOrder,
+          parentId: parent.id,
+          status: ContentStatus.PUBLISHED,
+        },
+        create: {
+          name: child.name,
+          slug: child.slug,
+          description: child.description,
+          imageUrl: child.imageUrl,
+          sortOrder: child.sortOrder,
+          parentId: parent.id,
+          status: ContentStatus.PUBLISHED,
+        },
+      });
+    }
   }
 
   const brands = [

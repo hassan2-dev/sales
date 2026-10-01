@@ -156,10 +156,21 @@ export function ProductCard({
           locale={locale}
         />
 
-        <div className="mt-auto flex items-end justify-between gap-2 pt-1">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <p className="text-lg font-extrabold tabular-nums text-navy dark:text-accent">
             {formatMoney(product.price, product.currency, locale === 'ar' ? 'ar-IQ' : 'en-US')}
           </p>
+          {showCart && !(qty > 0 && line) ? (
+            <button
+              type="button"
+              disabled={outOfStock}
+              onClick={() => void addItem(product.id, 1, product)}
+              className="store-add-btn inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition hover:bg-accent-soft disabled:opacity-50"
+              aria-label={locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
+            >
+              <ShoppingBag className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
 
         {showCart ? (
@@ -193,22 +204,7 @@ export function ProductCard({
                   {locale === 'ar' ? 'حذف' : 'Del'}
                 </button>
               </div>
-            ) : (
-              <button
-                type="button"
-                disabled={outOfStock}
-                onClick={() => void addItem(product.id, 1, product)}
-                className="store-add-btn h-11 w-full rounded-xl bg-accent text-sm font-extrabold text-white disabled:opacity-50"
-              >
-                {outOfStock
-                  ? locale === 'ar'
-                    ? 'غير متوفر'
-                    : 'Unavailable'
-                  : locale === 'ar'
-                    ? 'أضف للسلة'
-                    : 'Add to cart'}
-              </button>
-            )}
+            ) : null}
             <Link
               to={`${storePath('quote')}?product=${product.id}`}
               className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-fg transition hover:border-accent hover:text-accent"

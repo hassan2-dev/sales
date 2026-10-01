@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FileText, GitCompareArrows, Heart, Minus, Plus } from 'lucide-react';
+import { FileText, GitCompareArrows, Heart, Minus, Plus, SlidersHorizontal } from 'lucide-react';
 import { LoadingState, EmptyState, ErrorState, Pagination } from '@/components/ui/States';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,12 +46,7 @@ export function StoreProductsPage() {
   const sort = sortParam || 'newest';
   const categorySlug = params.get('category') || '';
   const brandSlug = params.get('brand') || '';
-  const [q, setQ] = useState(search);
   const [mobileFilters, setMobileFilters] = useState(false);
-
-  useEffect(() => {
-    setQ(search);
-  }, [search]);
 
   const sortBy =
     sort === 'bestsellers'
@@ -87,6 +82,7 @@ export function StoreProductsPage() {
           brandSlug: brandSlug || undefined,
         })
       ).data,
+    retry: 1,
   });
 
   const sortOptions = [
@@ -118,10 +114,13 @@ export function StoreProductsPage() {
   const activeBrand = (brands.data ?? []).find((b) => b.slug === brandSlug);
   const total = query.data?.meta.total ?? 0;
   const products = query.data?.data ?? [];
+  const cats = categories.data ?? [];
+  const brandList = brands.data ?? [];
+  const hasFilters = Boolean(search || categorySlug || brandSlug || sortParam);
 
   const title = search
     ? locale === 'ar'
-      ? `نتائج البحث`
+      ? 'نتائج البحث'
       : 'Search results'
     : activeCategory
       ? activeCategory.name
@@ -139,272 +138,271 @@ export function StoreProductsPage() {
               ? 'كل المنتجات'
               : 'All products';
 
-  const FiltersPanel = (
-    <div className="space-y-4">
-      <div className="store-surface p-4">
-        <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-          {locale === 'ar' ? 'ترتيب حسب' : 'Sort by'}
-        </p>
-        <div className="mt-3 flex flex-col gap-1.5">
-          {sortOptions.map((f) => (
-            <button
-              key={f.id}
-              type="button"
-              onClick={() => applyParams({ sort: f.id, page: '1' })}
-              className={
-                sort === f.id
-                  ? 'rounded-xl bg-accent px-3 py-2.5 text-start text-sm font-bold text-white'
-                  : 'rounded-xl px-3 py-2.5 text-start text-sm font-medium text-muted transition hover:bg-mist hover:text-fg dark:hover:bg-white/5'
-              }
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="store-surface p-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-            {locale === 'ar' ? 'الأقسام' : 'Categories'}
-          </p>
-          {categorySlug ? (
-            <button
-              type="button"
-              className="text-[11px] font-bold text-accent"
-              onClick={() => applyParams({ category: null, page: '1' })}
-            >
-              {locale === 'ar' ? 'الكل' : 'All'}
-            </button>
-          ) : null}
-        </div>
-        <div className="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => applyParams({ category: null, page: '1' })}
-            className={
-              !categorySlug
-                ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
-            }
-          >
-            {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
-          </button>
-          {(categories.data ?? []).map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => applyParams({ category: c.slug, page: '1' })}
-              className={
-                categorySlug === c.slug
-                  ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                  : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
-              }
-            >
-              {c.name}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="store-surface p-4">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
-            {locale === 'ar' ? 'العلامات' : 'Brands'}
-          </p>
-          {brandSlug ? (
-            <button
-              type="button"
-              className="text-[11px] font-bold text-accent"
-              onClick={() => applyParams({ brand: null, page: '1' })}
-            >
-              {locale === 'ar' ? 'الكل' : 'All'}
-            </button>
-          ) : null}
-        </div>
-        <div className="mt-3 flex max-h-56 flex-col gap-1 overflow-y-auto">
-          <button
-            type="button"
-            onClick={() => applyParams({ brand: null, page: '1' })}
-            className={
-              !brandSlug
-                ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
-            }
-          >
-            {locale === 'ar' ? 'كل العلامات' : 'All brands'}
-          </button>
-          {(brands.data ?? []).map((b) => (
-            <button
-              key={b.id}
-              type="button"
-              onClick={() => applyParams({ brand: b.slug, page: '1' })}
-              className={
-                brandSlug === b.slug
-                  ? 'rounded-xl bg-accent/10 px-3 py-2 text-start text-sm font-bold text-accent'
-                  : 'rounded-xl px-3 py-2 text-start text-sm text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5'
-              }
-            >
-              {b.name}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <>
       <Seo title={title} path={storePath('products')} />
-      <div className="border-b border-border bg-card">
-        <div className="mx-auto max-w-[90rem] px-4 py-7 sm:px-6 lg:px-10">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent">
-            {locale === 'ar' ? 'المتجر' : 'Store'}
-          </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
-            {title}
-          </h1>
-          <p className="mt-1.5 text-sm text-muted">
-            {search ? (
-              locale === 'ar' ? (
-                <>
-                  نتائج «<span className="font-semibold text-fg">{search}</span>» — {total} منتج
-                </>
-              ) : (
-                <>
-                  Results for «<span className="font-semibold text-fg">{search}</span>» — {total}{' '}
-                  products
-                </>
-              )
-            ) : (
-              <>
-                {total} {locale === 'ar' ? 'منتج' : 'products'}
-                {activeCategory
-                  ? locale === 'ar'
-                    ? ` في ${activeCategory.name}`
-                    : ` in ${activeCategory.name}`
-                  : ''}
-                {activeBrand
-                  ? locale === 'ar'
-                    ? ` · ${activeBrand.name}`
-                    : ` · ${activeBrand.name}`
-                  : ''}
-              </>
-            )}
-          </p>
 
-          <form
-            className="mt-5 flex flex-wrap gap-2"
-            onSubmit={(e) => {
-              e.preventDefault();
-              applyParams({ q: q.trim(), page: '1' });
-            }}
-          >
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={
-                locale === 'ar' ? 'ابحث بالاسم أو SKU...' : 'Search name or SKU...'
-              }
-              className="h-11 max-w-xl flex-1 rounded-xl"
-            />
-            <Button type="submit" className="h-11 rounded-xl px-5 font-bold">
-              {locale === 'ar' ? 'بحث' : 'Search'}
-            </Button>
-            {search || categorySlug || brandSlug || sortParam ? (
-              <Button
+      {cats.length > 0 ? (
+        <div className="border-b border-border bg-card">
+          <div className="mx-auto max-w-[90rem] px-4 py-3 sm:px-6 lg:px-10">
+            <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:px-0">
+              <button
                 type="button"
-                variant="outline"
-                className="h-11 rounded-xl"
-                onClick={() => {
-                  setQ('');
-                  setParams({});
-                }}
+                onClick={() => applyParams({ category: null, page: '1' })}
+                className={cn(
+                  'shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition',
+                  !categorySlug
+                    ? 'bg-navy text-white'
+                    : 'border border-border bg-page text-muted hover:border-accent/40 hover:text-fg',
+                )}
               >
-                {locale === 'ar' ? 'مسح الفلاتر' : 'Clear filters'}
-              </Button>
-            ) : null}
-            <Button
-              type="button"
-              variant="outline"
-              className="h-11 rounded-xl lg:hidden"
-              onClick={() => setMobileFilters((v) => !v)}
-            >
-              {locale === 'ar' ? 'فلاتر' : 'Filters'}
-            </Button>
-          </form>
+                {locale === 'ar' ? 'كل الأقسام' : 'All'}
+              </button>
+              {cats.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => applyParams({ category: c.slug, page: '1' })}
+                  className={cn(
+                    'inline-flex shrink-0 items-center gap-2 rounded-full px-3.5 py-2 text-xs font-bold transition',
+                    categorySlug === c.slug ||
+                      (c.children ?? []).some((ch) => ch.slug === categorySlug)
+                      ? 'bg-accent text-white'
+                      : 'border border-border bg-page text-muted hover:border-accent/40 hover:text-fg',
+                  )}
+                >
+                  {c.imageUrl ? (
+                    <img
+                      src={c.imageUrl}
+                      alt=""
+                      className="h-5 w-5 rounded-full object-cover"
+                    />
+                  ) : null}
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
-          <div className="mt-5 space-y-3">
-            <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-              <span className="shrink-0 text-xs font-bold text-muted">
-                {locale === 'ar' ? 'ترتيب:' : 'Sort:'}
+      <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-10 lg:py-10">
+        {/* Sidebar */}
+        <aside className="hidden space-y-4 lg:sticky lg:top-28 lg:block lg:self-start">
+          <div className="store-surface overflow-hidden">
+            <div className="border-b border-border bg-navy px-4 py-3 text-white">
+              <p className="text-sm font-extrabold">
+                {locale === 'ar' ? 'تصفية النتائج' : 'Filter results'}
+              </p>
+            </div>
+            <div className="space-y-5 p-4">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                  {locale === 'ar' ? 'المجموعات / الأقسام' : 'Groups / Categories'}
+                </p>
+                <div className="mt-3 flex max-h-72 flex-col gap-2 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => applyParams({ category: null, page: '1' })}
+                    className={cn(
+                      'rounded-xl px-3 py-2 text-start text-sm transition',
+                      !categorySlug
+                        ? 'bg-accent/10 font-bold text-accent'
+                        : 'text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5',
+                    )}
+                  >
+                    {locale === 'ar' ? 'كل الأقسام' : 'All categories'}
+                  </button>
+                  {cats.map((group) => (
+                    <div key={group.id} className="space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => applyParams({ category: group.slug, page: '1' })}
+                        className={cn(
+                          'w-full rounded-xl px-3 py-2 text-start text-sm font-bold transition',
+                          categorySlug === group.slug
+                            ? 'bg-navy text-white'
+                            : 'text-fg hover:bg-mist dark:hover:bg-white/5',
+                        )}
+                      >
+                        {group.name}
+                      </button>
+                      {(group.children ?? []).map((child) => (
+                        <button
+                          key={child.id}
+                          type="button"
+                          onClick={() => applyParams({ category: child.slug, page: '1' })}
+                          className={cn(
+                            'ms-2 w-[calc(100%-0.5rem)] rounded-xl px-3 py-1.5 text-start text-xs transition',
+                            categorySlug === child.slug
+                              ? 'bg-accent/10 font-bold text-accent'
+                              : 'text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5',
+                          )}
+                        >
+                          {child.name}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-muted">
+                  {locale === 'ar' ? 'العلامات' : 'Brands'}
+                </p>
+                <div className="mt-3 flex max-h-52 flex-col gap-1 overflow-y-auto">
+                  <button
+                    type="button"
+                    onClick={() => applyParams({ brand: null, page: '1' })}
+                    className={cn(
+                      'rounded-xl px-3 py-2 text-start text-sm transition',
+                      !brandSlug
+                        ? 'bg-accent/10 font-bold text-accent'
+                        : 'text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5',
+                    )}
+                  >
+                    {locale === 'ar' ? 'كل العلامات' : 'All brands'}
+                  </button>
+                  {brandList.map((b) => (
+                    <button
+                      key={b.id}
+                      type="button"
+                      onClick={() => applyParams({ brand: b.slug, page: '1' })}
+                      className={cn(
+                        'rounded-xl px-3 py-2 text-start text-sm transition',
+                        brandSlug === b.slug
+                          ? 'bg-accent/10 font-bold text-accent'
+                          : 'text-muted hover:bg-mist hover:text-fg dark:hover:bg-white/5',
+                      )}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* Mobile filters drawer */}
+        {mobileFilters ? (
+          <div className="store-surface space-y-4 p-4 lg:hidden">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-extrabold">
+                {locale === 'ar' ? 'الفلاتر' : 'Filters'}
+              </p>
+              <button
+                type="button"
+                className="text-xs font-bold text-accent"
+                onClick={() => setMobileFilters(false)}
+              >
+                {locale === 'ar' ? 'إغلاق' : 'Close'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {cats.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  onClick={() => {
+                    applyParams({ category: c.slug, page: '1' });
+                    setMobileFilters(false);
+                  }}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-bold',
+                    categorySlug === c.slug
+                      ? 'bg-accent text-white'
+                      : 'border border-border text-muted',
+                  )}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {brandList.map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  onClick={() => {
+                    applyParams({ brand: b.slug, page: '1' });
+                    setMobileFilters(false);
+                  }}
+                  className={cn(
+                    'rounded-full px-3 py-1.5 text-xs font-bold',
+                    brandSlug === b.slug
+                      ? 'bg-navy text-white'
+                      : 'border border-border text-muted',
+                  )}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <div>
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl font-extrabold tracking-tight text-fg sm:text-2xl">
+                {title}
+              </h1>
+              <span className="rounded-full bg-mist px-2.5 py-1 text-xs font-bold text-muted dark:bg-white/10">
+                {total} {locale === 'ar' ? 'منتج' : 'products'}
               </span>
+              {search ? <span className="text-sm text-muted">«{search}»</span> : null}
+              {hasFilters ? (
+                <button
+                  type="button"
+                  className="text-xs font-bold text-accent hover:underline"
+                  onClick={() => setParams({})}
+                >
+                  {locale === 'ar' ? 'مسح الفلاتر' : 'Clear filters'}
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="inline-flex h-9 items-center rounded-xl border border-border px-3 text-xs font-bold text-muted lg:hidden"
+                onClick={() => setMobileFilters((v) => !v)}
+              >
+                <SlidersHorizontal className="me-1.5 h-3.5 w-3.5" />
+                {locale === 'ar' ? 'فلاتر' : 'Filters'}
+              </button>
+            </div>
+            <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 no-scrollbar sm:mx-0 sm:px-0">
               {sortOptions.map((f) => (
                 <button
                   key={f.id}
                   type="button"
                   onClick={() => applyParams({ sort: f.id, page: '1' })}
-                  className={
+                  className={cn(
+                    'shrink-0 rounded-full px-3.5 py-1.5 text-xs font-bold transition',
                     sort === f.id
-                      ? 'shrink-0 rounded-full bg-accent px-3.5 py-1.5 text-xs font-bold text-white'
-                      : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-accent/40 hover:text-fg'
-                  }
+                      ? 'bg-accent text-white'
+                      : 'border border-border bg-card text-muted hover:border-accent/40 hover:text-fg',
+                  )}
                 >
                   {f.label}
                 </button>
               ))}
             </div>
-            {(categories.data ?? []).length > 0 ? (
-              <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-1 no-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
-                <span className="shrink-0 text-xs font-bold text-muted">
-                  {locale === 'ar' ? 'قسم:' : 'Category:'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => applyParams({ category: null, page: '1' })}
-                  className={
-                    !categorySlug
-                      ? 'shrink-0 rounded-full bg-navy px-3.5 py-1.5 text-xs font-bold text-white'
-                      : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-navy/30 hover:text-fg'
-                  }
-                >
-                  {locale === 'ar' ? 'الكل' : 'All'}
-                </button>
-                {(categories.data ?? []).map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => applyParams({ category: c.slug, page: '1' })}
-                    className={
-                      categorySlug === c.slug
-                        ? 'shrink-0 rounded-full bg-navy px-3.5 py-1.5 text-xs font-bold text-white'
-                        : 'shrink-0 rounded-full border border-border bg-card px-3.5 py-1.5 text-xs font-semibold text-muted transition hover:border-navy/30 hover:text-fg'
-                    }
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      </div>
-
-      <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-8 sm:px-6 lg:grid-cols-[240px_1fr] lg:px-10 lg:py-10">
-        <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">{FiltersPanel}</aside>
-        {mobileFilters ? <div className="lg:hidden">{FiltersPanel}</div> : null}
-
-        <div>
-          <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
-            <p className="text-sm font-semibold text-muted">
-              {locale === 'ar'
-                ? `عرض ${products.length} من ${total}`
-                : `Showing ${products.length} of ${total}`}
-            </p>
           </div>
 
           {query.isLoading ? <LoadingState variant="products" /> : null}
-          {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
+          {query.isError ? (
+            <ErrorState
+              title={locale === 'ar' ? 'تعذر تحميل المنتجات' : 'Could not load products'}
+              description={
+                locale === 'ar'
+                  ? 'تأكد أن الـ API شغّال ثم أعد المحاولة'
+                  : 'Make sure the API is running, then try again'
+              }
+              retryLabel={locale === 'ar' ? 'إعادة المحاولة' : 'Try again'}
+              onRetry={() => void query.refetch()}
+            />
+          ) : null}
 
           {!query.isLoading && !query.isError ? (
             products.length ? (
@@ -422,10 +420,12 @@ export function StoreProductsPage() {
                         ? locale === 'ar'
                           ? 'مبيعات'
                           : 'Top'
-                        : sort === 'newest'
-                          ? locale === 'ar'
-                            ? 'جديد'
-                            : 'New'
+                        : sort === 'newest' || !sortParam
+                          ? p.featured
+                            ? locale === 'ar'
+                              ? 'مميز'
+                              : 'Featured'
+                            : undefined
                           : undefined
                     }
                   />
@@ -449,10 +449,7 @@ export function StoreProductsPage() {
                 }
                 action={{
                   label: locale === 'ar' ? 'إعادة ضبط' : 'Reset',
-                  onClick: () => {
-                    setQ('');
-                    setParams({});
-                  },
+                  onClick: () => setParams({}),
                 }}
               />
             )
@@ -460,6 +457,7 @@ export function StoreProductsPage() {
 
           <div className="mt-8">
             <Pagination
+              locale={locale}
               page={query.data?.meta.page ?? page}
               totalPages={query.data?.meta.totalPages ?? 1}
               onChange={(p) => applyParams({ page: String(p) })}
@@ -484,53 +482,84 @@ export function StoreCategoriesPage() {
       <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
-            {locale === 'ar' ? 'الأقسام' : 'Categories'}
+            {locale === 'ar' ? 'مجموعات الأقسام' : 'Category groups'}
           </h1>
           <p className="mt-1 text-sm text-muted">
             {locale === 'ar'
-              ? 'تصفّح كل أقسام المتجر الصناعي'
-              : 'Browse every industrial store category'}
+              ? 'كروبات رئيسية وتحتها أقسام المنتجات'
+              : 'Main groups with product sections inside'}
           </p>
         </div>
 
         {categories.isLoading ? <LoadingState variant="cards" /> : null}
         {categories.isError ? <ErrorState onRetry={() => void categories.refetch()} /> : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {(categories.data ?? []).map((c, i) => (
-            <Link
-              key={c.id}
-              to={storePath(`categories/${c.slug}`)}
-              className="group store-surface overflow-hidden transition hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
-            >
-              <div className="relative aspect-4/3 overflow-hidden bg-mist dark:bg-muted/40">
-                {c.imageUrl ? (
-                  <img
-                    src={c.imageUrl}
-                    alt={c.name}
-                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full items-center justify-center bg-linear-to-br from-accent/15 to-navy/10 text-accent">
-                    <span className="text-sm font-bold tabular-nums opacity-60">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
+        <div className="space-y-8">
+          {(categories.data ?? []).map((group, i) => (
+            <section key={group.id} className="store-surface overflow-hidden">
+              <Link
+                to={storePath(`categories/${group.slug}`)}
+                className="group relative block overflow-hidden"
+              >
+                <div className="relative aspect-[21/9] max-h-48 w-full bg-mist sm:max-h-56">
+                  {group.imageUrl ? (
+                    <img
+                      src={group.imageUrl}
+                      alt={group.name}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center bg-navy/10 text-navy">
+                      <span className="text-sm font-bold">{String(i + 1).padStart(2, '0')}</span>
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-linear-to-t from-navy/85 via-navy/35 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
+                      {locale === 'ar' ? 'مجموعة' : 'Group'}
+                    </p>
+                    <h2 className="mt-1 text-xl font-extrabold text-white sm:text-2xl">
+                      {group.name}
+                    </h2>
+                    {group.description ? (
+                      <p className="mt-1 max-w-2xl text-sm text-white/75">{group.description}</p>
+                    ) : null}
                   </div>
-                )}
-                <div className="absolute inset-0 bg-linear-to-t from-navy/80 via-navy/20 to-transparent" />
-                <span className="absolute start-3 top-3 rounded-md bg-white/90 px-2 py-0.5 text-[10px] font-extrabold tabular-nums text-navy">
-                  {String(i + 1).padStart(2, '0')}
-                </span>
-              </div>
-              <div className="p-4">
-                <p className="text-base font-bold text-fg transition group-hover:text-accent">
-                  {c.name}
-                </p>
-                {c.description ? (
-                  <p className="mt-1 line-clamp-2 text-sm text-muted">{c.description}</p>
-                ) : null}
-              </div>
-            </Link>
+                </div>
+              </Link>
+
+              {(group.children?.length ?? 0) > 0 ? (
+                <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {(group.children ?? []).map((child) => (
+                    <Link
+                      key={child.id}
+                      to={storePath(`categories/${child.slug}`)}
+                      className="flex items-center gap-3 rounded-xl border border-border bg-page p-3 transition hover:border-accent/40 hover:shadow-sm"
+                    >
+                      {child.imageUrl ? (
+                        <img
+                          src={child.imageUrl}
+                          alt=""
+                          className="h-14 w-14 shrink-0 rounded-lg object-cover"
+                        />
+                      ) : (
+                        <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent text-xs font-bold">
+                          EH
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-fg">{child.name}</p>
+                        {child.description ? (
+                          <p className="mt-0.5 line-clamp-2 text-xs text-muted">
+                            {child.description}
+                          </p>
+                        ) : null}
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+            </section>
           ))}
         </div>
 
@@ -550,10 +579,10 @@ export function StoreCategoryPage() {
     queryFn: async () => (await catalogApi.categoryBySlug(slug)).data,
   });
   const products = useQuery({
-    queryKey: ['category-products', category.data?.id],
-    enabled: Boolean(category.data?.id),
+    queryKey: ['category-products', category.data?.slug],
+    enabled: Boolean(category.data?.slug),
     queryFn: async () =>
-      (await catalogApi.products({ categoryId: category.data!.id, limit: 24 })).data,
+      (await catalogApi.products({ categorySlug: category.data!.slug, limit: 24 })).data,
   });
 
   if (category.isLoading) return <LoadingState variant="page" />;
@@ -586,6 +615,11 @@ export function StoreCategoryPage() {
               />
               <div className="absolute inset-0 bg-linear-to-t from-navy/75 via-navy/20 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
+                {(category.data.children?.length ?? 0) > 0 ? (
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
+                    {locale === 'ar' ? 'مجموعة أقسام' : 'Category group'}
+                  </p>
+                ) : null}
                 <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
                   {category.data.name}
                 </h1>
@@ -608,12 +642,45 @@ export function StoreCategoryPage() {
           </>
         )}
 
-        <p className="mt-5 text-sm font-semibold text-muted">
+        {(category.data.children?.length ?? 0) > 0 ? (
+          <div className="mt-8">
+            <h2 className="text-lg font-extrabold text-fg">
+              {locale === 'ar' ? 'الأقسام داخل المجموعة' : 'Sections in this group'}
+            </h2>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {(category.data.children ?? []).map((child) => (
+                <Link
+                  key={child.id}
+                  to={storePath(`categories/${child.slug}`)}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-accent/40 hover:shadow-sm"
+                >
+                  {child.imageUrl ? (
+                    <img
+                      src={child.imageUrl}
+                      alt=""
+                      className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                    />
+                  ) : null}
+                  <div className="min-w-0">
+                    <p className="truncate font-bold text-fg">{child.name}</p>
+                    {child.description ? (
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted">
+                        {child.description}
+                      </p>
+                    ) : null}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        <p className="mt-8 text-sm font-semibold text-muted">
           {products.data?.meta.total ?? products.data?.data?.length ?? 0}{' '}
-          {locale === 'ar' ? 'منتج في هذا القسم' : 'products in this category'}
+          {locale === 'ar' ? 'منتج في هذه المجموعة / القسم' : 'products in this group / category'}
         </p>
         {products.isLoading ? <LoadingState variant="products" /> : null}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {(products.data?.data ?? []).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}

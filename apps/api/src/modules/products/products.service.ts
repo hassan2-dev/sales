@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import {
   Availability,
+  ContentStatus,
   Prisma,
   ProductStatus,
 } from '@prisma/client';
@@ -120,7 +121,24 @@ export class ProductsService {
       where.featured =
         query.featured === true ||
         query.featured === ('true' as unknown as boolean);
-    if (query.categorySlug) where.category = { slug: query.categorySlug };
+    if (query.categorySlug) {
+      const cat = await this.prisma.category.findFirst({
+        where: { slug: query.categorySlug, status: ContentStatus.PUBLISHED },
+        select: {
+          id: true,
+          children: {
+            where: { status: ContentStatus.PUBLISHED },
+            select: { id: true },
+          },
+        },
+      });
+      if (cat) {
+        const ids = [cat.id, ...cat.children.map((c) => c.id)];
+        where.categoryId = { in: ids };
+      } else {
+        where.category = { slug: query.categorySlug };
+      }
+    }
     if (query.brandSlug) where.brand = { slug: query.brandSlug };
 
     const sortBy = query.sortBy || 'createdAt';

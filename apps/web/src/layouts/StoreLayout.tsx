@@ -127,7 +127,7 @@ export function StoreLayout() {
     <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-page text-fg" dir={dir}>
       <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
         <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center gap-1.5 px-3 sm:h-[4.25rem] sm:gap-3 sm:px-6 lg:px-10">
-          <Logo to="/" imgClassName="h-8 sm:h-10" className="min-w-0 shrink" />
+          <Logo to={storePath()} imgClassName="h-8 sm:h-10" className="min-w-0 shrink" />
 
           <form onSubmit={onSearch} className="mx-2 hidden min-w-0 flex-1 md:flex">
             <div className="store-search w-full max-w-2xl">
@@ -330,20 +330,27 @@ export function StoreLayout() {
       <CompareBar />
 
       <footer className="mt-auto border-t border-white/10 bg-navy pb-[env(safe-area-inset-bottom)] text-white">
-        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10">
-          <div>
+        <div className="mx-auto grid max-w-[90rem] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-12 lg:px-10">
+          <div className="lg:col-span-4">
             <Logo
               to={storePath()}
               imgClassName="h-12 max-w-[180px] sm:h-14 sm:max-w-[200px]"
             />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/55">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
               {locale === 'ar'
                 ? 'متجر افاق الطاقة — منصة B2B لمعدات النفط والغاز والصناعة في العراق.'
                 : 'Energy Horizon Store — B2B marketplace for oil, gas & industrial equipment in Iraq.'}
             </p>
+            <Link
+              to={storePath('quote')}
+              className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-white hover:bg-accent-soft"
+            >
+              <FileText className="h-4 w-4" />
+              {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+            </Link>
           </div>
-          <div>
-            <p className="text-sm font-bold">{locale === 'ar' ? 'التسوق' : 'Shop'}</p>
+          <div className="lg:col-span-2">
+            <p className="text-sm font-bold">{locale === 'ar' ? 'المنتجات' : 'Products'}</p>
             <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
               <Link to={storePath('products')} className="hover:text-white">
                 {locale === 'ar' ? 'كل المنتجات' : 'All products'}
@@ -354,35 +361,54 @@ export function StoreLayout() {
               <Link to={storePath('products') + '?sort=bestsellers'} className="hover:text-white">
                 {locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
               </Link>
-              <Link to={storePath('favorites')} className="hover:text-white">
-                {locale === 'ar' ? 'المفضلة' : 'Wishlist'}
+              <Link to={storePath('products') + '?sort=newest'} className="hover:text-white">
+                {locale === 'ar' ? 'وصل حديثاً' : 'New arrivals'}
               </Link>
             </div>
           </div>
-          <div>
-            <p className="text-sm font-bold">{locale === 'ar' ? 'الحساب' : 'Account'}</p>
+          <div className="lg:col-span-2">
+            <p className="text-sm font-bold">{locale === 'ar' ? 'الدعم' : 'Support'}</p>
             <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
-              <Link to={accountTo} className="hover:text-white">
-                {accountLabel}
+              <Link to={storePath('quote')} className="hover:text-white">
+                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+              </Link>
+              <Link to={storePath('favorites')} className="hover:text-white">
+                {locale === 'ar' ? 'المفضلة' : 'Wishlist'}
               </Link>
               <Link to={storePath('cart')} className="hover:text-white">
                 {locale === 'ar' ? 'السلة' : 'Cart'}
-              </Link>
-              <Link to={storePath('quote')} className="hover:text-white">
-                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
               </Link>
               <a href={SITE_URL} className="hover:text-white">
                 {locale === 'ar' ? 'الموقع الرئيسي' : 'Corporate site'}
               </a>
             </div>
           </div>
-          <div>
-            <p className="text-sm font-bold">{locale === 'ar' ? 'لماذا المتجر؟' : 'Why Energy Horizon'}</p>
-            <ul className="mt-3 space-y-2.5 text-sm text-white/55">
-              <li>{locale === 'ar' ? 'شراء مباشر أو عرض سعر' : 'Buy now or request quote'}</li>
-              <li>{locale === 'ar' ? 'كتالوج صناعي محدّث' : 'Live industrial catalog'}</li>
-              <li>{locale === 'ar' ? 'دعم مشاريع ومقاولات' : 'Project & contractor support'}</li>
-            </ul>
+          <div className="lg:col-span-2">
+            <p className="text-sm font-bold">{locale === 'ar' ? 'الشركة' : 'Company'}</p>
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
+              <Link to={accountTo} className="hover:text-white">
+                {accountLabel}
+              </Link>
+              <a href={SITE_URL} className="hover:text-white">
+                {locale === 'ar' ? 'عن افاق الطاقة' : 'About Energy Horizon'}
+              </a>
+              <span>{locale === 'ar' ? 'تغطية العراق' : 'Iraq coverage'}</span>
+              <span>{locale === 'ar' ? 'دعم مشاريع B2B' : 'B2B project support'}</span>
+            </div>
+          </div>
+          <div className="lg:col-span-2">
+            <p className="text-sm font-bold">{locale === 'ar' ? 'تواصل سريع' : 'Quick contact'}</p>
+            <p className="mt-3 text-sm leading-relaxed text-white/55">
+              {locale === 'ar'
+                ? 'للكميات الكبيرة والمشاريع الخاصة تواصل مع فريق المبيعات.'
+                : 'For volume orders and special projects, contact our sales team.'}
+            </p>
+            <Link
+              to={storePath('products')}
+              className="mt-4 inline-flex text-sm font-bold text-accent-soft hover:text-white"
+            >
+              {locale === 'ar' ? 'تصفح الكتالوج ←' : 'Browse catalog →'}
+            </Link>
           </div>
         </div>
         <div className="border-t border-white/10">

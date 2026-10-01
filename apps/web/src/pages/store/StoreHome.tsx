@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ArrowRight,
-  BadgeCheck,
   Bolt,
   Box,
   Cable,
@@ -18,6 +17,7 @@ import {
   Headphones,
   Layers,
   Package,
+  Percent,
   Search,
   ShieldCheck,
   Truck,
@@ -33,8 +33,9 @@ import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
 import { cn } from '@/lib/cn';
 
+/** Industrial sunset / refinery — matches mockup energy */
 const HERO_BG =
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=2400&q=80';
+  'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=2400&q=80';
 
 const CAT_ICONS: LucideIcon[] = [
   Wrench,
@@ -117,118 +118,126 @@ export function StoreHomePage() {
     );
   }
 
+  const trust = [
+    {
+      icon: ShieldCheck,
+      title: locale === 'ar' ? 'منتجات أصلية' : 'Original products',
+      text: locale === 'ar' ? 'علامات صناعية موثوقة' : 'Trusted industrial brands',
+    },
+    {
+      icon: Headphones,
+      title: locale === 'ar' ? 'دعم فني متخصص' : 'Technical support',
+      text: locale === 'ar' ? 'لفرق المشاريع والمقاولات' : 'For project & contractor teams',
+    },
+    {
+      icon: Truck,
+      title: locale === 'ar' ? 'توريد سريع' : 'Fast supply',
+      text: locale === 'ar' ? 'تغطية داخل العراق' : 'Nationwide Iraq coverage',
+    },
+    {
+      icon: Percent,
+      title: locale === 'ar' ? 'عروض للمشاريع' : 'Project offers',
+      text: locale === 'ar' ? 'أسعار وكميات خاصة' : 'Volume & project pricing',
+    },
+  ];
+
+  const stats = [
+    { value: '500+', label: locale === 'ar' ? 'مشروع مكتمل' : 'Completed projects' },
+    { value: '50+', label: locale === 'ar' ? 'علامة عالمية' : 'Global brands' },
+    { value: '10+', label: locale === 'ar' ? 'سنوات خبرة' : 'Years experience' },
+    { value: '24/7', label: locale === 'ar' ? 'دعم فني' : 'Technical support' },
+  ];
+
   return (
     <>
       <Seo title={locale === 'ar' ? 'متجر افاق الطاقة' : 'Energy Horizon Store'} path={storePath()} />
 
-      <section className="relative isolate overflow-hidden bg-navy text-white">
+      {/* Hero — mockup: full-bleed industrial + dual CTA */}
+      <section className="relative isolate min-h-[72vh] overflow-hidden bg-navy text-white sm:min-h-[78vh]">
         <img
           src={HERO_BG}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover opacity-40"
+          className="absolute inset-0 h-full w-full object-cover object-center"
         />
-        <div className="absolute inset-0 bg-linear-to-r from-navy via-navy/88 to-navy/55 rtl:bg-linear-to-l" />
-        <div className="absolute inset-0 bg-linear-to-t from-navy/70 via-transparent to-navy/20" />
+        <div className="absolute inset-0 bg-navy/55" />
+        <div className="absolute inset-0 bg-linear-to-t from-navy via-navy/40 to-navy/25" />
+        <div className="absolute inset-0 bg-linear-to-l from-transparent via-navy/30 to-navy/75" />
 
-        <div className="relative mx-auto max-w-[90rem] px-4 py-12 sm:px-6 sm:py-20 lg:px-10 lg:py-24">
+        <div className="relative mx-auto flex min-h-[72vh] max-w-[90rem] flex-col justify-end px-4 pb-14 pt-20 sm:min-h-[78vh] sm:px-6 sm:pb-20 lg:px-10 lg:pb-24">
           <div className="max-w-3xl reveal">
-            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-accent-soft">
-              {locale === 'ar' ? 'افاق الطاقة · Energy Horizon' : 'Energy Horizon · افاق الطاقة'}
+            <p className="mb-3 inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-bold tracking-wide text-white/90 backdrop-blur-sm">
+              {locale === 'ar' ? 'افاق الطاقة · العراق' : 'Energy Horizon · Iraq'}
             </p>
-            <h1 className="mt-4 text-[1.75rem] font-extrabold leading-[1.15] tracking-tight sm:text-4xl lg:text-5xl">
-              {locale === 'ar' ? (
-                <>
-                  سوق صناعي موثوق لـ{' '}
-                  <span className="text-accent-soft">معدات الطاقة</span>
-                </>
-              ) : (
-                <>
-                  Premium industrial marketplace for{' '}
-                  <span className="text-accent-soft">energy equipment</span>
-                </>
-              )}
-            </h1>
-            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/70 sm:text-base">
+            <h1 className="text-[1.85rem] font-extrabold leading-[1.2] tracking-tight sm:text-4xl lg:text-5xl xl:text-[3.25rem]">
               {locale === 'ar'
-                ? 'اكتشف منتجات النفط والغاز والصناعة، قارن المواصفات، اشترِ مباشرة أو اطلب عرض سعر لمشروعك.'
-                : 'Discover oil & gas and industrial products, compare specs, buy directly or request a project quote.'}
+                ? 'حلول متكاملة لقطاع النفط والغاز في العراق'
+                : 'Integrated solutions for oil & gas in Iraq'}
+            </h1>
+            <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
+              {locale === 'ar'
+                ? 'كتالوج صناعي حي — اشترِ مباشرة أو اطلب عرض سعر لمشروعك بثقة.'
+                : 'Live industrial catalog — buy directly or request a project quote with confidence.'}
             </p>
 
-            <form onSubmit={onSearch} className="mt-8">
-              <div className="store-search h-12 max-w-2xl border-0 shadow-[0_20px_50px_-24px_rgb(0_0_0/0.55)] sm:h-14">
-                <div className="flex min-w-0 flex-1 items-center gap-2 px-3 sm:gap-2.5 sm:px-4">
-                  <Search className="h-4 w-4 shrink-0 text-muted sm:h-5 sm:w-5" />
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link
+                to={storePath('products')}
+                className="inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-extrabold text-white shadow-[0_12px_32px_-12px_rgb(0_112_192/0.7)] transition hover:bg-accent-soft"
+              >
+                {locale === 'ar' ? 'تصفح المنتجات' : 'Browse products'}
+                <Arrow className="h-4 w-4" />
+              </Link>
+              <Link
+                to={storePath('quote')}
+                className="inline-flex h-12 items-center gap-2 rounded-xl border-2 border-white/55 bg-white/5 px-6 text-sm font-extrabold text-white backdrop-blur-sm transition hover:border-white hover:bg-white/15"
+              >
+                <FileText className="h-4 w-4" />
+                {locale === 'ar' ? 'طلب عرض سعر' : 'Request a quote'}
+              </Link>
+            </div>
+
+            {/* Compact search under CTAs — keeps header clean like mockup */}
+            <form onSubmit={onSearch} className="mt-8 max-w-xl">
+              <div className="store-search h-12 border-0 shadow-[0_20px_50px_-24px_rgb(0_0_0/0.55)]">
+                <div className="flex min-w-0 flex-1 items-center gap-2 px-3.5">
+                  <Search className="h-4 w-4 shrink-0 text-muted" />
                   <input
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder={
                       locale === 'ar'
-                        ? 'ابحث عن مضخة، كابل، SKU...'
-                        : 'Search pumps, cables, SKU...'
+                        ? 'ابحث عن منتج أو SKU...'
+                        : 'Search product or SKU...'
                     }
-                    className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-muted sm:text-[15px]"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-muted"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="inline-flex h-full shrink-0 items-center gap-1.5 bg-accent px-4 text-sm font-extrabold text-white transition hover:bg-accent-soft sm:gap-2 sm:px-6"
+                  className="inline-flex h-full shrink-0 items-center bg-navy px-4 text-sm font-bold text-white hover:bg-accent"
                 >
                   {locale === 'ar' ? 'بحث' : 'Search'}
-                  <Arrow className="hidden h-4 w-4 sm:block" />
                 </button>
               </div>
             </form>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link
-                to={storePath('products')}
-                className="inline-flex h-11 items-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-navy transition hover:bg-mist"
-              >
-                {locale === 'ar' ? 'تصفح الكتالوج' : 'Browse catalog'}
-              </Link>
-              <Link
-                to={storePath('quote')}
-                className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/30 px-5 text-sm font-bold text-white transition hover:border-white hover:bg-white/10"
-              >
-                <FileText className="h-4 w-4" />
-                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
-              </Link>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto grid max-w-[90rem] gap-5 px-4 py-6 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10">
-          {[
-            {
-              icon: Truck,
-              title: locale === 'ar' ? 'توريد مشاريع' : 'Project supply',
-              text: locale === 'ar' ? 'طلب منظم للمقاولات' : 'Contractor-ready ordering',
-            },
-            {
-              icon: ShieldCheck,
-              title: locale === 'ar' ? 'حساب موثّق' : 'Verified account',
-              text: locale === 'ar' ? 'OTP بالهاتف' : 'Phone OTP checkout',
-            },
-            {
-              icon: Package,
-              title: locale === 'ar' ? 'كتالوج حي' : 'Live catalog',
-              text: locale === 'ar' ? 'مخزون ومواصفات محدّثة' : 'Updated stock & specs',
-            },
-            {
-              icon: Headphones,
-              title: locale === 'ar' ? 'دعم فني' : 'Technical support',
-              text: locale === 'ar' ? 'لفرق المشاريع' : 'For project teams',
-            },
-          ].map((f) => (
-            <div key={f.title} className="flex items-start gap-3">
-              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+      {/* Trust strip — mockup dark blue value cards */}
+      <section className="bg-navy text-white">
+        <div className="mx-auto grid max-w-[90rem] gap-3 px-4 py-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:gap-4 lg:px-10 lg:py-6">
+          {trust.map((f) => (
+            <div
+              key={f.title}
+              className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-4 backdrop-blur-sm transition hover:bg-white/10"
+            >
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white">
                 <f.icon className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-sm font-bold text-fg">{f.title}</p>
-                <p className="mt-0.5 text-xs text-muted">{f.text}</p>
+                <p className="text-sm font-extrabold">{f.title}</p>
+                <p className="mt-0.5 text-xs text-white/60">{f.text}</p>
               </div>
             </div>
           ))}
@@ -238,11 +247,11 @@ export function StoreHomePage() {
       <div className="mx-auto w-full max-w-[90rem] space-y-16 px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
         <section>
           <SectionHead
-            title={locale === 'ar' ? 'تسوق حسب القسم' : 'Shop by category'}
+            title={locale === 'ar' ? 'مجموعات الأقسام' : 'Category groups'}
             subtitle={
               locale === 'ar'
-                ? 'اختر القسم المناسب لمعدات مشروعك'
-                : 'Find the right equipment category for your project'
+                ? 'كروبات رئيسية وتحتها أقسام المنتجات'
+                : 'Main groups with product sections inside'
             }
             action={
               <Link
@@ -255,20 +264,21 @@ export function StoreHomePage() {
             }
           />
           {categories.isLoading ? <LoadingState variant="cards" /> : null}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {cats.map((c, i) => {
               const Icon = pickIcon(c.slug, i);
               const tone = CAT_TONES[i % CAT_TONES.length];
+              const childCount = c.children?.length ?? 0;
               return (
                 <Link
                   key={c.id}
                   to={storePath(`categories/${c.slug}`)}
-                  className="store-cat store-surface group overflow-hidden transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-md"
+                  className="store-cat group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
                   style={{ animationDelay: `${Math.min(i, 10) * 40}ms` }}
                 >
                   <div
                     className={cn(
-                      'relative aspect-4/3 overflow-hidden',
+                      'relative aspect-5/4 overflow-hidden',
                       !c.imageUrl && tone,
                     )}
                   >
@@ -284,13 +294,31 @@ export function StoreHomePage() {
                         <Icon className="h-10 w-10" />
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-linear-to-t from-navy/80 via-navy/25 to-transparent" />
+                    <div className="absolute inset-0 bg-linear-to-t from-navy/85 via-navy/20 to-transparent" />
                     <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="text-base font-extrabold text-white">{c.name}</p>
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
+                        {locale === 'ar' ? 'مجموعة' : 'Group'}
+                        {childCount
+                          ? ` · ${childCount} ${locale === 'ar' ? 'أقسام' : 'sections'}`
+                          : ''}
+                      </p>
+                      <p className="mt-1 text-lg font-extrabold text-white">{c.name}</p>
                       {c.description ? (
                         <p className="mt-0.5 line-clamp-1 text-xs text-white/75">
                           {c.description}
                         </p>
+                      ) : null}
+                      {childCount > 0 ? (
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          {(c.children ?? []).slice(0, 3).map((ch) => (
+                            <span
+                              key={ch.id}
+                              className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm"
+                            >
+                              {ch.name}
+                            </span>
+                          ))}
+                        </div>
                       ) : null}
                     </div>
                   </div>
@@ -302,7 +330,29 @@ export function StoreHomePage() {
             <EmptyState title={locale === 'ar' ? 'لا توجد أقسام' : 'No categories'} />
           ) : null}
         </section>
+      </div>
 
+      {/* Stats band — mockup industrial proof */}
+      <section className="relative isolate overflow-hidden bg-navy text-white">
+        <img
+          src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=2000&q=70"
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover opacity-25"
+        />
+        <div className="absolute inset-0 bg-navy/80" />
+        <div className="relative mx-auto grid max-w-[90rem] gap-8 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-10 lg:py-16">
+          {stats.map((s) => (
+            <div key={s.label} className="text-center lg:text-start">
+              <p className="text-3xl font-extrabold tracking-tight text-accent-soft sm:text-4xl">
+                {s.value}
+              </p>
+              <p className="mt-2 text-sm font-semibold text-white/70">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <div className="mx-auto w-full max-w-[90rem] space-y-16 px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
         {featuredList.length > 0 ? (
           <section>
             <SectionHead
@@ -339,20 +389,20 @@ export function StoreHomePage() {
         {brandList.length > 0 ? (
           <section>
             <SectionHead
-              title={locale === 'ar' ? 'العلامات التجارية' : 'Popular brands'}
+              title={locale === 'ar' ? 'العلامات التجارية' : 'Trusted brands'}
               subtitle={
                 locale === 'ar' ? 'شركاء توريد صناعي موثوقون' : 'Trusted industrial supply partners'
               }
             />
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
               {brandList.map((b) => (
                 <Link
                   key={b.id}
                   to={storePath(`brands/${b.slug}`)}
-                  className="store-surface flex h-24 items-center justify-center px-4 transition hover:border-accent/40 hover:shadow-md"
+                  className="flex h-20 w-[calc(50%-0.375rem)] items-center justify-center rounded-2xl border border-border bg-card px-4 transition hover:border-accent/40 hover:shadow-md sm:w-36 md:w-40"
                 >
                   {b.logo ? (
-                    <img src={b.logo} alt={b.name} className="max-h-10 max-w-full object-contain" />
+                    <img src={b.logo} alt={b.name} className="max-h-9 max-w-full object-contain" />
                   ) : (
                     <span className="text-center text-sm font-bold text-fg">{b.name}</span>
                   )}
@@ -423,34 +473,41 @@ export function StoreHomePage() {
           </div>
         </section>
 
-        <section className="store-surface overflow-hidden p-6 sm:p-8 lg:p-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start gap-4">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
-                <BadgeCheck className="h-6 w-6" />
-              </span>
-              <div>
-                <h3 className="text-xl font-extrabold tracking-tight text-fg">
-                  {locale === 'ar' ? 'هل تحتاج عرض سعر لمشروع؟' : 'Need a quote for your project?'}
-                </h3>
-                <p className="mt-2 max-w-xl text-sm leading-relaxed text-muted">
-                  {locale === 'ar'
-                    ? 'أرسل المنتجات والكميات وبيانات شركتك — يرد فريق المبيعات بعرض فني واضح.'
-                    : 'Send products, quantities, and company details — our commercial team responds with a clear technical quote.'}
-                </p>
-              </div>
+        {/* Projects CTA — mockup large project band */}
+        <section className="relative overflow-hidden rounded-3xl bg-navy text-white">
+          <img
+            src="https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1600&q=70"
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover opacity-30"
+          />
+          <div className="absolute inset-0 bg-linear-to-l from-navy/95 via-navy/80 to-navy/55" />
+          <div className="relative flex flex-col gap-6 p-6 sm:p-8 lg:flex-row lg:items-center lg:justify-between lg:p-12">
+            <div className="max-w-xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent-soft">
+                {locale === 'ar' ? 'مشاريع خاصة' : 'Special projects'}
+              </p>
+              <h3 className="mt-2 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                {locale === 'ar'
+                  ? 'طلبات كبيرة وعروض للمشاريع'
+                  : 'Large orders & project quotes'}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-white/70">
+                {locale === 'ar'
+                  ? 'أرسل المنتجات والكميات وبيانات شركتك — يرد فريق المبيعات بعرض فني واضح.'
+                  : 'Send products, quantities, and company details — our team responds with a clear technical quote.'}
+              </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
                 to={storePath('quote')}
-                className="inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-bold text-white hover:bg-accent-soft"
+                className="inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-extrabold text-white hover:bg-accent-soft"
               >
                 <FileText className="h-4 w-4" />
                 {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
               </Link>
               <Link
                 to={storePath('products')}
-                className="inline-flex h-11 items-center rounded-xl border border-border px-5 text-sm font-semibold hover:border-accent hover:text-accent"
+                className="inline-flex h-12 items-center rounded-xl border border-white/35 px-6 text-sm font-bold text-white hover:bg-white/10"
               >
                 {locale === 'ar' ? 'تصفح المنتجات' : 'Browse products'}
               </Link>

@@ -30,7 +30,7 @@ export class CategoriesService {
 
   async findAllPublic() {
     return this.prisma.category.findMany({
-      where: { status: ContentStatus.PUBLISHED },
+      where: { status: ContentStatus.PUBLISHED, parentId: null },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
       include: {
         children: {

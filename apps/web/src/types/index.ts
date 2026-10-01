@@ -61,6 +61,10 @@ export interface Category {
   description?: string | null;
   imageUrl?: string | null;
   status?: string;
+  parentId?: string | null;
+  sortOrder?: number;
+  parent?: Category | null;
+  children?: Category[];
 }
 
 export interface Brand {
