@@ -185,8 +185,9 @@ async function main() {
       shortDescription: 'Advanced drilling solutions for Oil & Gas operations',
       description:
         'Comprehensive drilling equipment and technical support for upstream operations across Iraq — BOP kits, mud pump spares, and field tooling.',
+      // Desert oil drilling derrick
       image:
-        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1696059928249-f036c4d54338?auto=format&fit=crop&w=1400&q=80',
       sortOrder: 1,
     },
     {
@@ -195,8 +196,9 @@ async function main() {
       shortDescription: 'Hydraulic systems and industrial fluid power',
       description:
         'Hydraulic components, HPUs, hose assemblies, and maintenance for industrial and oilfield applications.',
+      // Industrial pumps, valves, and stainless piping
       image:
-        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1400&q=80',
       sortOrder: 2,
     },
     {
@@ -205,8 +207,9 @@ async function main() {
       shortDescription: 'Electrical engineering and power solutions',
       description:
         'Ex lighting, instrumentation, transmitters, and power solutions for industrial facilities and hazardous areas.',
+      // High-voltage transmission / power infrastructure
       image:
-        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1400&q=80',
       sortOrder: 3,
     },
     {
@@ -215,9 +218,32 @@ async function main() {
       shortDescription: 'Experienced technical personnel to support you',
       description:
         'Field engineers and specialists providing on-site support, commissioning, training, and HSE guidance.',
+      // Engineers reviewing mechanical drawings with a part
       image:
-        'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80',
+        'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=1400&q=80',
       sortOrder: 4,
+    },
+    {
+      name: 'Safety & PPE',
+      slug: 'safety-ppe',
+      shortDescription: 'HSE gear and PPE packages for crews',
+      description:
+        'Hard hats, FR coveralls, gloves, eye and hearing protection — staged from Baghdad and Basra for drilling pads and plant turnarounds.',
+      // Crew in hard hats and high-visibility PPE on site
+      image:
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=80',
+      sortOrder: 5,
+    },
+    {
+      name: 'Procurement & Supply',
+      slug: 'procurement-supply',
+      shortDescription: 'Sourcing, staging, and delivery for industrial SKUs',
+      description:
+        'End-to-end procurement for oilfield and industrial materials — quote, consolidate, and deliver with clear lead times across Iraq.',
+      // Industrial warehouse / staging racks
+      image:
+        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=80',
+      sortOrder: 6,
     },
   ];
 
@@ -257,26 +283,6 @@ async function main() {
       contactPerson: 'Tabarak',
       sortOrder: 2,
     },
-    {
-      name: 'Erbil Office',
-      city: 'Erbil',
-      country: 'Iraq',
-      address: '100 Meter Road, Erbil',
-      phone: '+964 7501234567',
-      email: 'erbil@energy-horizon.net',
-      contactPerson: 'Karzan',
-      sortOrder: 3,
-    },
-    {
-      name: 'Kirkuk Desk',
-      city: 'Kirkuk',
-      country: 'Iraq',
-      address: 'Kirkuk Industrial Zone',
-      phone: '+964 7709876543',
-      email: 'kirkuk@energy-horizon.net',
-      contactPerson: 'Operations Desk',
-      sortOrder: 4,
-    },
   ];
 
   for (const office of offices) {
@@ -295,13 +301,21 @@ async function main() {
     }
   }
 
+  // Only Baghdad + Basra — archive any other seeded offices
+  await prisma.office.updateMany({
+    where: {
+      name: { notIn: offices.map((o) => o.name) },
+    },
+    data: { status: ContentStatus.ARCHIVED },
+  });
+
   await prisma.page.upsert({
     where: { slug: 'about' },
     update: {
       title: 'About Energy Horizon',
       excerpt: 'Advanced solutions for the Oil & Gas industry',
       content:
-        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq. From drilling support and hydraulics to electrical packages and HSE supply, our teams in Baghdad, Basra, Erbil and Kirkuk keep projects moving safely.',
+        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq. From drilling support and hydraulics to electrical packages and HSE supply, our teams in Baghdad and Basra keep projects moving safely.',
       status: ContentStatus.PUBLISHED,
     },
     create: {
@@ -309,7 +323,7 @@ async function main() {
       slug: 'about',
       excerpt: 'Advanced solutions for the Oil & Gas industry',
       content:
-        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq.',
+        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq. Our teams operate from Baghdad and Basra.',
       status: ContentStatus.PUBLISHED,
     },
   });
@@ -445,44 +459,55 @@ async function main() {
     {
       name: 'Energy Horizon',
       slug: 'energy-horizon',
-      description: 'Private-label industrial solutions',
+      description:
+        'Our private-label PPE, tools, and industrial kits — staged in Baghdad and Basra for oilfield and plant crews.',
       website: 'https://energy-horizon.net',
-      logo: 'https://images.unsplash.com/photo-1560179707-f14eea744dc0?auto=format&fit=crop&w=200&q=80',
+      logo: '/logo.png',
       sortOrder: 1,
     },
     {
       name: 'Schlumberger',
       slug: 'schlumberger',
-      description: 'Oilfield services and equipment',
-      logo: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=200&q=80',
+      description:
+        'Oilfield services technology and equipment lines for drilling, evaluation, and production support.',
+      website: 'https://www.slb.com',
+      logo: '/partners/schlumberger.svg',
       sortOrder: 2,
     },
     {
       name: 'Baker Hughes',
       slug: 'baker-hughes',
-      description: 'Energy technology company',
-      logo: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=200&q=80',
+      description:
+        'Energy technology for drilling, completions, and industrial turbomachinery applications.',
+      website: 'https://www.bakerhughes.com',
+      logo: '/partners/baker-hughes.svg',
       sortOrder: 3,
     },
     {
       name: 'Halliburton',
       slug: 'halliburton',
-      description: 'Products and services for energy industry',
-      logo: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=200&q=80',
+      description:
+        'Products and services for cementing, stimulation, and well construction programs.',
+      website: 'https://www.halliburton.com',
+      logo: '/partners/halliburton.svg',
       sortOrder: 4,
     },
     {
       name: 'Weatherford',
       slug: 'weatherford',
-      description: 'Oilfield equipment and services',
-      logo: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=200&q=80',
+      description:
+        'Oilfield equipment and tubular running systems for well integrity and production.',
+      website: 'https://www.weatherford.com',
+      logo: '/partners/weatherford.svg',
       sortOrder: 5,
     },
     {
       name: 'NOV',
       slug: 'nov',
-      description: 'National Oilwell Varco equipment lines',
-      logo: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=200&q=80',
+      description:
+        'National Oilwell Varco drilling and wellsite equipment lines for rigs and land operations.',
+      website: 'https://www.nov.com',
+      logo: '/partners/nov.svg',
       sortOrder: 6,
     },
   ];
@@ -931,12 +956,12 @@ async function main() {
         'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=1200&q=80',
     },
     {
-      title: 'Erbil office now open for northern projects',
-      slug: 'erbil-office-open',
+      title: 'Baghdad & Basra desks ready for field quotes',
+      slug: 'baghdad-basra-field-quotes',
       excerpt:
-        'Local desk in Erbil supports quotes, PPE supply and technical coordination for KRG sites.',
+        'Quote support and PPE staging through our Baghdad and Basra offices.',
       content:
-        'Energy Horizon opened an Erbil coordination desk to serve northern oil and industrial customers with faster response times and local staging.',
+        'Energy Horizon serves customers from two offices only — Baghdad and Basra — with faster quote turnaround and local staging for Oil & Gas sites across Iraq.',
       author: 'Energy Horizon',
       category: 'Company',
       featured: true,
@@ -979,6 +1004,12 @@ async function main() {
       },
     });
   }
+
+  // Remove outdated Erbil-office news from earlier seeds
+  await prisma.newsArticle.updateMany({
+    where: { slug: 'erbil-office-open' },
+    data: { status: ContentStatus.ARCHIVED },
+  });
 
   console.log('Seed completed successfully.');
   console.log('Admin: admin@energy-horizon.net / Admin@12345');

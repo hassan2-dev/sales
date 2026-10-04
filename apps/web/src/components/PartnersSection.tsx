@@ -2,9 +2,34 @@ import { Link } from 'react-router-dom';
 import type { Brand } from '@/types';
 import { storePath } from '@/lib/urls';
 import { Reveal } from '@/components/Reveal';
+import { cn } from '@/lib/cn';
 
 function isExternalPartner(brand: Brand) {
   return brand.slug !== 'energy-horizon';
+}
+
+function BrandMark({ brand, className }: { brand: Brand; className?: string }) {
+  if (brand.logo) {
+    return (
+      <img
+        src={brand.logo}
+        alt={brand.name}
+        className={cn(
+          'max-h-9 max-w-[150px] object-contain object-center sm:max-h-11 sm:max-w-[170px]',
+          'opacity-80 grayscale transition duration-300',
+          'group-hover:opacity-100 group-hover:grayscale-0',
+          'dark:brightness-0 dark:invert dark:opacity-70 dark:group-hover:opacity-100',
+          className,
+        )}
+      />
+    );
+  }
+
+  return (
+    <span className="text-base font-extrabold tracking-tight text-fg/65 transition group-hover:text-fg sm:text-lg">
+      {brand.name}
+    </span>
+  );
 }
 
 export function PartnersSection({
@@ -45,30 +70,20 @@ export function PartnersSection({
               <span className="h-px flex-1 bg-line" aria-hidden />
             </div>
 
-            <div className="relative overflow-hidden border-y border-line bg-card py-8">
-              <div className="pointer-events-none absolute inset-y-0 start-0 z-10 w-12 bg-gradient-to-r from-[var(--card)] to-transparent sm:w-20" />
-              <div className="pointer-events-none absolute inset-y-0 end-0 z-10 w-12 bg-gradient-to-l from-[var(--card)] to-transparent sm:w-20" />
+            <div className="relative overflow-hidden rounded-xl border border-line bg-card py-6 sm:py-8">
+              <div className="pointer-events-none absolute inset-y-0 start-0 z-10 w-10 bg-gradient-to-r from-[var(--card)] to-transparent sm:w-16" />
+              <div className="pointer-events-none absolute inset-y-0 end-0 z-10 w-10 bg-gradient-to-l from-[var(--card)] to-transparent sm:w-16" />
 
-              <div className="marquee-track flex w-max items-center gap-10 px-6 sm:gap-14">
+              <div className="marquee-track flex w-max items-center gap-8 px-6 sm:gap-12">
                 {belt.map((b, i) => (
                   <Link
                     key={`${b.id}-${i}`}
                     to={storePath(`brands/${b.slug}`)}
-                    className="inline-flex h-14 min-w-[8rem] shrink-0 items-center justify-center opacity-70 transition hover:opacity-100"
+                    className="group inline-flex h-16 min-w-[9.5rem] shrink-0 items-center justify-center rounded-lg px-4 transition hover:bg-muted/50"
                     tabIndex={i >= partners.length ? -1 : undefined}
                     aria-hidden={i >= partners.length ? true : undefined}
                   >
-                    {b.logo ? (
-                      <img
-                        src={b.logo}
-                        alt={b.name}
-                        className="max-h-10 max-w-[140px] object-contain sm:max-h-12 sm:max-w-[160px]"
-                      />
-                    ) : (
-                      <span className="text-lg font-extrabold tracking-tight text-fg/70 sm:text-xl">
-                        {b.name}
-                      </span>
-                    )}
+                    <BrandMark brand={b} />
                   </Link>
                 ))}
               </div>

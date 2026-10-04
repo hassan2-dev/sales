@@ -411,6 +411,44 @@
     color: #fff;
   }
 
+  .brand-card {
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      background 0.35s ease,
+      color 0.35s ease,
+      border-color 0.35s ease,
+      box-shadow 0.4s ease;
+  }
+
+  .brand-card:hover {
+    transform: translateY(-8px);
+    background: #0070c0;
+    color: #fff;
+    border-color: #0070c0;
+    box-shadow: 0 22px 48px -18px rgb(0 112 192 / 0.45);
+  }
+
+  .brand-card:hover .text-muted {
+    color: rgb(255 255 255 / 0.72);
+  }
+
+  .brand-card:hover .font-kpi {
+    color: rgb(255 255 255 / 0.4);
+  }
+
+  .brand-own {
+    transition:
+      border-color 0.35s ease,
+      box-shadow 0.4s ease,
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .brand-own:hover {
+    border-color: #0070c0;
+    box-shadow: 0 22px 48px -18px rgb(0 112 192 / 0.35);
+    transform: translateY(-4px);
+  }
+
   .trust-roster-row {
     position: relative;
     background: transparent;
@@ -785,6 +823,27 @@
   .hero-ken {
     animation: var(--animate-ken);
     will-change: transform;
+  }
+
+  .hero-slide {
+    opacity: 0;
+    transform: scale(1.06);
+    transition:
+      opacity 1.1s ease,
+      transform 7s ease-out;
+    will-change: opacity, transform;
+  }
+  .hero-slide.is-active {
+    opacity: 1;
+    transform: scale(1);
+    z-index: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-slide {
+      transition: opacity 0.4s ease;
+      transform: none;
+    }
   }
 
   /* CTA buttons */

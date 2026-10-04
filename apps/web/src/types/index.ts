@@ -75,6 +75,7 @@ export interface Brand {
   logo?: string | null;
   website?: string | null;
   status?: string;
+  sortOrder?: number;
 }
 
 export interface CartItem {
@@ -145,6 +146,7 @@ export interface CmsService {
   image?: string | null;
   imageUrl?: string | null;
   status?: string;
+  sortOrder?: number;
 }
 
 export interface CmsProject {

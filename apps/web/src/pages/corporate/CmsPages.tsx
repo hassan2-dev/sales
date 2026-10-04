@@ -1,17 +1,33 @@
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  BadgeCheck,
+  HardHat,
+  Package,
+  ShieldCheck,
+  Truck,
+  Users,
+  Warehouse,
+  Wrench,
+  Zap,
+} from 'lucide-react';
 import { Seo } from '@/lib/seo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { LoadingState, EmptyState, ErrorState } from '@/components/ui/States';
 import { catalogApi, cmsApi } from '@/services/endpoints';
-import { STORE_URL } from '@/lib/urls';
+import { STORE_URL, storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
+import { cn } from '@/lib/cn';
 
 function PageHero({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
@@ -81,118 +97,411 @@ export function AboutPage() {
 }
 
 export function ServicesPage() {
-  const { locale } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const p = t.pages;
+
   const query = useQuery({
     queryKey: ['services'],
     queryFn: async () => (await cmsApi.services()).data,
   });
 
+  const services = useMemo(
+    () => [...(query.data ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [query.data],
+  );
+
+  const process = [
+    { title: p.servicesStep1, sub: p.servicesStep1Sub },
+    { title: p.servicesStep2, sub: p.servicesStep2Sub },
+    { title: p.servicesStep3, sub: p.servicesStep3Sub },
+  ];
+
+  const icons = [HardHat, Wrench, Zap, Users, ShieldCheck, Package] as const;
+
   return (
     <>
-      <Seo title={locale === 'ar' ? 'الخدمات' : 'Services'} path="/services" />
-      <PageHero
-        title={locale === 'ar' ? 'الخدمات' : 'Services'}
-        subtitle={
-          locale === 'ar'
-            ? 'هندسة وتشغيل ودعم ميداني.'
-            : 'Engineering, commissioning, and operational support.'
-        }
-      />
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        {query.isLoading ? <LoadingState /> : null}
-        {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
-        <div className="divide-y divide-[var(--border)] border-y border-line">
-          {(query.data ?? []).map((s, i) => (
-            <Link
-              key={s.id}
-              to={`/services/${s.slug}`}
-              className="group grid gap-2 py-7 transition sm:grid-cols-[4rem_1fr] sm:gap-8"
-            >
-              <span className="text-sm tabular-nums text-muted">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <div>
-                <h2 className="text-xl font-semibold text-fg transition group-hover:text-accent">
-                  {s.name}
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted line-clamp-3">
-                  {s.shortDescription || s.description}
-                </p>
-              </div>
-            </Link>
-          ))}
+      <Seo title={p.servicesHero} path="/services" description={p.servicesHeroSub} />
+      <PageHero title={p.servicesHero} subtitle={p.servicesHeroSub} />
+
+      {/* Intro */}
+      <section className="border-b border-line bg-page text-fg">
+        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1fr_1.4fr] lg:gap-16 lg:px-10">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            {p.servicesIntro}
+          </p>
+          <p className="max-w-2xl text-lg font-medium leading-relaxed text-muted sm:text-xl">
+            {p.servicesIntroSub}
+          </p>
         </div>
-        {!query.isLoading && !(query.data ?? []).length ? (
-          <EmptyState title={locale === 'ar' ? 'لا توجد خدمات' : 'No services published'} />
-        ) : null}
-      </div>
+      </section>
+
+      {/* Services grid */}
+      <section className="border-b border-line bg-page py-14 text-fg sm:py-24">
+        <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+          <div className="mb-10 max-w-2xl sm:mb-14">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+              {p.servicesList}
+            </p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl">
+              {p.servicesListSub}
+            </h2>
+          </div>
+
+          {query.isLoading ? <LoadingState variant="cards" /> : null}
+          {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {services.map((s, i) => {
+              const Icon = icons[i % icons.length];
+              return (
+                <Link
+                  key={s.id}
+                  to={`/services/${s.slug}`}
+                  className="service-card group relative flex h-full min-h-[260px] flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-5 sm:min-h-[300px] sm:p-7"
+                >
+                  {(s.imageUrl || s.image) && (
+                    <img
+                      src={s.imageUrl || s.image || ''}
+                      alt=""
+                      className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition duration-500 group-hover:opacity-[0.16]"
+                    />
+                  )}
+                  <div className="relative z-10 flex items-start justify-between gap-3">
+                    <span className="font-kpi text-4xl leading-none text-accent/35">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-accent/25 bg-accent/10 text-accent">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                  </div>
+                  <div className="relative z-10 mt-auto pt-8">
+                    <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.name}</h3>
+                    <p className="mt-3 line-clamp-3 text-sm font-medium leading-relaxed text-muted">
+                      {s.shortDescription || s.description}
+                    </p>
+                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
+                      {p.learnMore}
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+
+          {!query.isLoading && !services.length ? (
+            <EmptyState
+              title={locale === 'ar' ? 'لا توجد خدمات' : 'No services published'}
+            />
+          ) : null}
+        </div>
+      </section>
+
+      {/* Process */}
+      <section className="border-b border-line bg-[#0a0a0a] py-14 text-white sm:py-20">
+        <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            {p.servicesProcess}
+          </p>
+          <div className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
+            {process.map((step, i) => (
+              <div key={step.title} className="border-t border-white/15 pt-6">
+                <span className="font-kpi text-sm text-accent">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <h3 className="mt-3 text-lg font-extrabold tracking-tight sm:text-xl">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/55">{step.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA */}
+      <section className="bg-page py-14 text-fg sm:py-20">
+        <div className="mx-auto flex max-w-[90rem] flex-col items-start justify-between gap-6 px-4 sm:flex-row sm:items-center sm:px-6 lg:px-10">
+          <div className="max-w-xl">
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              {p.servicesCtaTitle}
+            </h2>
+            <p className="mt-3 text-muted">{p.servicesCtaSub}</p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Link to="/contact" className="btn-cta btn-cta-primary btn-shine w-full sm:w-auto">
+              {p.servicesCtaContact}
+              <Arrow className="h-4 w-4" />
+            </Link>
+            <a
+              href={STORE_URL}
+              className="btn-cta btn-cta-dark w-full sm:w-auto"
+            >
+              {p.servicesCtaStore}
+              <ArrowUpRight className="h-4 w-4" />
+            </a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
 
 export function ServiceDetailPage({ slug }: { slug: string }) {
+  const { t, locale, dir } = useI18n();
+  const p = t.pages;
+
   const query = useQuery({
     queryKey: ['service', slug],
     queryFn: async () => (await cmsApi.serviceBySlug(slug)).data,
   });
 
-  if (query.isLoading) return <LoadingState />;
+  if (query.isLoading) return <LoadingState variant="page" />;
   if (query.isError || !query.data) {
     return <ErrorState title="Service not found" onRetry={() => void query.refetch()} />;
   }
 
+  const s = query.data;
+
   return (
     <>
       <Seo
-        title={query.data.name}
+        title={s.name}
         path={`/services/${slug}`}
-        description={query.data.shortDescription || undefined}
+        description={s.shortDescription || undefined}
       />
-      <PageHero title={query.data.name} subtitle={query.data.shortDescription || undefined} />
-      <div className="mx-auto max-w-3xl px-4 py-16 whitespace-pre-wrap text-base leading-relaxed text-muted sm:px-6 lg:px-8">
-        {query.data.description || 'Details coming soon.'}
+      <PageHero title={s.name} subtitle={s.shortDescription || undefined} />
+
+      {(s.imageUrl || s.image) && (
+        <div className="border-b border-line bg-page">
+          <div className="mx-auto max-w-[90rem] px-4 py-8 sm:px-6 lg:px-10">
+            <img
+              src={s.imageUrl || s.image || ''}
+              alt=""
+              className="aspect-[21/9] w-full rounded-xl object-cover"
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="mx-auto max-w-3xl px-4 py-14 text-base leading-relaxed text-muted sm:px-6 sm:py-20 lg:px-8">
+        <div className="whitespace-pre-wrap">
+          {s.description || (locale === 'ar' ? 'التفاصيل قريباً.' : 'Details coming soon.')}
+        </div>
       </div>
+
+      <section className="border-t border-line bg-page py-12 text-fg">
+        <div className="mx-auto flex max-w-[90rem] flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
+          <Link to="/services" className="inline-flex items-center gap-2 text-sm font-bold text-accent">
+            {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+            {p.servicesHero}
+          </Link>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link to="/contact" className="btn-cta btn-cta-primary btn-shine">
+              {p.servicesCtaContact}
+            </Link>
+            <a href={STORE_URL} className="btn-cta btn-cta-dark">
+              {p.servicesCtaStore}
+            </a>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
 
 export function BrandsPage() {
-  const { locale } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const p = t.pages;
+
   const query = useQuery({
     queryKey: ['brands-public'],
     queryFn: async () => (await catalogApi.brands()).data,
   });
 
+  const brands = useMemo(
+    () => [...(query.data ?? [])].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
+    [query.data],
+  );
+
+  const ownBrand = brands.find((b) => b.slug === 'energy-horizon');
+  const partners = brands.filter((b) => b.slug !== 'energy-horizon');
+
+  const why = [
+    { title: p.brandsWhy1, sub: p.brandsWhy1Sub, Icon: BadgeCheck },
+    { title: p.brandsWhy2, sub: p.brandsWhy2Sub, Icon: Warehouse },
+    { title: p.brandsWhy3, sub: p.brandsWhy3Sub, Icon: Truck },
+  ];
+
   return (
     <>
-      <Seo title={locale === 'ar' ? 'العلامات' : 'Brands'} path="/brands" />
-      <PageHero
-        title={locale === 'ar' ? 'العلامات التجارية' : 'Brands'}
-        subtitle={
-          locale === 'ar'
-            ? 'الشركات وخطوط المنتجات التي نمثّلها.'
-            : 'Manufacturers and product lines we represent.'
-        }
-      />
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        {query.isLoading ? <LoadingState /> : null}
-        {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
-        <div className="grid gap-px overflow-hidden rounded-sm border border-line bg-[var(--border)] sm:grid-cols-2 lg:grid-cols-3">
-          {(query.data ?? []).map((b) => (
-            <a
-              key={b.id}
-              href={`${STORE_URL.replace(/\/$/, '')}/brands/${b.slug}`}
-              className="bg-[var(--card)] p-8 transition hover:bg-elevated"
-            >
-              <h2 className="text-lg font-semibold text-fg">{b.name}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-muted line-clamp-3">{b.description}</p>
-            </a>
-          ))}
+      <Seo title={p.brandsHero} path="/brands" description={p.brandsHeroSub} />
+      <PageHero title={p.brandsHero} subtitle={p.brandsHeroSub} />
+
+      <section className="border-b border-line bg-page text-fg">
+        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1fr_1.4fr] lg:gap-16 lg:px-10">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            {p.brandsIntro}
+          </p>
+          <p className="max-w-2xl text-lg font-medium leading-relaxed text-muted sm:text-xl">
+            {p.brandsIntroSub}
+          </p>
         </div>
-        {!query.isLoading && !(query.data ?? []).length ? (
-          <EmptyState title={locale === 'ar' ? 'لا توجد علامات' : 'No brands yet'} />
-        ) : null}
-      </div>
+      </section>
+
+      {ownBrand ? (
+        <section className="border-b border-line bg-page py-14 text-fg sm:py-20">
+          <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+            <div className="mb-8 max-w-2xl">
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+                {p.brandsOwn}
+              </p>
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl">
+                {p.brandsOwnSub}
+              </h2>
+            </div>
+
+            <Link
+              to={storePath(`brands/${ownBrand.slug}`)}
+              className="brand-own group relative flex flex-col gap-8 overflow-hidden rounded-xl border border-accent/30 bg-card p-6 sm:flex-row sm:items-center sm:gap-12 sm:p-10"
+            >
+              <div className="flex h-28 w-full shrink-0 items-center justify-center rounded-lg border border-line bg-page sm:h-36 sm:w-56">
+                {ownBrand.logo ? (
+                  <img
+                    src={ownBrand.logo}
+                    alt={ownBrand.name}
+                    className="max-h-16 max-w-[70%] object-contain sm:max-h-20"
+                  />
+                ) : (
+                  <span className="text-xl font-extrabold tracking-tight">{ownBrand.name}</span>
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+                  {ownBrand.name}
+                </h3>
+                <p className="mt-3 max-w-xl text-sm font-medium leading-relaxed text-muted sm:text-base">
+                  {ownBrand.description}
+                </p>
+                <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5">
+                  {p.brandsView}
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                </span>
+              </div>
+            </Link>
+          </div>
+        </section>
+      ) : null}
+
+      <section className="border-b border-line bg-page py-14 text-fg sm:py-24">
+        <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+          <div className="mb-10 max-w-2xl sm:mb-14">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+              {p.brandsList}
+            </p>
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl">
+              {p.brandsListSub}
+            </h2>
+          </div>
+
+          {query.isLoading ? <LoadingState variant="cards" /> : null}
+          {query.isError ? <ErrorState onRetry={() => void query.refetch()} /> : null}
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {partners.map((b, i) => (
+              <Link
+                key={b.id}
+                to={storePath(`brands/${b.slug}`)}
+                className="brand-card group flex h-full min-h-[240px] flex-col overflow-hidden rounded-xl border border-border/80 bg-card p-5 sm:min-h-[260px] sm:p-7"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="font-kpi text-3xl leading-none text-accent/35">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <div className="flex h-16 w-36 items-center justify-center rounded-lg border border-line bg-page px-3">
+                    {b.logo ? (
+                      <img
+                        src={b.logo}
+                        alt={b.name}
+                        className={cn(
+                          'max-h-9 max-w-full object-contain opacity-80 grayscale transition duration-300',
+                          'group-hover:opacity-100 group-hover:grayscale-0',
+                          'dark:brightness-0 dark:invert dark:opacity-70 dark:group-hover:opacity-100',
+                        )}
+                      />
+                    ) : (
+                      <span className="text-sm font-extrabold tracking-tight text-fg/70">
+                        {b.name}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-auto pt-8">
+                  <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{b.name}</h3>
+                  <p className="mt-3 line-clamp-3 text-sm font-medium leading-relaxed text-muted">
+                    {b.description}
+                  </p>
+                  <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
+                    {p.brandsView}
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+
+          {!query.isLoading && !brands.length ? (
+            <EmptyState title={locale === 'ar' ? 'لا توجد علامات' : 'No brands yet'} />
+          ) : null}
+        </div>
+      </section>
+
+      <section className="border-b border-line bg-[#0a0a0a] py-14 text-white sm:py-20">
+        <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            {p.brandsWhy}
+          </p>
+          <div className="mt-10 grid gap-8 sm:grid-cols-3 sm:gap-6">
+            {why.map((item, i) => (
+              <div key={item.title} className="border-t border-white/15 pt-6">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-kpi text-sm text-accent">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <item.Icon className="h-5 w-5 text-accent" aria-hidden />
+                </div>
+                <h3 className="mt-3 text-lg font-extrabold tracking-tight sm:text-xl">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/55">{item.sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-page py-14 text-fg sm:py-20">
+        <div className="mx-auto flex max-w-[90rem] flex-col items-start justify-between gap-6 px-4 sm:flex-row sm:items-center sm:px-6 lg:px-10">
+          <div className="max-w-xl">
+            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+              {p.brandsCtaTitle}
+            </h2>
+            <p className="mt-3 text-muted">{p.brandsCtaSub}</p>
+          </div>
+          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <Link to="/contact" className="btn-cta btn-cta-primary btn-shine w-full sm:w-auto">
+              {p.brandsCtaContact}
+              <Arrow className="h-4 w-4" />
+            </Link>
+            <Link to={storePath()} className="btn-cta btn-cta-dark w-full sm:w-auto">
+              {p.brandsCtaStore}
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
     </>
   );
 }

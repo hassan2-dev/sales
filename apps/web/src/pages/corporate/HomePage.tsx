@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  Download,
   HardHat,
   Handshake,
   Leaf,
@@ -22,6 +23,7 @@ import { NationwideCoverage } from '@/components/NationwideCoverage';
 import { IraqOfficesMap } from '@/components/IraqOfficesMap';
 import { CountUpStat } from '@/components/CountUpStat';
 import { Reveal } from '@/components/Reveal';
+import { HeroSlideshow } from '@/components/HeroSlideshow';
 import {
   Card,
   CardDescription,
@@ -30,8 +32,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-const HERO_IMG =
-  'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=2400&q=80';
+/** Drop your real PDF at apps/web/public/company-profile.pdf */
+const COMPANY_PROFILE_PDF = '/company-profile.pdf';
+
 const ABOUT_IMG =
   'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80';
 const STATS_IMG =
@@ -136,13 +139,7 @@ export function HomePage() {
 
       {/* Hero — industrial / safety */}
       <section className="relative min-h-[min(100svh,52rem)] overflow-x-clip overflow-y-hidden text-white sm:min-h-[calc(100svh-4rem)]">
-        <img
-          src={HERO_IMG}
-          alt=""
-          className="hero-ken absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/35 dark:from-black/95 dark:via-black/80" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_20%_50%,rgb(0_112_192/0.35),transparent_65%)]" />
+        <HeroSlideshow />
 
         <div className="relative z-10 mx-auto flex min-h-[min(100svh,52rem)] max-w-[90rem] flex-col justify-center px-4 py-14 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:py-20 lg:px-10">
           <div className="max-w-3xl">
@@ -163,6 +160,14 @@ export function HomePage() {
                 {t.hero.ctaStore}
                 <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
+              <a
+                href={COMPANY_PROFILE_PDF}
+                download="AT-Energy-Horizon-Company-Profile.pdf"
+                className="btn-cta btn-cta-ghost group w-full sm:w-auto"
+              >
+                <Download className="h-4 w-4" />
+                {t.hero.ctaProfile}
+              </a>
               <Link to="/services" className="btn-cta btn-cta-ghost w-full sm:w-auto">
                 {t.hero.ctaContact}
               </Link>
