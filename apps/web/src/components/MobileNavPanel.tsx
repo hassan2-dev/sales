@@ -76,7 +76,7 @@ export function MobileNavPanel({
 
       <div
         className={cn(
-          'absolute inset-0 flex flex-col bg-[#f4f8fc] transition-transform duration-300 ease-out dark:bg-[#0b1524]',
+          'absolute inset-0 flex flex-col bg-page text-fg transition-transform duration-300 ease-out',
           open ? 'translate-x-0' : dir === 'rtl' ? 'translate-x-full' : '-translate-x-full',
         )}
       >
@@ -85,7 +85,7 @@ export function MobileNavPanel({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-black/10 bg-white text-fg shadow-sm dark:border-white/15 dark:bg-white/10"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-line bg-card text-fg shadow-sm"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -112,14 +112,14 @@ export function MobileNavPanel({
             <button
               type="button"
               onClick={toggleLocale}
-              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-bold text-muted hover:bg-black/5 dark:hover:bg-white/10"
+              className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-bold text-muted hover:bg-secondary"
             >
               {locale === 'en' ? 'العربية' : 'English'}
             </button>
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted hover:bg-black/5 dark:hover:bg-white/10"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted hover:bg-secondary"
               aria-label={theme === 'light' ? 'Dark' : 'Light'}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -132,7 +132,7 @@ export function MobileNavPanel({
               action.variant === 'primary'
                 ? 'inline-flex h-12 w-full items-center justify-center rounded-2xl bg-accent text-base font-bold text-white shadow-[0_10px_28px_-10px_rgb(0_112_192/0.65)] transition hover:bg-accent-soft'
                 : action.variant === 'secondary'
-                  ? 'inline-flex h-12 w-full items-center justify-center rounded-2xl border-2 border-accent bg-white text-base font-bold text-accent transition hover:bg-accent/5 dark:bg-transparent'
+                  ? 'inline-flex h-12 w-full items-center justify-center rounded-2xl border-2 border-accent bg-card text-base font-bold text-accent transition hover:bg-accent/10'
                   : 'inline-flex h-10 w-full items-center justify-center text-sm font-semibold text-muted';
 
             if (action.href) {

@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
+  ChevronDown,
   Download,
   HardHat,
   Handshake,
@@ -15,12 +16,13 @@ import { Seo } from '@/lib/seo';
 import { LoadingState, EmptyState, ErrorState } from '@/components/ui/States';
 import { catalogApi, cmsApi } from '@/services/endpoints';
 import { useI18n } from '@/i18n/i18n-context';
+import { localizeService } from '@/lib/localize-cms';
 import { storePath } from '@/lib/urls';
 import { FeaturedProductsCarousel } from '@/components/FeaturedProductsCarousel';
 import { PartnersSection } from '@/components/PartnersSection';
 import { NationwideCoverage } from '@/components/NationwideCoverage';
 import { IraqOfficesMap } from '@/components/IraqOfficesMap';
-import { CountUpStat } from '@/components/CountUpStat';
+import { OperationalPresenceSection } from '@/components/OperationalPresenceSection';
 import { Reveal } from '@/components/Reveal';
 import { HeroSlideshow } from '@/components/HeroSlideshow';
 import {
@@ -35,8 +37,6 @@ import {
 const COMPANY_PROFILE_PDF = '/company-profile.pdf';
 
 const ABOUT_IMG = '/company/p01-1.jpg';
-const STATS_IMG = '/company/p07-1.jpg';
-
 const MARQUEE = [
   'AT',
   'ENERGY HORIZON',
@@ -58,16 +58,16 @@ export function HomePage() {
     queryKey: ['home-services'],
     queryFn: async () => (await cmsApi.services()).data,
   });
+  const offices = useQuery({
+    queryKey: ['home-offices'],
+    queryFn: async () => (await cmsApi.offices()).data,
+  });
   const news = useQuery({
     queryKey: ['home-news'],
     queryFn: async () => {
       const res = await cmsApi.news({ limit: 3 });
       return Array.isArray(res.data) ? res.data : res.data.data;
     },
-  });
-  const offices = useQuery({
-    queryKey: ['home-offices'],
-    queryFn: async () => (await cmsApi.offices()).data,
   });
   const featuredProducts = useQuery({
     queryKey: ['home-featured-products'],
@@ -81,6 +81,12 @@ export function HomePage() {
   });
   const newsItems = news.data ?? [];
   const marquee = [...MARQUEE, ...MARQUEE];
+  const intlOffices = (offices.data ?? []).filter(
+    (o) => o.country && !/iraq/i.test(o.country),
+  );
+  const iraqOffices = (offices.data ?? []).filter(
+    (o) => !o.country || /iraq/i.test(o.country),
+  );
 
   const values = [
     {
@@ -119,22 +125,44 @@ export function HomePage() {
         path="/"
       />
 
-      {/* Hero — industrial / safety */}
-      <section className="relative min-h-[min(100svh,52rem)] overflow-x-clip overflow-y-hidden text-white sm:min-h-[calc(100svh-4rem)]">
-        <HeroSlideshow />
+      {/* Hero — brand-first, full-bleed field image */}
+      <section className="relative min-h-[min(92svh,44rem)] overflow-x-clip text-white sm:min-h-[min(100svh,52rem)]">
+        <HeroSlideshow showDots={false} />
 
-        <div className="relative z-10 mx-auto flex min-h-[min(100svh,52rem)] max-w-[90rem] flex-col justify-center px-4 py-14 sm:min-h-[calc(100svh-4rem)] sm:px-6 sm:py-20 lg:px-10">
+        {/* In-hero scrolling notice */}
+        <div className="absolute inset-x-0 top-[4.25rem] z-20 px-3 sm:top-[4.75rem] sm:px-6 lg:px-10">
+          <div className="mx-auto flex max-w-[90rem] overflow-hidden rounded-full border border-white/15 bg-black/45 shadow-lg shadow-black/20 backdrop-blur-md">
+            <span className="shrink-0 bg-accent px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white sm:px-4 sm:text-[11px]">
+              {t.hero.alertLabel}
+            </span>
+            <div className="relative min-w-0 flex-1 overflow-hidden">
+              <div className="hero-alert-track flex w-max items-center gap-8 py-2 pe-8 ps-4 text-xs font-semibold tracking-wide text-white/90 sm:text-sm">
+                {[...t.hero.alertItems, ...t.hero.alertItems].map((item, i) => (
+                  <span key={`${item}-${i}`} className="inline-flex items-center gap-8 whitespace-nowrap">
+                    {item}
+                    <span className="h-1 w-1 rounded-full bg-accent" aria-hidden />
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative z-10 mx-auto flex min-h-[min(92svh,44rem)] max-w-[90rem] flex-col justify-end px-4 pb-20 pt-36 sm:min-h-[min(100svh,52rem)] sm:px-6 sm:pb-24 sm:pt-40 lg:justify-center lg:px-10 lg:pb-28 lg:pt-36">
           <div className="max-w-3xl">
-            <p className="reveal text-[11px] font-bold uppercase tracking-[0.22em] text-accent sm:text-xs sm:tracking-[0.28em]">
-              {t.hero.eyebrow}
+            <p className="reveal text-[clamp(2.35rem,8vw,4.75rem)] font-extrabold leading-[0.95] tracking-tight text-white">
+              {locale === 'ar' ? t.hero.brandAr : t.hero.brand}
             </p>
-            <h1 className="reveal reveal-delay-1 mt-4 text-[1.85rem] font-extrabold leading-[1.15] tracking-tight sm:mt-5 sm:text-5xl sm:leading-[1.05] lg:text-6xl xl:text-7xl">
+            <p className="reveal reveal-delay-1 mt-2 text-sm font-semibold tracking-[0.18em] text-accent sm:mt-3 sm:text-base sm:tracking-[0.22em]">
+              {locale === 'ar' ? t.hero.brand : t.hero.brandAr}
+            </p>
+            <h1 className="reveal reveal-delay-2 mt-5 max-w-2xl text-xl font-bold leading-snug text-white/95 sm:mt-7 sm:text-3xl sm:leading-tight lg:text-4xl">
               {t.hero.title}
             </h1>
-            <p className="reveal reveal-delay-2 mt-4 max-w-xl text-sm font-medium leading-relaxed text-white/70 sm:mt-6 sm:text-lg">
+            <p className="reveal reveal-delay-2 mt-3 max-w-xl text-sm font-medium leading-relaxed text-white/70 sm:mt-4 sm:text-base lg:text-lg">
               {t.hero.subtitle}
             </p>
-            <div className="reveal reveal-delay-3 mt-7 flex w-full flex-col gap-2.5 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:gap-3">
+            <div className="reveal reveal-delay-3 mt-7 flex w-full flex-col gap-3 sm:mt-9 sm:w-auto sm:flex-row sm:items-center sm:gap-3">
               <Link
                 to={storePath('products')}
                 className="btn-cta btn-cta-primary btn-shine group w-full sm:w-auto"
@@ -142,24 +170,40 @@ export function HomePage() {
                 {t.hero.ctaStore}
                 <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Link>
-              <a
-                href={COMPANY_PROFILE_PDF}
-                download="AT-Energy-Horizon-Company-Profile.pdf"
-                className="btn-cta btn-cta-ghost group w-full sm:w-auto"
-              >
-                <Download className="h-4 w-4" />
-                {t.hero.ctaProfile}
-              </a>
               <Link to="/services" className="btn-cta btn-cta-ghost w-full sm:w-auto">
                 {t.hero.ctaContact}
+                <Arrow className="h-4 w-4" />
               </Link>
             </div>
+            <a
+              href={COMPANY_PROFILE_PDF}
+              download="AT-Energy-Horizon-Company-Profile.pdf"
+              className="reveal reveal-delay-3 mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white/65 transition hover:text-white"
+            >
+              <Download className="h-4 w-4" />
+              {t.hero.ctaProfile}
+            </a>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            document.getElementById('home-next')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+          className="absolute inset-x-0 bottom-3 z-20 mx-auto flex w-fit flex-col items-center gap-1 rounded-full px-3 py-2 text-white/70 transition hover:text-white"
+          aria-label={t.hero.scrollDown}
+        >
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em]">{t.hero.scrollDown}</span>
+          <ChevronDown className="hero-scroll-cue h-5 w-5" aria-hidden />
+        </button>
       </section>
 
       {/* Safety values strip */}
-      <section className="overflow-x-clip border-b border-white/10 bg-[#0a0a0a] text-white">
+      <section
+        id="home-next"
+        className="overflow-x-clip border-b border-white/10 bg-[#0a0a0a] text-white scroll-mt-16"
+      >
         <div className="mx-auto grid max-w-[90rem] gap-px sm:grid-cols-2 lg:grid-cols-4">
           {values.map((v, i) => (
             <Reveal key={v.title} delay={i} className="value-cell flex gap-3 px-4 py-6 sm:gap-4 sm:px-8 sm:py-8">
@@ -188,37 +232,45 @@ export function HomePage() {
       </div>
 
       {/* About / capabilities */}
-      <section className="border-b border-line bg-page py-16 text-fg sm:py-28">
-        <div className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:gap-12 sm:px-6 sm:py-0 lg:grid-cols-2 lg:gap-16 lg:px-10">
-          <Reveal variant="left" className="relative mb-10 pb-12 sm:mb-0 sm:pb-8">
-            <img
-              src={ABOUT_IMG}
-              alt=""
-              className="aspect-4/3 w-full rounded-2xl object-cover shadow-lg"
-            />
-            <div className="absolute inset-x-3 -bottom-5 flex items-center gap-3 rounded-xl bg-accent px-4 py-3 text-white shadow-lg sm:inset-x-auto sm:start-8 sm:px-5 sm:py-4">
-              <HardHat className="h-7 w-7 shrink-0 sm:h-8 sm:w-8" aria-hidden />
-              <div className="min-w-0">
-                <p className="font-kpi text-2xl font-extrabold leading-none sm:text-3xl">
-                  {t.home.experience}
-                </p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-white/85 sm:text-xs">
-                  {t.home.experienceLabel}
-                </p>
+      <section className="overflow-x-clip border-b border-line bg-page py-14 text-fg sm:py-24 lg:py-28">
+        <div className="mx-auto grid max-w-[90rem] items-center gap-10 px-4 sm:gap-12 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-10">
+          <Reveal className="min-w-0">
+            <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm">
+              <img
+                src={ABOUT_IMG}
+                alt=""
+                className="aspect-[4/3] w-full object-cover"
+              />
+              <div className="flex items-center gap-3 border-t border-white/10 bg-accent px-4 py-3.5 text-white sm:px-5 sm:py-4">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/15">
+                  <HardHat className="h-5 w-5 sm:h-6 sm:w-6" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <p className="font-kpi text-2xl font-extrabold leading-none sm:text-3xl">
+                    {t.home.experience}
+                  </p>
+                  <p className="mt-1 text-[11px] font-semibold leading-snug text-white/90 sm:text-xs">
+                    {t.home.experienceLabel}
+                  </p>
+                </div>
               </div>
             </div>
           </Reveal>
-          <Reveal variant="right" delay={1} className="min-w-0 lg:ps-4">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+
+          <Reveal delay={1} className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
               {t.home.valuesTitle}
             </p>
-            <h2 className="mt-4 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:mt-4 sm:text-4xl lg:text-[2.75rem] lg:leading-[1.1]">
               {t.home.capabilities}
             </h2>
-            <p className="mt-6 max-w-xl text-base font-medium leading-relaxed text-muted sm:text-lg">
+            <p className="mt-4 text-sm font-medium leading-relaxed text-muted sm:mt-5 sm:text-base lg:text-lg">
               {t.home.capabilitiesSub}
             </p>
-            <Link to="/about" className="btn-cta btn-cta-dark btn-shine mt-8">
+            <Link
+              to="/about"
+              className="btn-cta btn-cta-primary btn-shine mt-7 w-full sm:mt-8 sm:w-auto"
+            >
               {t.home.learnMore}
               <Arrow className="h-4 w-4" />
             </Link>
@@ -253,6 +305,7 @@ export function HomePage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {(services.data ?? []).slice(0, 4).map((s, i) => {
               const Icon = SERVICE_ICONS[i % SERVICE_ICONS.length];
+              const loc = localizeService(s, locale);
               return (
                 <Reveal key={s.id} delay={i}>
                   <Link
@@ -280,9 +333,9 @@ export function HomePage() {
                       </span>
                     </div>
                     <div className="relative z-10 mt-auto pt-10">
-                      <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.name}</h3>
+                      <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{loc.name}</h3>
                       <p className="service-card-muted mt-3 line-clamp-3 text-sm font-medium leading-relaxed text-muted">
-                        {s.shortDescription || s.description}
+                        {loc.shortDescription || loc.description}
                       </p>
                       <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
                         {t.home.learnMore}
@@ -358,48 +411,52 @@ export function HomePage() {
         </section>
       ) : null}
 
-      {/* Stats band */}
-      <section className="relative overflow-hidden border-b border-line text-white">
-        <img
-          src={STATS_IMG}
-          alt=""
-          className="hero-ken absolute inset-0 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 bg-[#0a0a0a]/85" />
-        <div className="relative mx-auto max-w-[90rem] px-4 py-20 sm:px-6 lg:px-10 lg:py-24">
-          <Reveal>
-            <h2 className="max-w-lg text-2xl font-extrabold tracking-tight sm:text-4xl">
-              {t.home.statsTitle}
-            </h2>
-          </Reveal>
-          <div className="mt-12 grid gap-8 sm:grid-cols-3">
-            {stats.map((s, i) => (
-              <Reveal key={s.label} delay={i} variant="scale">
-                <CountUpStat
-                  end={s.end}
-                  suffix={s.suffix}
-                  label={s.label}
-                  durationMs={1400 + i * 200}
-                />
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
+      <OperationalPresenceSection
+        dir={dir}
+        stats={stats}
+        labels={{
+          eyebrow: t.home.statsEyebrow,
+          title: t.home.statsTitle,
+          sub: t.home.statsSub,
+          cta: t.home.statsCta,
+          from: t.home.coverageFrom,
+          to: t.home.coverageTo,
+          badge: t.home.coverageBadge,
+        }}
+      />
 
       <PartnersSection
+        dir={dir}
         labels={{
           partners: t.home.partners,
           partnersSub: t.home.partnersSub,
           clients: t.home.clients,
           brands: t.home.brands,
+          viewBrand: t.home.partnersViewBrand,
+          viewProjects: t.home.partnersViewProjects,
+          allBrands: t.home.partnersAllBrands,
+          allProjects: t.home.partnersAllProjects,
         }}
       />
 
       <section className="border-b border-line bg-page px-4 py-14 text-fg sm:px-6 sm:py-20 lg:px-10 lg:py-28">
         <div className="mx-auto max-w-[90rem]">
-          <Reveal>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">{t.home.news}</p>
+          <Reveal className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+                {t.home.news}
+              </p>
+              <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
+                {locale === 'ar' ? 'آخر التحديثات' : 'Latest updates'}
+              </h2>
+            </div>
+            <Link
+              to="/news"
+              className="group inline-flex items-center gap-2 text-sm font-bold text-accent"
+            >
+              {locale === 'ar' ? 'كل الأخبار' : 'All news'}
+              <Arrow className="h-4 w-4 transition group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+            </Link>
           </Reveal>
           {news.isLoading ? <LoadingState variant="cards" /> : null}
           <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-3">
@@ -484,15 +541,48 @@ export function HomePage() {
                 {String((offices.data ?? []).length || 0).padStart(2, '0')}
               </span>
               <span className="pb-2 text-[11px] font-bold uppercase tracking-[0.2em] text-muted">
-                IQ
+                IQ + INT
               </span>
             </div>
           </Reveal>
 
-          {(offices.data ?? []).length ? (
-            <Reveal delay={1}>
+          {intlOffices.length ? (
+            <Reveal delay={1} className="mt-12">
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted">
+                {t.pages.officesIntl}
+              </p>
+              <p className="mt-2 max-w-xl text-sm text-muted">{t.pages.officesIntlSub}</p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {intlOffices.map((o) => (
+                  <div
+                    key={o.id}
+                    className="rounded-xl border border-border/80 bg-card px-5 py-5"
+                  >
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-accent">
+                      {o.country}
+                    </p>
+                    <h3 className="mt-2 text-lg font-extrabold tracking-tight">{o.name}</h3>
+                    {o.contactPerson ? (
+                      <p className="mt-2 text-sm text-muted">{o.contactPerson}</p>
+                    ) : null}
+                    {o.phone ? (
+                      <a
+                        href={`tel:${o.phone.replace(/\s/g, '')}`}
+                        className="mt-3 inline-block text-sm font-bold text-accent"
+                      >
+                        {o.phone}
+                      </a>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          ) : null}
+
+          {iraqOffices.length || (offices.data ?? []).length ? (
+            <Reveal delay={2} className="mt-14">
               <IraqOfficesMap
-                offices={offices.data ?? []}
+                offices={iraqOffices.length ? iraqOffices : (offices.data ?? [])}
                 locale={locale}
                 labels={{
                   offices: t.home.offices,

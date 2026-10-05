@@ -8,6 +8,7 @@ import type {
   CmsPage,
   CmsProject,
   CmsService,
+  SiteCommerceSettings,
   Customer,
   DashboardOverview,
   Office,
@@ -107,6 +108,14 @@ export const quotesApi = {
     api.patch(`/quotes/${id}/assign`, { assignedToId }),
 };
 
+export const settingsApi = {
+  commerce: () => api.get<SiteCommerceSettings>('/settings/commerce'),
+  commerceAdmin: () => api.get<SiteCommerceSettings & { id?: string; updatedAt?: string }>(
+    '/settings/commerce/admin',
+  ),
+  updateCommerce: (data: Partial<SiteCommerceSettings>) => api.patch('/settings/commerce', data),
+};
+
 export const cmsApi = {
   pages: () => api.get<CmsPage[]>('/pages'),
   pageBySlug: (slug: string) => api.get<CmsPage>(`/pages/slug/${slug}`),
@@ -122,6 +131,8 @@ export const cmsApi = {
 };
 
 export const adminCmsApi = {
+  services: () => api.get<CmsService[]>('/services/admin/all'),
+  updateService: (id: string, data: Record<string, unknown>) => api.patch(`/services/${id}`, data),
   createService: (data: Record<string, unknown>) => api.post('/services', data),
   createProject: (data: Record<string, unknown>) => api.post('/projects', data),
   createNews: (data: Record<string, unknown>) => api.post('/news', data),

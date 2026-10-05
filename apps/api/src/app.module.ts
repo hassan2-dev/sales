@@ -29,6 +29,7 @@ import { OfficesModule } from './modules/offices/offices.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { DashboardModule } from './modules/dashboard/dashboard.module.js';
+import { SettingsModule } from './modules/settings/settings.module.js';
 
 @Module({
   imports: [
@@ -65,6 +66,7 @@ import { DashboardModule } from './modules/dashboard/dashboard.module.js';
     NotificationsModule,
     AuditModule,
     DashboardModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [

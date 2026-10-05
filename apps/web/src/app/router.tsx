@@ -4,6 +4,7 @@ import { CorporateLayout } from '@/layouts/CorporateLayout';
 import { StoreLayout } from '@/layouts/StoreLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { LoadingState } from '@/components/ui/States';
+import { PageTransition } from '@/components/PageTransition';
 import { ADMIN_URL, STORE_URL, getAppSurface } from '@/lib/urls';
 import { HomePage } from '@/pages/corporate/HomePage';
 import {
@@ -14,6 +15,7 @@ import {
   NewsPage,
   NewsDetailPage,
   BrandsPage,
+  BrandDetailPage,
   ProjectsPage,
   ProjectDetailPage,
 } from '@/pages/corporate/CmsPages';
@@ -71,14 +73,19 @@ function ServiceDetailRoute() {
   return <ServiceDetailPage slug={slug} />;
 }
 
-function NewsDetailRoute() {
+function BrandDetailRoute() {
   const { slug = '' } = useParams();
-  return <NewsDetailPage slug={slug} />;
+  return <BrandDetailPage slug={slug} />;
 }
 
 function ProjectDetailRoute() {
   const { slug = '' } = useParams();
   return <ProjectDetailPage slug={slug} />;
+}
+
+function NewsDetailRoute() {
+  const { slug = '' } = useParams();
+  return <NewsDetailPage slug={slug} />;
 }
 
 function ExternalRedirect({ to }: { to: string }) {
@@ -156,6 +163,7 @@ export function AppRouter() {
   if (surface === 'store') {
     return (
       <BrowserRouter>
+        <PageTransition />
         <Routes>
           {storeRoutes()}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -167,6 +175,7 @@ export function AppRouter() {
   if (surface === 'admin') {
     return (
       <BrowserRouter>
+        <PageTransition />
         <Routes>
           {adminRoutes()}
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -177,6 +186,7 @@ export function AppRouter() {
 
   return (
     <BrowserRouter>
+      <PageTransition />
       <Routes>
         <Route element={<CorporateLayout />}>
           <Route index element={<HomePage />} />
@@ -184,6 +194,7 @@ export function AppRouter() {
           <Route path="services" element={<ServicesPage />} />
           <Route path="services/:slug" element={<ServiceDetailRoute />} />
           <Route path="brands" element={<BrandsPage />} />
+          <Route path="brands/:slug" element={<BrandDetailRoute />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/:slug" element={<ProjectDetailRoute />} />
           <Route path="news" element={<NewsPage />} />

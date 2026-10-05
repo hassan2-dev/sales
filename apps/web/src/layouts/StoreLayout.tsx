@@ -86,7 +86,7 @@ export function StoreLayout() {
       : accountLabel;
 
   const iconBtn =
-    'inline-flex h-10 w-10 items-center justify-center rounded-xl text-navy/70 transition hover:bg-mist hover:text-navy dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white';
+    'inline-flex h-10 w-10 items-center justify-center rounded-xl text-muted transition hover:bg-secondary hover:text-fg';
 
   function onSearch(e: FormEvent) {
     e.preventDefault();
@@ -190,7 +190,7 @@ export function StoreLayout() {
             </Link>
             <Link
               to={accountTo}
-              className="hidden h-10 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold text-navy transition hover:bg-mist dark:text-white dark:hover:bg-white/10 md:inline-flex"
+              className="hidden h-10 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold text-muted transition hover:bg-secondary hover:text-fg md:inline-flex"
             >
               <UserRound className="h-4 w-4" />
               <span className="max-w-[6.5rem] truncate">{accountName}</span>
@@ -235,8 +235,8 @@ export function StoreLayout() {
                 end={'end' in l ? l.end : undefined}
                 className={({ isActive }) =>
                   cn(
-                    'relative whitespace-nowrap px-3 py-3 text-sm font-semibold text-muted transition hover:text-navy dark:hover:text-white',
-                    (active ?? isActive) && 'text-navy dark:text-white',
+                    'relative whitespace-nowrap px-3 py-3 text-sm font-semibold text-muted transition hover:text-fg',
+                    (active ?? isActive) && 'text-fg',
                   )
                 }
               >
@@ -329,14 +329,14 @@ export function StoreLayout() {
 
       <CompareBar />
 
-      <footer className="mt-auto border-t border-white/10 bg-navy pb-[env(safe-area-inset-bottom)] text-white">
+      <footer className="mt-auto border-t border-line bg-card pb-[env(safe-area-inset-bottom)] text-fg">
         <div className="mx-auto grid max-w-[90rem] gap-10 px-4 py-14 sm:grid-cols-2 sm:px-6 lg:grid-cols-12 lg:px-10">
           <div className="lg:col-span-4">
             <Logo
               to={storePath()}
               imgClassName="h-12 max-w-[180px] sm:h-14 sm:max-w-[200px]"
             />
-            <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/55">
+            <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted">
               {locale === 'ar'
                 ? 'متجر افاق الطاقة — منصة B2B لمعدات النفط والغاز والصناعة في العراق.'
                 : 'Energy Horizon Store — B2B marketplace for oil, gas & industrial equipment in Iraq.'}
@@ -351,45 +351,45 @@ export function StoreLayout() {
           </div>
           <div className="lg:col-span-2">
             <p className="text-sm font-bold">{locale === 'ar' ? 'المنتجات' : 'Products'}</p>
-            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
-              <Link to={storePath('products')} className="hover:text-white">
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-muted [&_a]:transition [&_a:hover]:text-fg">
+              <Link to={storePath('products')}>
                 {locale === 'ar' ? 'كل المنتجات' : 'All products'}
               </Link>
-              <Link to={storePath('categories')} className="hover:text-white">
+              <Link to={storePath('categories')}>
                 {locale === 'ar' ? 'الأقسام' : 'Categories'}
               </Link>
-              <Link to={storePath('products') + '?sort=bestsellers'} className="hover:text-white">
+              <Link to={storePath('products') + '?sort=bestsellers'}>
                 {locale === 'ar' ? 'الأكثر مبيعاً' : 'Best sellers'}
               </Link>
-              <Link to={storePath('products') + '?sort=newest'} className="hover:text-white">
+              <Link to={storePath('products') + '?sort=newest'}>
                 {locale === 'ar' ? 'وصل حديثاً' : 'New arrivals'}
               </Link>
             </div>
           </div>
           <div className="lg:col-span-2">
             <p className="text-sm font-bold">{locale === 'ar' ? 'الدعم' : 'Support'}</p>
-            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
-              <Link to={storePath('quote')} className="hover:text-white">
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-muted [&_a]:transition [&_a:hover]:text-fg">
+              <Link to={storePath('quote')}>
                 {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
               </Link>
-              <Link to={storePath('favorites')} className="hover:text-white">
+              <Link to={storePath('favorites')}>
                 {locale === 'ar' ? 'المفضلة' : 'Wishlist'}
               </Link>
-              <Link to={storePath('cart')} className="hover:text-white">
+              <Link to={storePath('cart')}>
                 {locale === 'ar' ? 'السلة' : 'Cart'}
               </Link>
-              <a href={SITE_URL} className="hover:text-white">
+              <a href={SITE_URL}>
                 {locale === 'ar' ? 'الموقع الرئيسي' : 'Corporate site'}
               </a>
             </div>
           </div>
           <div className="lg:col-span-2">
             <p className="text-sm font-bold">{locale === 'ar' ? 'الشركة' : 'Company'}</p>
-            <div className="mt-3 flex flex-col gap-2.5 text-sm text-white/55">
-              <Link to={accountTo} className="hover:text-white">
+            <div className="mt-3 flex flex-col gap-2.5 text-sm text-muted [&_a]:transition [&_a:hover]:text-fg">
+              <Link to={accountTo}>
                 {accountLabel}
               </Link>
-              <a href={SITE_URL} className="hover:text-white">
+              <a href={SITE_URL}>
                 {locale === 'ar' ? 'عن افاق الطاقة' : 'About Energy Horizon'}
               </a>
               <span>{locale === 'ar' ? 'تغطية العراق' : 'Iraq coverage'}</span>
@@ -398,21 +398,21 @@ export function StoreLayout() {
           </div>
           <div className="lg:col-span-2">
             <p className="text-sm font-bold">{locale === 'ar' ? 'تواصل سريع' : 'Quick contact'}</p>
-            <p className="mt-3 text-sm leading-relaxed text-white/55">
+            <p className="mt-3 text-sm leading-relaxed text-muted">
               {locale === 'ar'
                 ? 'للكميات الكبيرة والمشاريع الخاصة تواصل مع فريق المبيعات.'
                 : 'For volume orders and special projects, contact our sales team.'}
             </p>
             <Link
               to={storePath('products')}
-              className="mt-4 inline-flex text-sm font-bold text-accent-soft hover:text-white"
+              className="mt-4 inline-flex text-sm font-bold text-accent hover:text-accent-soft"
             >
               {locale === 'ar' ? 'تصفح الكتالوج ←' : 'Browse catalog →'}
             </Link>
           </div>
         </div>
-        <div className="border-t border-white/10">
-          <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-white/35 sm:px-6 lg:px-10">
+        <div className="border-t border-line">
+          <div className="mx-auto flex max-w-[90rem] flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-muted/80 sm:px-6 lg:px-10">
             <span>© {new Date().getFullYear()} Energy Horizon · افاق الطاقة</span>
             <span>{locale === 'ar' ? 'سوق صناعي B2B' : 'Industrial B2B marketplace'}</span>
           </div>

@@ -8,6 +8,7 @@ import { FavoritesProvider } from '@/stores/favorites-context';
 import { CompareProvider } from '@/stores/compare-context';
 import { ThemeProvider } from '@/stores/theme-context';
 import { I18nProvider } from '@/i18n/i18n-context';
+import { CommerceSettingsProvider } from '@/stores/commerce-settings-context';
 import { AppToaster } from '@/components/AppToaster';
 import { AppRouter } from '@/app/router';
 import './index.css';
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <I18nProvider>
+            <CommerceSettingsProvider>
             <AuthProvider>
               <FavoritesProvider>
                 <CompareProvider>
@@ -38,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
                 </CompareProvider>
               </FavoritesProvider>
             </AuthProvider>
+            </CommerceSettingsProvider>
           </I18nProvider>
         </ThemeProvider>
       </QueryClientProvider>

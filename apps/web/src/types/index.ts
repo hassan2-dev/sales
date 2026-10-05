@@ -76,6 +76,22 @@ export interface Brand {
   website?: string | null;
   status?: string;
   sortOrder?: number;
+  services?: {
+    id: string;
+    name: string;
+    slug: string;
+    shortDescription?: string | null;
+    image?: string | null;
+  }[];
+  products?: {
+    id: string;
+    name: string;
+    slug: string;
+    shortDescription?: string | null;
+    price?: number | string;
+    currency?: string;
+    images?: { url: string }[];
+  }[];
 }
 
 export interface CartItem {
@@ -140,13 +156,24 @@ export interface QuoteRequest {
 export interface CmsService {
   id: string;
   name: string;
+  nameAr?: string | null;
   slug: string;
   shortDescription?: string | null;
+  shortDescriptionAr?: string | null;
   description?: string | null;
+  descriptionAr?: string | null;
+  content?: string | null;
+  contentAr?: string | null;
   image?: string | null;
   imageUrl?: string | null;
   status?: string;
   sortOrder?: number;
+  brands?: Brand[];
+}
+
+export interface SiteCommerceSettings {
+  usdToIqdRate: number;
+  enableIqdDisplay: boolean;
 }
 
 export interface CmsProject {

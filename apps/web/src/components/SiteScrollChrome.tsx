@@ -48,7 +48,7 @@ export function useSiteScrollChrome() {
 export function HeaderScrollProgress({ progress }: { progress: number }) {
   return (
     <div
-      className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-0.5 overflow-hidden bg-white/10"
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-1 h-0.5 overflow-hidden bg-border"
       aria-hidden
     >
       <div
@@ -68,7 +68,7 @@ export function ScrollToTopButton({ show }: { show: boolean }) {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label={t.common.backToTop}
       className={cn(
-        'fixed bottom-6 end-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-black text-white shadow-[0_10px_28px_-12px_rgb(0_0_0/0.65)] transition-all duration-300 hover:border-accent hover:bg-accent sm:end-8',
+        'fixed bottom-6 end-5 z-40 inline-flex h-11 w-11 items-center justify-center rounded-full border border-line bg-card text-fg shadow-lg shadow-black/10 transition-all duration-300 hover:border-accent hover:bg-accent hover:text-white dark:shadow-black/40 sm:end-8',
         show
           ? 'translate-y-0 opacity-100'
           : 'pointer-events-none translate-y-3 opacity-0',

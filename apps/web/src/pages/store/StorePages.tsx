@@ -1463,6 +1463,7 @@ export function CartPage() {
                     </div>
                     <Textarea
                       placeholder={locale === 'ar' ? 'ملاحظات (اختياري)' : 'Notes (optional)'}
+                      className="text-accent placeholder:text-accent/55"
                       {...form.register('notes')}
                     />
                     <Button

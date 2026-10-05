@@ -14,6 +14,7 @@ import { useFavorites } from '@/stores/favorites-context';
 import { useCompare } from '@/stores/compare-context';
 import { useAuth } from '@/stores/auth-context';
 import { useI18n } from '@/i18n/i18n-context';
+import { useCommerceSettings, usdToIqd } from '@/stores/commerce-settings-context';
 import { AvailabilityBadge } from '@/components/store/StoreUI';
 import type { Product } from '@/types';
 
@@ -50,7 +51,14 @@ export function ProductCard({
   const { isCompared, toggle: toggleCompare } = useCompare();
   const { isAuthenticated } = useAuth();
   const { locale } = useI18n();
+  const commerce = useCommerceSettings();
   const navigate = useNavigate();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const priceUsd = Number(product.price ?? 0);
+  const showIqd =
+    commerce.enableIqdDisplay &&
+    (product.currency ?? 'USD').toUpperCase() === 'USD' &&
+    Number.isFinite(priceUsd);
   const img = productImage(product);
   const fav = isFavorite(product.id);
   const compared = isCompared(product.id);
@@ -157,9 +165,16 @@ export function ProductCard({
         />
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <p className="text-lg font-extrabold tabular-nums text-navy dark:text-accent">
-            {formatMoney(product.price, product.currency, locale === 'ar' ? 'ar-IQ' : 'en-US')}
-          </p>
+          <div className="min-w-0">
+            <p className="text-lg font-extrabold tabular-nums text-navy dark:text-accent">
+              {formatMoney(product.price, product.currency, moneyLocale)}
+            </p>
+            {showIqd ? (
+              <p className="text-xs font-semibold tabular-nums text-muted">
+                {formatMoney(usdToIqd(priceUsd, commerce.usdToIqdRate), 'IQD', moneyLocale)}
+              </p>
+            ) : null}
+          </div>
           {showCart && !(qty > 0 && line) ? (
             <button
               type="button"

@@ -261,6 +261,7 @@ model Brand {
   updatedAt   DateTime      @updatedAt
 
   products Product[]
+  services ServiceBrand[]
 
   @@index([status])
 }
@@ -600,19 +601,45 @@ model Page {
 }
 
 model Service {
-  id               String        @id @default(uuid()) @db.Uuid
-  name             String
-  slug             String        @unique
-  description      String?
-  shortDescription String?
-  image            String?
-  content          String?
-  status           ContentStatus @default(DRAFT)
-  sortOrder        Int           @default(0)
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  id                  String        @id @default(uuid()) @db.Uuid
+  name                String
+  nameAr              String?
+  slug                String        @unique
+  description         String?
+  descriptionAr       String?
+  shortDescription    String?
+  shortDescriptionAr  String?
+  image               String?
+  content             String?
+  contentAr           String?
+  status              ContentStatus @default(DRAFT)
+  sortOrder           Int           @default(0)
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  brands ServiceBrand[]
 
   @@index([status])
+  @@index([sortOrder])
+}
+
+model SiteSettings {
+  id               String   @id @default("default")
+  usdToIqdRate     Decimal  @default(1310) @db.Decimal(12, 4)
+  enableIqdDisplay Boolean  @default(true)
+  updatedAt        DateTime @updatedAt
+}
+
+model ServiceBrand {
+  serviceId String  @db.Uuid
+  brandId   String  @db.Uuid
+  sortOrder Int     @default(0)
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  brand   Brand   @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, brandId])
+  @@index([brandId])
   @@index([sortOrder])
 }
 

@@ -7,6 +7,7 @@ type CountUpStatProps = {
   label: string;
   durationMs?: number;
   className?: string;
+  variant?: 'overlay' | 'glass';
 };
 
 export function CountUpStat({
@@ -15,6 +16,7 @@ export function CountUpStat({
   label,
   durationMs = 1600,
   className,
+  variant = 'overlay',
 }: CountUpStatProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [value, setValue] = useState(0);
@@ -68,15 +70,22 @@ export function CountUpStat({
     return () => cancelAnimationFrame(raf);
   }, [started, end, durationMs]);
 
+  const valueClass =
+    variant === 'glass'
+      ? 'font-kpi text-4xl font-extrabold tabular-nums text-white sm:text-5xl'
+      : 'font-kpi text-5xl font-extrabold text-accent tabular-nums sm:text-6xl';
+  const labelClass =
+    variant === 'glass'
+      ? 'mt-3 text-xs font-bold uppercase tracking-[0.16em] text-white/55 sm:text-[13px]'
+      : 'mt-2 text-sm font-semibold uppercase tracking-[0.14em] text-white/60';
+
   return (
     <div ref={ref} className={cn(className)}>
-      <p className="font-kpi text-5xl font-extrabold text-accent tabular-nums sm:text-6xl">
+      <p className={valueClass}>
         {value.toLocaleString()}
         {suffix}
       </p>
-      <p className="mt-2 text-sm font-semibold uppercase tracking-[0.14em] text-white/60">
-        {label}
-      </p>
+      <p className={labelClass}>{label}</p>
     </div>
   );
 }

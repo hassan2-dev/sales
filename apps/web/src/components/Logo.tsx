@@ -9,9 +9,9 @@ type LogoProps = {
   onClick?: () => void;
 };
 
-/** Local PNG by default; set VITE_LOGO_URL to an R2 public URL in production. */
+/** Local SVG by default; set VITE_LOGO_URL to an R2 public URL in production. */
 const LOGO_SRC =
-  import.meta.env.VITE_LOGO_URL?.trim() || '/energy-horizon-logo.png';
+  import.meta.env.VITE_LOGO_URL?.trim() || '/energy-horizon-logo.svg';
 
 export function Logo({ to = '/', href, className, imgClassName, onClick }: LogoProps) {
   const img = (

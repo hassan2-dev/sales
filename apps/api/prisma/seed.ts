@@ -181,57 +181,107 @@ async function main() {
   const services = [
     {
       name: 'Drilling',
+      nameAr: 'الحفر',
       slug: 'drilling',
       shortDescription: 'Materials and equipment for drilling and workover rigs',
+      shortDescriptionAr: 'مواد ومعدات لمنصات الحفر وصيانة الآبار',
       description:
         'From reliable international manufacturers we support drilling and workover rigs with power systems, pneumatic systems, mud pumps and tanks, rig-floor equipment, and mechanical and hydraulic systems — focused on efficiency, safety, and quality.',
+      descriptionAr:
+        'من مصنعين دوليين موثوقين ندعم منصات الحفر وصيانة الآبار بأنظمة الطاقة والأنظمة الهوائية ومضخات الطين والخزانات ومعدات رأس البئر والأنظمة الميكانيكية والهيدروليكية — مع التركيز على الكفاءة والسلامة والجودة.',
       image: '/company/p05-1.jpg',
       sortOrder: 1,
     },
     {
       name: 'Hydraulic',
+      nameAr: 'الهيدروليك',
       slug: 'hydraulic',
       shortDescription: 'Fluid power equipment and integrated hydraulic systems',
+      shortDescriptionAr: 'معدات القوة الهيدروليكية والأنظمة المتكاملة',
       description:
         'Fluid power and hydraulic equipment including pumps, valves, motors, meters, hoses, quick-release couplings, fittings and adapters — plus integrated systems for oilfield and industrial operations.',
+      descriptionAr:
+        'معدات القوة الهيدروليكية تشمل المضخات والصمامات والمحركات والعدادات والخراطيم والوصلات السريعة والتجهيزات — إضافة إلى أنظمة متكاملة لعمليات النفط والصناعة.',
       image: '/company/p06-1.jpg',
       sortOrder: 2,
     },
     {
       name: 'Electrical',
+      nameAr: 'الكهرباء',
       slug: 'electrical',
       shortDescription: 'Electrical supply including explosion-proof solutions',
+      shortDescriptionAr: 'تجهيزات كهربائية بما فيها حلول مقاومة للانفجار',
       description:
         'Cables, connectors, transformers, power systems, and a wide range of electrical components for drilling rigs and plants — plus Ex equipment, intrinsic safety barriers, HMI systems, and control solutions for harsh and hazardous areas.',
+      descriptionAr:
+        'كابلات وموصلات ومحولات وأنظمة طاقة ومكونات كهربائية لمنصات الحفر والمصانع — إضافة إلى معدات Ex وحواجز السلامة ذاتية الحماية وأنظمة HMI والتحكم للبيئات القاسية والخطرة.',
       image: '/company/p07-1.jpg',
       sortOrder: 3,
     },
     {
-      name: 'Technical Team',
-      slug: 'technical-team',
-      shortDescription: 'Manpower and technical personnel for Iraqi projects',
+      name: 'Safety & PPE',
+      nameAr: 'السلامة ومعدات الوقاية',
+      slug: 'safety-ppe',
+      shortDescription: 'EN-certified PPE from ISO 9001 accredited suppliers',
+      shortDescriptionAr: 'معدات وقاية معتمدة EN من موردين ISO 9001',
       description:
-        'Professional employer and manpower services for local and international organizations in Iraq — control-room operators and supervisors, area operators, commissioning, ICSS, instrumentation, and machinery engineers and technicians.',
-      image: '/company/p08-1.jpg',
+        'Personal protective equipment sourced from leading international partners — hard hats, hearing and eye protection, gloves, FR clothing, and specialty ranges for oil, gas, and chemical handling, selected for EN certification and ISO 9001 supply chains.',
+      descriptionAr:
+        'معدات وقاية شخصية من شركاء دوليين — خوذ وسماعات ونظارات وحماية وقفازات وملابس مقاومة للحريق وخطوط متخصصة للنفط والغاز والكيميائيات، معتمدة EN وسلاسل توريد ISO 9001.',
+      image: '/company/p10-1.jpg',
       sortOrder: 4,
     },
     {
-      name: 'Safety & PPE',
-      slug: 'safety-ppe',
-      shortDescription: 'EN-certified PPE from ISO 9001 accredited suppliers',
+      name: 'IT & Power',
+      nameAr: 'تقنية المعلومات والطاقة',
+      slug: 'it-power',
+      shortDescription: 'UPS, power continuity, and industrial IT support',
+      shortDescriptionAr: 'UPS واستمرارية الطاقة ودعم IT صناعي',
       description:
-        'Personal protective equipment sourced from leading international partners — hard hats, hearing and eye protection, gloves, FR clothing, and specialty ranges for oil, gas, and chemical handling, selected for EN certification and ISO 9001 supply chains.',
-      image: '/company/p10-1.jpg',
+        'Uninterruptible power systems, industrial computing support, and power continuity packages for control rooms, offices, and critical field installations — keeping operations online through outages and unstable supply.',
+      descriptionAr:
+        'أنظمة طاقة غير منقطعة ودعم حوسبة صناعية وحزم استمرارية للطاقة لغرف التحكم والمكاتب والمواقع الحرجة — لإبقاء العمليات متصلة أثناء انقطاع التيار.',
+      image: '/company/p14-1.jpg',
       sortOrder: 5,
     },
     {
+      name: 'Isolation Stations & Refineries',
+      nameAr: 'محطات العزل والمصافي',
+      slug: 'isolation-refineries',
+      shortDescription: 'Supply for degassing stations, isolation plants, and refineries',
+      shortDescriptionAr: 'توريد لمحطات التفريغ والعزل والمصافي',
+      description:
+        'Materials and equipment for degassing and isolation stations, midstream facilities, and refinery turnarounds — staged from Baghdad and Basra with documentation and field support for plant and process environments.',
+      descriptionAr:
+        'مواد ومعدات لمحطات التفريغ والعزل ومنشآت منتصف الخط وصيانة المصافي — من بغداد والبصرة مع توثيق ودعم ميداني لبيئات المصانع والعمليات.',
+      image: '/company/p12-1.jpg',
+      sortOrder: 6,
+    },
+    {
+      name: 'Technical Team',
+      nameAr: 'الفريق الفني',
+      slug: 'technical-team',
+      shortDescription: 'Manpower and technical personnel for Iraqi projects',
+      shortDescriptionAr: 'كوادر فنية وموارد بشرية لمشاريع العراق',
+      description:
+        'Professional employer and manpower services for local and international organizations in Iraq — control-room operators and supervisors, area operators, commissioning, ICSS, instrumentation, and machinery engineers and technicians.',
+      descriptionAr:
+        'خدمات توظيف وكوادر للمنظمات المحلية والدولية في العراق — مشغلو غرف التحكم والمشرفون ومشغلو المناطق والتشغيل وICSS والأجهزة والمهندسون والفنيون.',
+      image: '/company/p08-1.jpg',
+      sortOrder: 7,
+    },
+    {
       name: 'Procurement & Supply',
+      nameAr: 'المشتريات والتوريد',
       slug: 'procurement-supply',
       shortDescription: 'Single-point procurement for oilfield and plant materials',
+      shortDescriptionAr: 'مشتريات موحّدة لمواد النفط والمصانع',
       description:
         'Strategic supply relationships with accredited manufacturers worldwide — instrumentation and sensors, pipe fittings, flanges, valves, pumps, hydraulics, electrical packages, and custom-made sensors and systems.',
+      descriptionAr:
+        'علاقات توريد استراتيجية مع مصنعين معتمدين عالمياً — أجهزة واستشعار ووصلات وأنابيب ومحابر وصمامات ومضخات وهيدروليك وحزم كهربائية وأنظمة مخصصة.',
       image: '/company/p04-1.jpg',
-      sortOrder: 6,
+      sortOrder: 8,
     },
   ];
 
@@ -240,8 +290,11 @@ async function main() {
       where: { slug: svc.slug },
       update: {
         name: svc.name,
+        nameAr: svc.nameAr,
         shortDescription: svc.shortDescription,
+        shortDescriptionAr: svc.shortDescriptionAr,
         description: svc.description,
+        descriptionAr: svc.descriptionAr,
         image: svc.image,
         sortOrder: svc.sortOrder,
         status: ContentStatus.PUBLISHED,
@@ -494,52 +547,137 @@ async function main() {
         'Our private-label PPE, tools, and industrial kits — staged in Baghdad and Basra for oilfield and plant crews.',
       website: 'https://energy-horizon.net',
       logo: '/logo.png',
+      sortOrder: 0,
+    },
+    {
+      name: 'ALFAGOMMA',
+      slug: 'alfagomma',
+      description:
+        'For over 60 years, Alfagomma has been producing and distributing high quality hydraulic and industrial hose systems worldwide — rubber and thermoplastic hose, fittings, adapters, quick-release couplings, assemblies, and stainless corrugated hose.',
+      website: 'https://www.alfagomma.com',
+      logo: '/brands/alfagomma.png',
       sortOrder: 1,
     },
     {
-      name: 'Schlumberger',
-      slug: 'schlumberger',
+      name: 'DEN-CON TOOL CO.',
+      slug: 'den-con',
       description:
-        'Oilfield services technology and equipment lines for drilling, evaluation, and production support.',
-      website: 'https://www.slb.com',
-      logo: '/partners/schlumberger.svg',
+        'Founded in 1975, Den-Con Tool Company provides a complete line of pipe handling tools for drilling and workover rigs — elevators, spiders, slips, bushings, and safety clamps. API 7K and API 8C certified with a quality system aligned to API Q1 / ISO.',
+      website: 'https://www.den-con.com',
+      logo: '/brands/den-con.png',
       sortOrder: 2,
     },
     {
-      name: 'Baker Hughes',
-      slug: 'baker-hughes',
+      name: 'BRIDON · BEKAERT',
+      slug: 'bridon-bekaert',
       description:
-        'Energy technology for drilling, completions, and industrial turbomachinery applications.',
-      website: 'https://www.bakerhughes.com',
-      logo: '/partners/baker-hughes.svg',
+        'Bridon·Bekaert The Ropes Group supplies high-performance steel wire ropes and lifting solutions for drilling, cranes, and heavy industrial applications across oil and gas.',
+      website: 'https://www.bridon-bekaert.com',
+      logo: '/brands/bridon-bekaert.png',
       sortOrder: 3,
     },
     {
-      name: 'Halliburton',
-      slug: 'halliburton',
+      name: 'OILGEAR',
+      slug: 'oilgear',
       description:
-        'Products and services for cementing, stimulation, and well construction programs.',
-      website: 'https://www.halliburton.com',
-      logo: '/partners/halliburton.svg',
+        'Oilgear designs and manufactures high-pressure hydraulic pumps, valves, and fluid power systems for demanding industrial and energy applications.',
+      website: 'https://www.oilgear.com',
+      logo: '/brands/oilgear.png',
       sortOrder: 4,
     },
     {
-      name: 'Weatherford',
-      slug: 'weatherford',
+      name: 'EMMEGI',
+      slug: 'emmegi',
       description:
-        'Oilfield equipment and tubular running systems for well integrity and production.',
-      website: 'https://www.weatherford.com',
-      logo: '/partners/weatherford.svg',
+        'Emmegi heat exchangers and cooling systems for hydraulic power units, industrial processes, and oilfield equipment packages.',
+      website: 'https://www.emmegi.com',
+      logo: '/brands/emmegi.png',
       sortOrder: 5,
     },
     {
-      name: 'NOV',
-      slug: 'nov',
+      name: 'LAPP',
+      slug: 'lapp',
       description:
-        'National Oilwell Varco drilling and wellsite equipment lines for rigs and land operations.',
-      website: 'https://www.nov.com',
-      logo: '/partners/nov.svg',
+        'LAPP cable and connectivity systems for industrial automation, power distribution, and harsh-environment electrical installations on rigs and plants.',
+      website: 'https://www.lapp.com',
+      logo: '/brands/lapp.png',
       sortOrder: 6,
+    },
+    {
+      name: 'PEPPERL+FUCHS',
+      slug: 'pepperl-fuchs',
+      description:
+        'Pepperl+Fuchs explosion protection, intrinsic safety barriers, sensors, and interface technology for hazardous areas in oil, gas, and process industries.',
+      website: 'https://www.pepperl-fuchs.com',
+      logo: '/brands/pepperl-fuchs.png',
+      sortOrder: 7,
+    },
+    {
+      name: 'hohner',
+      slug: 'hohner',
+      description:
+        'Hohner industrial encoders and motion feedback devices for automation, drilling machinery, and process control systems.',
+      website: 'https://www.hohner.es',
+      logo: '/brands/hohner.png',
+      sortOrder: 8,
+    },
+    {
+      name: 'NUOVA FIMA',
+      slug: 'nuova-fima',
+      description:
+        'Nuova Fima pressure and temperature instrumentation — gauges, transmitters, and process instruments for industrial and oilfield duty.',
+      website: 'https://www.nuovafima.com',
+      logo: '/brands/nuova-fima.png',
+      sortOrder: 9,
+    },
+    {
+      name: 'euromotori',
+      slug: 'euromotori',
+      description:
+        'Euromotori electric motors and drive solutions for industrial pumps, compressors, and oilfield auxiliary equipment.',
+      website: 'https://www.euromotori.it',
+      logo: '/brands/euromotori.png',
+      sortOrder: 10,
+    },
+    {
+      name: 'ANTENUCCI',
+      slug: 'antenucci',
+      description:
+        'Antenucci equipment and tooling supporting drilling and workover operations with field-proven mechanical solutions.',
+      logo: '/brands/antenucci.png',
+      sortOrder: 11,
+    },
+    {
+      name: 'IMPERIAL Safety',
+      slug: 'imperial-safety',
+      description:
+        'Imperial Safety PPE ranges for oil, gas, and industrial sites — head, eye, hand, and body protection selected for EN certification and field durability.',
+      logo: '/brands/imperial-safety.png',
+      sortOrder: 12,
+    },
+    {
+      name: 'ELIT UPS',
+      slug: 'elit-ups',
+      description:
+        'ELIT UPS systems for uninterrupted power in control rooms, offices, and critical IT / industrial loads across energy facilities.',
+      logo: '/brands/elit-ups.png',
+      sortOrder: 13,
+    },
+    {
+      name: 'UNIKA GROUP',
+      slug: 'unika-group',
+      description:
+        'Unika Group industrial solutions supporting plant, refinery, and process facility supply programs.',
+      logo: '/brands/unika-group.png',
+      sortOrder: 14,
+    },
+    {
+      name: 'epoll',
+      slug: 'epoll',
+      description:
+        'epoll products and systems for industrial and energy-sector applications across isolation plants and process sites.',
+      logo: '/brands/epoll.png',
+      sortOrder: 15,
     },
   ];
 
@@ -549,21 +687,77 @@ async function main() {
       update: {
         name: brand.name,
         description: brand.description,
-        website: brand.website,
+        website: brand.website ?? null,
         logo: brand.logo,
         sortOrder: brand.sortOrder,
         status: ContentStatus.PUBLISHED,
       },
-      create: { ...brand, status: ContentStatus.PUBLISHED },
+      create: {
+        name: brand.name,
+        slug: brand.slug,
+        description: brand.description,
+        website: brand.website ?? null,
+        logo: brand.logo,
+        sortOrder: brand.sortOrder,
+        status: ContentStatus.PUBLISHED,
+      },
     });
   }
+
+  // Soft-archive legacy catalog brands no longer featured on corporate pages
+  await prisma.brand.updateMany({
+    where: {
+      slug: {
+        in: ['schlumberger', 'baker-hughes', 'halliburton', 'weatherford', 'nov'],
+      },
+    },
+    data: { status: ContentStatus.DRAFT },
+  });
 
   const brandMap = Object.fromEntries(
     (await prisma.brand.findMany()).map((b) => [b.slug, b.id]),
   );
+  const serviceMap = Object.fromEntries(
+    (await prisma.service.findMany()).map((s) => [s.slug, s.id]),
+  );
   const categoryMap = Object.fromEntries(
     (await prisma.category.findMany()).map((c) => [c.slug, c.id]),
   );
+
+  const serviceBrandLinks: { serviceSlug: string; brandSlug: string; sortOrder: number }[] = [
+    { serviceSlug: 'drilling', brandSlug: 'den-con', sortOrder: 1 },
+    { serviceSlug: 'drilling', brandSlug: 'bridon-bekaert', sortOrder: 2 },
+    { serviceSlug: 'drilling', brandSlug: 'antenucci', sortOrder: 3 },
+    { serviceSlug: 'hydraulic', brandSlug: 'alfagomma', sortOrder: 1 },
+    { serviceSlug: 'hydraulic', brandSlug: 'oilgear', sortOrder: 2 },
+    { serviceSlug: 'hydraulic', brandSlug: 'emmegi', sortOrder: 3 },
+    { serviceSlug: 'electrical', brandSlug: 'lapp', sortOrder: 1 },
+    { serviceSlug: 'electrical', brandSlug: 'pepperl-fuchs', sortOrder: 2 },
+    { serviceSlug: 'electrical', brandSlug: 'hohner', sortOrder: 3 },
+    { serviceSlug: 'electrical', brandSlug: 'nuova-fima', sortOrder: 4 },
+    { serviceSlug: 'electrical', brandSlug: 'euromotori', sortOrder: 5 },
+    { serviceSlug: 'safety-ppe', brandSlug: 'imperial-safety', sortOrder: 1 },
+    { serviceSlug: 'it-power', brandSlug: 'elit-ups', sortOrder: 1 },
+    { serviceSlug: 'isolation-refineries', brandSlug: 'unika-group', sortOrder: 1 },
+    { serviceSlug: 'isolation-refineries', brandSlug: 'epoll', sortOrder: 2 },
+  ];
+
+  for (const link of serviceBrandLinks) {
+    const serviceId = serviceMap[link.serviceSlug];
+    const brandId = brandMap[link.brandSlug];
+    if (!serviceId || !brandId) continue;
+    await prisma.serviceBrand.upsert({
+      where: {
+        serviceId_brandId: { serviceId, brandId },
+      },
+      update: { sortOrder: link.sortOrder },
+      create: {
+        serviceId,
+        brandId,
+        sortOrder: link.sortOrder,
+      },
+    });
+  }
 
   const products = [
     {
@@ -610,7 +804,7 @@ async function main() {
       price: 4200.0,
       stock: 18,
       featured: true,
-      brandSlug: 'schlumberger',
+      brandSlug: 'den-con',
       categorySlug: 'drilling-equipment',
       image:
         'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=800&q=80',
@@ -627,7 +821,7 @@ async function main() {
       price: 6750.0,
       stock: 7,
       featured: true,
-      brandSlug: 'baker-hughes',
+      brandSlug: 'oilgear',
       categorySlug: 'hydraulic-systems',
       image:
         'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80',
@@ -644,7 +838,7 @@ async function main() {
       price: 890.0,
       stock: 42,
       featured: true,
-      brandSlug: 'halliburton',
+      brandSlug: 'pepperl-fuchs',
       categorySlug: 'electrical-instrumentation',
       image:
         'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=800&q=80',
@@ -678,7 +872,7 @@ async function main() {
       price: 640.0,
       stock: 55,
       featured: false,
-      brandSlug: 'schlumberger',
+      brandSlug: 'nuova-fima',
       categorySlug: 'electrical-instrumentation',
       image:
         'https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&w=800&q=80',
@@ -695,7 +889,7 @@ async function main() {
       price: 3100.0,
       stock: 12,
       featured: true,
-      brandSlug: 'halliburton',
+      brandSlug: 'den-con',
       categorySlug: 'drilling-equipment',
       image:
         'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=800&q=80',
@@ -712,7 +906,7 @@ async function main() {
       price: 185.0,
       stock: 120,
       featured: true,
-      brandSlug: 'baker-hughes',
+      brandSlug: 'alfagomma',
       categorySlug: 'hydraulic-systems',
       image:
         'https://images.unsplash.com/photo-1581092918056-0c4c3faad126?auto=format&fit=crop&w=800&q=80',
@@ -729,7 +923,7 @@ async function main() {
       price: 310.0,
       stock: 64,
       featured: false,
-      brandSlug: 'halliburton',
+      brandSlug: 'pepperl-fuchs',
       categorySlug: 'electrical-instrumentation',
       image:
         'https://images.unsplash.com/photo-1558449028-b53a1268ec39?auto=format&fit=crop&w=800&q=80',
@@ -763,7 +957,7 @@ async function main() {
       price: 8900.0,
       stock: 4,
       featured: true,
-      brandSlug: 'nov',
+      brandSlug: 'den-con',
       categorySlug: 'drilling-equipment',
       image:
         'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80',
@@ -780,7 +974,7 @@ async function main() {
       price: 95.0,
       stock: 200,
       featured: false,
-      brandSlug: 'weatherford',
+      brandSlug: 'alfagomma',
       categorySlug: 'hydraulic-systems',
       image:
         'https://images.unsplash.com/photo-1581092162384-8987c1d64718?auto=format&fit=crop&w=800&q=80',
@@ -1051,6 +1245,12 @@ async function main() {
   await prisma.newsArticle.updateMany({
     where: { slug: 'erbil-office-open' },
     data: { status: ContentStatus.ARCHIVED },
+  });
+
+  await prisma.siteSettings.upsert({
+    where: { id: 'default' },
+    update: {},
+    create: { id: 'default', usdToIqdRate: 1310, enableIqdDisplay: true },
   });
 
   console.log('Seed completed successfully.');

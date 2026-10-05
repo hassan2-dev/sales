@@ -28,6 +28,7 @@ import { LoadingState, EmptyState, ErrorState } from '@/components/ui/States';
 import { catalogApi, cmsApi } from '@/services/endpoints';
 import { STORE_URL, storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
+import { localizeService } from '@/lib/localize-cms';
 import { cn } from '@/lib/cn';
 import { Reveal } from '@/components/Reveal';
 import { CountUpStat } from '@/components/CountUpStat';
@@ -384,6 +385,7 @@ export function ServicesPage() {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {services.map((s, i) => {
               const Icon = icons[i % icons.length];
+              const loc = localizeService(s, locale);
               return (
                 <Link
                   key={s.id}
@@ -406,9 +408,9 @@ export function ServicesPage() {
                     </span>
                   </div>
                   <div className="relative z-10 mt-auto pt-8">
-                    <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{s.name}</h3>
+                    <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{loc.name}</h3>
                     <p className="mt-3 line-clamp-3 text-sm font-medium leading-relaxed text-muted">
-                      {s.shortDescription || s.description}
+                      {loc.shortDescription || loc.description}
                     </p>
                     <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
                       {p.learnMore}
@@ -481,6 +483,7 @@ export function ServicesPage() {
 export function ServiceDetailPage({ slug }: { slug: string }) {
   const { t, locale, dir } = useI18n();
   const p = t.pages;
+  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
   const query = useQuery({
     queryKey: ['service', slug],
@@ -493,33 +496,101 @@ export function ServiceDetailPage({ slug }: { slug: string }) {
   }
 
   const s = query.data;
+  const loc = localizeService(s, locale);
+  const brands = s.brands ?? [];
+  const heroImg = s.imageUrl || s.image || '';
 
   return (
     <>
       <Seo
-        title={s.name}
+        title={loc.name}
         path={`/services/${slug}`}
-        description={s.shortDescription || undefined}
+        description={loc.shortDescription || undefined}
       />
-      <PageHero title={s.name} subtitle={s.shortDescription || undefined} />
 
-      {(s.imageUrl || s.image) && (
-        <div className="border-b border-line bg-page">
-          <div className="mx-auto max-w-[90rem] px-4 py-8 sm:px-6 lg:px-10">
-            <img
-              src={s.imageUrl || s.image || ''}
-              alt=""
-              className="aspect-[21/9] w-full rounded-xl object-cover"
-            />
-          </div>
+      <section className="relative min-h-[min(52vh,28rem)] overflow-hidden text-white sm:min-h-[min(60vh,34rem)]">
+        {heroImg ? (
+          <img
+            src={heroImg}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 bg-[#0a1628]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/70 to-black/35" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_60%_at_15%_50%,rgb(0_112_192/0.35),transparent_65%)]" />
+        <div className="relative z-10 mx-auto flex min-h-[min(52vh,28rem)] max-w-[90rem] flex-col justify-end px-4 pb-12 pt-24 sm:min-h-[min(60vh,34rem)] sm:px-6 sm:pb-16 lg:px-10">
+          <Link
+            to="/services"
+            className="mb-6 inline-flex w-fit items-center gap-2 text-sm font-bold text-white/70 transition hover:text-white"
+          >
+            {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+            {p.servicesHero}
+          </Link>
+          <h1 className="max-w-3xl text-3xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            {loc.name}
+          </h1>
+          {loc.shortDescription ? (
+            <p className="mt-4 max-w-2xl text-sm font-medium leading-relaxed text-white/75 sm:text-lg">
+              {loc.shortDescription}
+            </p>
+          ) : null}
         </div>
-      )}
+      </section>
 
       <div className="mx-auto max-w-3xl px-4 py-14 text-base leading-relaxed text-muted sm:px-6 sm:py-20 lg:px-8">
         <div className="whitespace-pre-wrap">
-          {s.description || (locale === 'ar' ? 'التفاصيل قريباً.' : 'Details coming soon.')}
+          {loc.description || (locale === 'ar' ? 'التفاصيل قريباً.' : 'Details coming soon.')}
         </div>
       </div>
+
+      {brands.length ? (
+        <section className="relative overflow-hidden bg-[#0070c0] py-16 text-white sm:py-24">
+          <div
+            className="pointer-events-none absolute start-1/2 top-0 h-6 w-12 -translate-x-1/2 bg-page [clip-path:polygon(0_0,100%_0,50%_100%)]"
+            aria-hidden
+          />
+          <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+            <Reveal className="mx-auto max-w-2xl text-center">
+              <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">
+                {p.servicesBrands}
+              </h2>
+              <p className="mt-3 text-sm font-medium text-white/80 sm:text-base">
+                {p.servicesBrandsSub}
+              </p>
+            </Reveal>
+
+            <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {brands.map((b, i) => (
+                <Reveal key={b.id} delay={i % 3}>
+                  <Link
+                    to={`/brands/${b.slug}`}
+                    className="group flex min-h-[160px] flex-col items-center justify-center rounded-2xl bg-white px-6 py-10 shadow-lg shadow-black/10 transition duration-300 hover:-translate-y-1 hover:shadow-xl sm:min-h-[180px]"
+                  >
+                    {b.logo ? (
+                      <img
+                        src={b.logo}
+                        alt={b.name}
+                        className="max-h-14 w-auto max-w-[85%] object-contain sm:max-h-16"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-lg font-extrabold tracking-tight text-[#0a1628]">
+                        {b.name}
+                      </span>
+                    )}
+                    <span className="mt-5 inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.14em] text-[#0070c0] opacity-0 transition group-hover:opacity-100">
+                      {p.servicesBrandOpen}
+                      <Arrow className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="border-t border-line bg-page py-12 text-fg">
         <div className="mx-auto flex max-w-[90rem] flex-col gap-4 px-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-10">
@@ -549,19 +620,181 @@ function LogoGrid({
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
       {items.map((item) => (
-        <div
+        <Link
           key={item.slug}
-          className="logo-cell flex min-h-[120px] items-center justify-center rounded-xl border border-border/80 px-4 py-8 transition hover:border-accent/35 sm:min-h-[150px] sm:px-8 sm:py-10"
+          to={`/brands/${item.slug}`}
+          className="logo-cell group flex min-h-[120px] items-center justify-center rounded-xl border border-border/80 px-4 py-8 transition hover:border-accent/35 hover:shadow-md sm:min-h-[150px] sm:px-8 sm:py-10"
         >
           <img
             src={item.logo}
             alt={item.name}
-            className="logo-mark max-h-14 w-auto max-w-[85%] object-contain sm:max-h-16"
+            className="logo-mark max-h-14 w-auto max-w-[85%] object-contain transition duration-300 group-hover:scale-[1.03] sm:max-h-16"
             loading="lazy"
           />
-        </div>
+        </Link>
       ))}
     </div>
+  );
+}
+
+export function BrandDetailPage({ slug }: { slug: string }) {
+  const { t, locale, dir } = useI18n();
+  const p = t.pages;
+  const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
+  const query = useQuery({
+    queryKey: ['brand', slug],
+    queryFn: async () => (await catalogApi.brandBySlug(slug)).data,
+  });
+
+  if (query.isLoading) return <LoadingState variant="page" />;
+  if (query.isError || !query.data) {
+    return (
+      <ErrorState
+        title={locale === 'ar' ? 'العلامة غير موجودة' : 'Brand not found'}
+        onRetry={() => void query.refetch()}
+      />
+    );
+  }
+
+  const brand = query.data;
+  const services = brand.services ?? [];
+  const products = brand.products ?? [];
+
+  return (
+    <>
+      <Seo
+        title={brand.name}
+        path={`/brands/${slug}`}
+        description={brand.description || undefined}
+      />
+
+      <section className="border-b border-line bg-page text-fg">
+        <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 sm:py-16 lg:px-10">
+          <Link
+            to="/brands"
+            className="inline-flex items-center gap-2 text-sm font-bold text-accent"
+          >
+            {dir === 'rtl' ? <ArrowRight className="h-4 w-4" /> : <ArrowLeft className="h-4 w-4" />}
+            {p.brandsBack}
+          </Link>
+
+          <div className="mt-8 grid items-center gap-10 lg:grid-cols-[minmax(0,280px)_1fr] lg:gap-16">
+            <Reveal variant="left">
+              <div className="flex min-h-[180px] items-center justify-center rounded-2xl border border-border/80 bg-white px-8 py-12 shadow-sm dark:bg-[#d9e2ec]">
+                {brand.logo ? (
+                  <img
+                    src={brand.logo}
+                    alt={brand.name}
+                    className="max-h-24 w-auto max-w-full object-contain"
+                  />
+                ) : (
+                  <span className="text-2xl font-extrabold tracking-tight">{brand.name}</span>
+                )}
+              </div>
+            </Reveal>
+
+            <Reveal variant="right" delay={1}>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-accent">
+                {p.brandsList}
+              </p>
+              <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
+                {brand.name}
+              </h1>
+              {brand.description ? (
+                <p className="mt-5 max-w-2xl text-base font-medium leading-relaxed text-muted sm:text-lg">
+                  {brand.description}
+                </p>
+              ) : null}
+
+              {services.length ? (
+                <div className="mt-6">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted">
+                    {p.brandsInServices}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {services.map((svc) => {
+                      const svcLoc = localizeService(svc, locale);
+                      return (
+                      <Link
+                        key={svc.id}
+                        to={`/services/${svc.slug}`}
+                        className="rounded-lg border border-border/80 bg-card px-3 py-1.5 text-xs font-bold text-fg transition hover:border-accent/40 hover:text-accent"
+                      >
+                        {svcLoc.name}
+                      </Link>
+                    );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link to="/contact" className="btn-cta btn-cta-primary btn-shine">
+                  {p.brandsQuote}
+                  <Arrow className="h-4 w-4" />
+                </Link>
+                <Link to={storePath()} className="btn-cta btn-cta-dark">
+                  {p.brandsCtaStore}
+                  <ArrowUpRight className="h-4 w-4" />
+                </Link>
+                {brand.website ? (
+                  <a
+                    href={brand.website}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-cta btn-cta-outline"
+                  >
+                    {p.brandsWebsite}
+                    <ArrowUpRight className="h-4 w-4" />
+                  </a>
+                ) : null}
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {products.length ? (
+        <section className="border-b border-line bg-page py-14 text-fg sm:py-20">
+          <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
+            <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
+              {p.brandsProducts}
+            </h2>
+            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((prod) => {
+                const img = prod.images?.[0]?.url;
+                return (
+                  <a
+                    key={prod.id}
+                    href={storePath(`products/${prod.slug}`)}
+                    className="group overflow-hidden rounded-xl border border-border/80 bg-card transition hover:border-accent/35"
+                  >
+                    {img ? (
+                      <div className="aspect-[16/10] overflow-hidden bg-mist">
+                        <img
+                          src={img}
+                          alt=""
+                          className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                        />
+                      </div>
+                    ) : null}
+                    <div className="p-5">
+                      <h3 className="font-bold tracking-tight">{prod.name}</h3>
+                      {prod.shortDescription ? (
+                        <p className="mt-2 line-clamp-2 text-sm text-muted">
+                          {prod.shortDescription}
+                        </p>
+                      ) : null}
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      ) : null}
+    </>
   );
 }
 
@@ -1464,17 +1697,17 @@ export function ContactPage() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-2 sm:min-w-[11rem] sm:items-end">
+                  <div className="flex flex-col gap-1 sm:min-w-[11rem] sm:items-end">
                     <a
                       href={telHref(person.phone)}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-fg transition hover:text-accent"
+                      className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-fg transition hover:text-accent"
                     >
                       <Phone className="h-3.5 w-3.5 text-accent" aria-hidden />
                       {person.phone}
                     </a>
                     <a
                       href={`mailto:${person.email}`}
-                      className="inline-flex items-center gap-2 break-all text-sm text-muted transition hover:text-accent"
+                      className="inline-flex min-h-10 items-center gap-2 break-all text-sm text-muted transition hover:text-accent"
                     >
                       <Mail className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
                       {person.email}
@@ -1483,7 +1716,7 @@ export function ContactPage() {
                       href={waHref(person.phone)}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 text-xs font-bold uppercase tracking-[0.14em] text-accent transition hover:underline"
+                      className="inline-flex min-h-10 items-center text-xs font-bold uppercase tracking-[0.14em] text-accent transition hover:underline"
                     >
                       {p.contactWhatsApp}
                     </a>

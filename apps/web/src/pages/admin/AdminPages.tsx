@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -54,9 +54,11 @@ import {
   supportApi,
   cmsApi,
   adminCmsApi,
+  settingsApi,
   usersApi,
   auditApi,
 } from '@/services/endpoints';
+import type { CmsService } from '@/types';
 import { formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
 
@@ -1164,26 +1166,139 @@ function CmsCrudPage({
   );
 }
 
+const emptyServiceForm = {
+  name: '',
+  nameAr: '',
+  shortDescription: '',
+  shortDescriptionAr: '',
+  description: '',
+  descriptionAr: '',
+};
+
 export function AdminServicesPage() {
   const { t } = useI18n();
+  const qc = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyServiceForm);
+
+  const list = useQuery({
+    queryKey: ['admin-services'],
+    queryFn: async () => (await adminCmsApi.services()).data,
+  });
+
+  function startEdit(row: CmsService) {
+    setEditingId(row.id);
+    setForm({
+      name: row.name ?? '',
+      nameAr: row.nameAr ?? '',
+      shortDescription: row.shortDescription ?? '',
+      shortDescriptionAr: row.shortDescriptionAr ?? '',
+      description: row.description ?? '',
+      descriptionAr: row.descriptionAr ?? '',
+    });
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingId) return;
+    try {
+      await adminCmsApi.updateService(editingId, form);
+      toast.success(t.admin.serviceUpdated);
+      setEditingId(null);
+      setForm(emptyServiceForm);
+      await qc.invalidateQueries({ queryKey: ['admin-services'] });
+      await qc.invalidateQueries({ queryKey: ['services'] });
+    } catch {
+      toast.error(t.admin.saveFailed);
+    }
+  }
+
   return (
-    <CmsCrudPage
-      title={t.admin.services}
-      listKey="admin-services"
-      listFn={() => cmsApi.services()}
-      createFn={(d) =>
-        adminCmsApi.createService({
-          ...d,
-          status: 'PUBLISHED',
-          slug: d.name?.toLowerCase().replace(/\s+/g, '-'),
-        })
-      }
-      fields={[
-        { key: 'name', label: t.common.name },
-        { key: 'shortDescription', label: t.admin.shortDescription },
-        { key: 'description', label: t.admin.description },
-      ]}
-    />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-fg">{t.admin.services}</h1>
+      <p className="text-sm text-muted">{t.admin.servicesBilingualHint}</p>
+
+      {editingId ? (
+        <form onSubmit={save} className="surface grid gap-3 p-4 md:grid-cols-2">
+          <p className="md:col-span-2 text-sm font-bold text-fg">{t.admin.editService}</p>
+          <Input
+            placeholder={t.admin.nameEn}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
+          <Input
+            placeholder={t.admin.nameAr}
+            value={form.nameAr}
+            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
+            dir="rtl"
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.shortDescriptionEn}
+            value={form.shortDescription}
+            onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
+            rows={3}
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.shortDescriptionAr}
+            value={form.shortDescriptionAr}
+            onChange={(e) => setForm({ ...form, shortDescriptionAr: e.target.value })}
+            rows={3}
+            dir="rtl"
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionEn}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={5}
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionAr}
+            value={form.descriptionAr}
+            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
+            rows={5}
+            dir="rtl"
+          />
+          <div className="flex gap-2 md:col-span-2">
+            <Button type="submit">{t.common.save}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setEditingId(null);
+                setForm(emptyServiceForm);
+              }}
+            >
+              {t.admin.back}
+            </Button>
+          </div>
+        </form>
+      ) : null}
+
+      {list.isLoading ? <LoadingState variant="table" /> : null}
+      <div className="space-y-2">
+        {(list.data ?? []).map((row) => (
+          <div
+            key={row.id}
+            className="surface flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
+          >
+            <span>
+              {row.name}
+              {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
+              <StatusBadge status={String(row.status || 'DRAFT')} />
+            </span>
+            <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
+              <Pencil className="me-1.5 h-3.5 w-3.5" />
+              {t.admin.edit}
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -1338,11 +1453,78 @@ export function AdminAuditPage() {
 
 export function AdminSettingsPage() {
   const { t } = useI18n();
+  const qc = useQueryClient();
+  const [rate, setRate] = useState('');
+  const [enableIqd, setEnableIqd] = useState(true);
+
+  const settings = useQuery({
+    queryKey: ['admin-commerce-settings'],
+    queryFn: async () => (await settingsApi.commerceAdmin()).data,
+  });
+
+  useEffect(() => {
+    if (!settings.data) return;
+    setRate(String(settings.data.usdToIqdRate));
+    setEnableIqd(settings.data.enableIqdDisplay);
+  }, [settings.data]);
+
+  async function saveCommerce(e: React.FormEvent) {
+    e.preventDefault();
+    const usdToIqdRate = Number(rate);
+    if (!Number.isFinite(usdToIqdRate) || usdToIqdRate <= 0) {
+      toast.error(t.admin.exchangeRateInvalid);
+      return;
+    }
+    try {
+      await settingsApi.updateCommerce({ usdToIqdRate, enableIqdDisplay: enableIqd });
+      toast.success(t.admin.settingsSaved);
+      await qc.invalidateQueries({ queryKey: ['admin-commerce-settings'] });
+      await qc.invalidateQueries({ queryKey: ['commerce-settings'] });
+    } catch {
+      toast.error(t.admin.saveFailed);
+    }
+  }
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-fg">{t.admin.settings}</h1>
-      <p className="text-sm text-muted">{t.admin.settingsBlurb}</p>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-fg">{t.admin.settings}</h1>
+        <p className="mt-1 text-sm text-muted">{t.admin.settingsBlurb}</p>
+      </div>
+
+      <form onSubmit={saveCommerce} className="surface max-w-lg space-y-4 p-4">
+        <h2 className="text-lg font-bold text-fg">{t.admin.commerceSettings}</h2>
+        <p className="text-sm text-muted">{t.admin.commerceSettingsHint}</p>
+        <div>
+          <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">
+            {t.admin.usdToIqdRate}
+          </label>
+          <Input
+            type="number"
+            step="0.0001"
+            min={1}
+            value={rate}
+            onChange={(e) => setRate(e.target.value)}
+            required
+          />
+          <p className="mt-1 text-xs text-muted">{t.admin.usdToIqdHint}</p>
+        </div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-fg">
+          <input
+            type="checkbox"
+            checked={enableIqd}
+            onChange={(e) => setEnableIqd(e.target.checked)}
+            className="h-4 w-4 rounded border-border accent-accent"
+          />
+          {t.admin.enableIqdDisplay}
+        </label>
+        <Button type="submit" disabled={settings.isLoading}>
+          {t.common.save}
+        </Button>
+      </form>
+
       <Button
+        variant="secondary"
         onClick={() =>
           void authApi
             .me()

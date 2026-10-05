@@ -28,18 +28,71 @@ export class BrandsService {
   }
 
   async findAllPublic() {
-    return this.prisma.brand.findMany({
+    const rows = await this.prisma.brand.findMany({
       where: { status: ContentStatus.PUBLISHED },
       orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
+      include: {
+        services: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                shortDescription: true,
+                image: true,
+              },
+            },
+          },
+        },
+      },
     });
+    return rows.map((b) => ({
+      ...b,
+      services: b.services.map((sb) => sb.service),
+    }));
   }
 
   async findBySlug(slug: string) {
     const brand = await this.prisma.brand.findFirst({
       where: { slug, status: ContentStatus.PUBLISHED },
+      include: {
+        services: {
+          orderBy: { sortOrder: 'asc' },
+          include: {
+            service: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                shortDescription: true,
+                image: true,
+              },
+            },
+          },
+        },
+        products: {
+          where: { status: 'ACTIVE' },
+          take: 12,
+          orderBy: { updatedAt: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            slug: true,
+            shortDescription: true,
+            price: true,
+            currency: true,
+            images: { where: { isPrimary: true }, take: 1, select: { url: true } },
+          },
+        },
+      },
     });
     if (!brand) throw new NotFoundException('Brand not found');
-    return brand;
+    return {
+      ...brand,
+      services: brand.services.map((sb) => sb.service),
+    };
   }
 
   async findAllAdmin() {

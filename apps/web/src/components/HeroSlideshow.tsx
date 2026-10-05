@@ -2,26 +2,26 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 const HERO_SLIDES = [
-  // Company CV — offshore platform cover
   '/company/p01-1.jpg',
-  // Company CV — drilling rig at sunset
   '/company/p05-1.jpg',
-  // Company CV — hydraulic systems
   '/company/p06-1.jpg',
-  // Company CV — PPE kit
+  '/company/p12-1.jpg',
+  '/company/p14-1.jpg',
   '/company/p10-1.jpg',
 ];
 
-const INTERVAL_MS = 5500;
+const INTERVAL_MS = 6000;
 
 export function HeroSlideshow({
   images = HERO_SLIDES,
   intervalMs = INTERVAL_MS,
   className,
+  showDots = true,
 }: {
   images?: string[];
   intervalMs?: number;
   className?: string;
+  showDots?: boolean;
 }) {
   const [active, setActive] = useState(0);
   const slides = images.length ? images : HERO_SLIDES;
@@ -35,7 +35,7 @@ export function HeroSlideshow({
       setActive((i) => (i + 1) % slides.length);
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [slides.length, intervalMs]);
+  }, [slides.length, intervalMs, active]);
 
   return (
     <div className={cn('absolute inset-0 overflow-hidden', className)}>
@@ -46,16 +46,18 @@ export function HeroSlideshow({
           alt=""
           aria-hidden
           className={cn(
-            'hero-slide absolute inset-0 h-full w-full object-cover',
+            'hero-slide absolute inset-0 h-full w-full object-cover object-center',
             i === active && 'is-active',
           )}
         />
       ))}
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/90 via-black/70 to-black/35 dark:from-black/95 dark:via-black/80" />
-      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_50%_60%_at_20%_50%,rgb(0_112_192/0.35),transparent_65%)]" />
 
-      {slides.length > 1 ? (
-        <div className="absolute inset-x-0 bottom-5 z-20 flex justify-center gap-2 px-4">
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black via-black/55 to-black/20" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/75 via-black/35 to-transparent rtl:bg-gradient-to-l" />
+      <div className="pointer-events-none absolute inset-0 z-[2] bg-[radial-gradient(ellipse_70%_55%_at_70%_20%,rgb(0_112_192/0.28),transparent_60%)]" />
+
+      {showDots && slides.length > 1 ? (
+        <div className="absolute inset-x-0 bottom-4 z-20 flex justify-center gap-1 sm:bottom-6">
           {slides.map((_, i) => (
             <button
               key={i}
@@ -63,11 +65,15 @@ export function HeroSlideshow({
               aria-label={`Slide ${i + 1}`}
               aria-current={i === active || undefined}
               onClick={() => setActive(i)}
-              className={cn(
-                'h-1.5 rounded-full transition-all duration-500',
-                i === active ? 'w-8 bg-accent' : 'w-1.5 bg-white/40 hover:bg-white/70',
-              )}
-            />
+              className="flex h-9 w-9 items-center justify-center"
+            >
+              <span
+                className={cn(
+                  'block rounded-full transition-all duration-500',
+                  i === active ? 'h-1 w-7 bg-white' : 'h-1 w-1 bg-white/45 hover:bg-white/75',
+                )}
+              />
+            </button>
           ))}
         </div>
       ) : null}
