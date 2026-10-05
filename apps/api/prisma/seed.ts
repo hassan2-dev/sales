@@ -182,67 +182,55 @@ async function main() {
     {
       name: 'Drilling',
       slug: 'drilling',
-      shortDescription: 'Advanced drilling solutions for Oil & Gas operations',
+      shortDescription: 'Materials and equipment for drilling and workover rigs',
       description:
-        'Comprehensive drilling equipment and technical support for upstream operations across Iraq — BOP kits, mud pump spares, and field tooling.',
-      // Desert oil drilling derrick
-      image:
-        'https://images.unsplash.com/photo-1696059928249-f036c4d54338?auto=format&fit=crop&w=1400&q=80',
+        'From reliable international manufacturers we support drilling and workover rigs with power systems, pneumatic systems, mud pumps and tanks, rig-floor equipment, and mechanical and hydraulic systems — focused on efficiency, safety, and quality.',
+      image: '/company/p05-1.jpg',
       sortOrder: 1,
     },
     {
       name: 'Hydraulic',
       slug: 'hydraulic',
-      shortDescription: 'Hydraulic systems and industrial fluid power',
+      shortDescription: 'Fluid power equipment and integrated hydraulic systems',
       description:
-        'Hydraulic components, HPUs, hose assemblies, and maintenance for industrial and oilfield applications.',
-      // Industrial pumps, valves, and stainless piping
-      image:
-        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1400&q=80',
+        'Fluid power and hydraulic equipment including pumps, valves, motors, meters, hoses, quick-release couplings, fittings and adapters — plus integrated systems for oilfield and industrial operations.',
+      image: '/company/p06-1.jpg',
       sortOrder: 2,
     },
     {
       name: 'Electrical',
       slug: 'electrical',
-      shortDescription: 'Electrical engineering and power solutions',
+      shortDescription: 'Electrical supply including explosion-proof solutions',
       description:
-        'Ex lighting, instrumentation, transmitters, and power solutions for industrial facilities and hazardous areas.',
-      // High-voltage transmission / power infrastructure
-      image:
-        'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1400&q=80',
+        'Cables, connectors, transformers, power systems, and a wide range of electrical components for drilling rigs and plants — plus Ex equipment, intrinsic safety barriers, HMI systems, and control solutions for harsh and hazardous areas.',
+      image: '/company/p07-1.jpg',
       sortOrder: 3,
     },
     {
       name: 'Technical Team',
       slug: 'technical-team',
-      shortDescription: 'Experienced technical personnel to support you',
+      shortDescription: 'Manpower and technical personnel for Iraqi projects',
       description:
-        'Field engineers and specialists providing on-site support, commissioning, training, and HSE guidance.',
-      // Engineers reviewing mechanical drawings with a part
-      image:
-        'https://images.unsplash.com/photo-1581094288338-2314dddb7ece?auto=format&fit=crop&w=1400&q=80',
+        'Professional employer and manpower services for local and international organizations in Iraq — control-room operators and supervisors, area operators, commissioning, ICSS, instrumentation, and machinery engineers and technicians.',
+      image: '/company/p08-1.jpg',
       sortOrder: 4,
     },
     {
       name: 'Safety & PPE',
       slug: 'safety-ppe',
-      shortDescription: 'HSE gear and PPE packages for crews',
+      shortDescription: 'EN-certified PPE from ISO 9001 accredited suppliers',
       description:
-        'Hard hats, FR coveralls, gloves, eye and hearing protection — staged from Baghdad and Basra for drilling pads and plant turnarounds.',
-      // Crew in hard hats and high-visibility PPE on site
-      image:
-        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1400&q=80',
+        'Personal protective equipment sourced from leading international partners — hard hats, hearing and eye protection, gloves, FR clothing, and specialty ranges for oil, gas, and chemical handling, selected for EN certification and ISO 9001 supply chains.',
+      image: '/company/p10-1.jpg',
       sortOrder: 5,
     },
     {
       name: 'Procurement & Supply',
       slug: 'procurement-supply',
-      shortDescription: 'Sourcing, staging, and delivery for industrial SKUs',
+      shortDescription: 'Single-point procurement for oilfield and plant materials',
       description:
-        'End-to-end procurement for oilfield and industrial materials — quote, consolidate, and deliver with clear lead times across Iraq.',
-      // Industrial warehouse / staging racks
-      image:
-        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1400&q=80',
+        'Strategic supply relationships with accredited manufacturers worldwide — instrumentation and sensors, pipe fittings, flanges, valves, pumps, hydraulics, electrical packages, and custom-made sensors and systems.',
+      image: '/company/p04-1.jpg',
       sortOrder: 6,
     },
   ];
@@ -267,9 +255,9 @@ async function main() {
       name: 'Baghdad Office',
       city: 'Baghdad',
       country: 'Iraq',
-      address: 'Al-Karrada, Baghdad',
+      address: 'Baghdad, Iraq',
       phone: '+964 7713938595',
-      email: 'baghdad@energy-horizon.net',
+      email: 'sales@energy-horizon.net',
       contactPerson: 'Eng. Ali Altaai',
       sortOrder: 1,
     },
@@ -277,11 +265,31 @@ async function main() {
       name: 'Basra Office',
       city: 'Basra',
       country: 'Iraq',
-      address: 'Al-Ashar, Basra',
+      address: 'Basra, Iraq',
       phone: '+964 7810565100',
-      email: 'basra@energy-horizon.net',
-      contactPerson: 'Tabarak',
+      email: 'tabarak@energy-horizon.net',
+      contactPerson: 'Eng. Tabarak Mohammed',
       sortOrder: 2,
+    },
+    {
+      name: 'Canada Office',
+      city: 'Canada',
+      country: 'Canada',
+      address: 'Canada',
+      phone: '+1 587 777 0488',
+      email: 'aalia@energy-horizon.net',
+      contactPerson: 'Aalia Al-Quraishi',
+      sortOrder: 3,
+    },
+    {
+      name: 'USA Office',
+      city: 'USA',
+      country: 'USA',
+      address: 'USA',
+      phone: '+1 314 201 3439',
+      email: 'mustafa.alsaffar@energy-horizon.net',
+      contactPerson: 'Mustafa Al Saffar',
+      sortOrder: 4,
     },
   ];
 
@@ -313,32 +321,55 @@ async function main() {
     where: { slug: 'about' },
     update: {
       title: 'About Energy Horizon',
-      excerpt: 'Advanced solutions for the Oil & Gas industry',
-      content:
-        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq. From drilling support and hydraulics to electrical packages and HSE supply, our teams in Baghdad and Basra keep projects moving safely.',
+      excerpt: 'Advanced Oil & Gas solutions for the industry',
+      content: [
+        'Headquartered in Baghdad, Afaq Al-Taqa International Co. Ltd. (Energy Horizon) is an Iraqi-owned and registered company.',
+        '',
+        'We are a leading supplier of materials and equipment to the Oil and Gas industry — drilling and workover rigs, degassing stations, refineries, and power plants.',
+        '',
+        'Our staff has more than 10 years of experience on drilling-rig operations, equipment supply, and maintenance. Authorization by leading manufacturers helps keep our processes aligned with high international standards.',
+        '',
+        'We provide electrical, mechanical, hydraulics, and drilling equipment from reputable international manufacturers, plus EN-certified PPE, explosion-proof electrical solutions, and single-point procurement through strategic supply relationships worldwide.',
+        '',
+        'Operational offices in Baghdad and Basra — with international branch contacts in Canada and the USA — support field delivery across Iraq.',
+      ].join('\n'),
       status: ContentStatus.PUBLISHED,
     },
     create: {
       title: 'About Energy Horizon',
       slug: 'about',
-      excerpt: 'Advanced solutions for the Oil & Gas industry',
-      content:
-        'Energy Horizon (Afaq Al-Taqa) delivers comprehensive and sustainable engineering solutions for the Oil & Gas and industrial sectors in Iraq. Our teams operate from Baghdad and Basra.',
+      excerpt: 'Advanced Oil & Gas solutions for the industry',
+      content: [
+        'Headquartered in Baghdad, Afaq Al-Taqa International Co. Ltd. (Energy Horizon) is an Iraqi-owned and registered company.',
+        '',
+        'We are a leading supplier of materials and equipment to the Oil and Gas industry — drilling and workover rigs, degassing stations, refineries, and power plants.',
+      ].join('\n'),
       status: ContentStatus.PUBLISHED,
     },
   });
 
   await prisma.companySetting.upsert({
     where: { key: 'company' },
-    update: {},
+    update: {
+      value: {
+        name: 'Energy Horizon',
+        nameAr: 'افاق الطاقة',
+        legalName: 'Afaq Al-Taqa for General Trading and Engineering Services Ltd.',
+        tagline: 'Advanced Oil & Gas solutions for the industry',
+        website: 'https://energy-horizon.net',
+        email: 'sales@energy-horizon.net',
+        currency: 'USD',
+      },
+    },
     create: {
       key: 'company',
       value: {
         name: 'Energy Horizon',
         nameAr: 'افاق الطاقة',
-        tagline: 'Advanced solutions for the Oil & Gas industry',
+        legalName: 'Afaq Al-Taqa for General Trading and Engineering Services Ltd.',
+        tagline: 'Advanced Oil & Gas solutions for the industry',
         website: 'https://energy-horizon.net',
-        email: 'info@energy-horizon.net',
+        email: 'sales@energy-horizon.net',
         currency: 'USD',
       },
     },
@@ -853,43 +884,41 @@ async function main() {
 
   const projects = [
     {
-      title: 'Basra Rig Safety Upgrade',
-      slug: 'basra-rig-safety-upgrade',
-      shortDescription: 'PPE and lighting package for an active drilling pad',
+      title: 'SC-PMC2 Manpower — West Qurna 1',
+      slug: 'sc-pmc2-wq1-manpower',
+      shortDescription:
+        'Control-room and commissioning manpower for the SC-PMC2 project on WQ1',
       description:
-        'Supplied FR coveralls, helmets, Zone 1 lighting and HSE consumables for a multi-well campaign near Basra.',
-      client: 'Basra Oil Company',
-      location: 'Basra, Iraq',
+        'Manpower supply for the SC-PMC2 project located on West Qurna 1 (WQ1) oil field — control-room operators and supervisors, area operators, commissioning engineers, ICSS engineers, instruments engineers and technicians, and machinery engineers. Client: Kentech Gulf Holding Ltd.',
+      client: 'Kentech Gulf Holding Ltd.',
+      location: 'West Qurna 1, Iraq',
       featured: true,
       sortOrder: 1,
-      coverImage:
-        'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80',
+      coverImage: '/company/p08-1.jpg',
     },
     {
-      title: 'Baghdad Plant Instrumentation',
-      slug: 'baghdad-plant-instrumentation',
-      shortDescription: 'Transmitters and electrical spares for a process plant',
+      title: 'Drilling & Workover Rig Supply',
+      slug: 'drilling-workover-rig-supply',
+      shortDescription: 'Materials and equipment packages for active drilling campaigns',
       description:
-        'Delivered pressure transmitters, junction boxes and Ex lighting for a midstream facility turnaround.',
-      client: 'Ministry of Oil',
-      location: 'Baghdad, Iraq',
+        'Supply support for drilling and workover rigs including power and pneumatic systems, mud pumps and tanks, and rig-floor mechanical and hydraulic equipment.',
+      client: 'Oil & Gas operators — Iraq',
+      location: 'Iraq',
       featured: true,
       sortOrder: 2,
-      coverImage:
-        'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80',
+      coverImage: '/company/p05-1.jpg',
     },
     {
-      title: 'Kirkuk Hydraulic Overhaul',
-      slug: 'kirkuk-hydraulic-overhaul',
-      shortDescription: 'HPU and hose assemblies for maintenance crews',
+      title: 'Plant Electrical & Ex Packages',
+      slug: 'plant-electrical-ex-packages',
+      shortDescription: 'Electrical and explosion-proof equipment for harsh environments',
       description:
-        'Hydraulic power units, hoses and fittings staged for a planned mechanical overhaul window.',
-      client: 'North Oil Company',
-      location: 'Kirkuk, Iraq',
+        'Cables, transformers, power systems, and explosion-proof control and distribution solutions for installation in harsh and hazardous industrial areas.',
+      client: 'Refineries & power plants — Iraq',
+      location: 'Iraq',
       featured: true,
       sortOrder: 3,
-      coverImage:
-        'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=1200&q=80',
+      coverImage: '/company/p11-1.jpg',
     },
   ];
 
@@ -914,6 +943,19 @@ async function main() {
       },
     });
   }
+
+  await prisma.project.updateMany({
+    where: {
+      slug: {
+        in: [
+          'basra-rig-safety-upgrade',
+          'baghdad-plant-instrumentation',
+          'kirkuk-hydraulic-overhaul',
+        ],
+      },
+    },
+    data: { status: ContentStatus.ARCHIVED },
+  });
 
   const news = [
     {

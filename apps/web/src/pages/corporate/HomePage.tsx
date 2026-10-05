@@ -1,5 +1,4 @@
-﻿import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
@@ -35,10 +34,8 @@ import {
 /** Drop your real PDF at apps/web/public/company-profile.pdf */
 const COMPANY_PROFILE_PDF = '/company-profile.pdf';
 
-const ABOUT_IMG =
-  'https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=1200&q=80';
-const STATS_IMG =
-  'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=2000&q=80';
+const ABOUT_IMG = '/company/p01-1.jpg';
+const STATS_IMG = '/company/p07-1.jpg';
 
 const MARQUEE = [
   'AT',
@@ -82,23 +79,8 @@ export function HomePage() {
       return fallback.data.data ?? [];
     },
   });
-  const brands = useQuery({
-    queryKey: ['home-brands'],
-    queryFn: async () => (await cmsApi.brands()).data,
-  });
-  const projects = useQuery({
-    queryKey: ['home-projects'],
-    queryFn: async () => (await cmsApi.projects()).data,
-  });
-
   const newsItems = news.data ?? [];
   const marquee = [...MARQUEE, ...MARQUEE];
-  const clientNames = useMemo(() => {
-    const names = (projects.data ?? [])
-      .map((p) => p.client?.trim())
-      .filter((n): n is string => Boolean(n));
-    return [...new Set(names)];
-  }, [projects.data]);
 
   const values = [
     {
@@ -405,35 +387,14 @@ export function HomePage() {
         </div>
       </section>
 
-      {!brands.isLoading && !projects.isLoading && (brands.data?.length || clientNames.length) ? (
-        <PartnersSection
-          brands={brands.data ?? []}
-          clients={clientNames}
-          labels={{
-            partners: t.home.partners,
-            partnersSub: t.home.partnersSub,
-            clients: t.home.clients,
-            brands: t.home.brands,
-          }}
-        />
-      ) : null}
-      {!brands.isLoading &&
-      !projects.isLoading &&
-      !(brands.data?.length || clientNames.length) ? (
-        <section className="border-b border-line bg-page px-4 py-16 text-fg">
-          <div className="mx-auto max-w-[90rem]">
-            <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">{t.home.partners}</h2>
-            <EmptyState
-              title={locale === 'ar' ? 'لا يوجد شركاء بعد' : 'No partners yet'}
-              description={
-                locale === 'ar'
-                  ? 'أضف العلامات والمشاريع من لوحة التحكم'
-                  : 'Add brands and project clients in admin'
-              }
-            />
-          </div>
-        </section>
-      ) : null}
+      <PartnersSection
+        labels={{
+          partners: t.home.partners,
+          partnersSub: t.home.partnersSub,
+          clients: t.home.clients,
+          brands: t.home.brands,
+        }}
+      />
 
       <section className="border-b border-line bg-page px-4 py-14 text-fg sm:px-6 sm:py-20 lg:px-10 lg:py-28">
         <div className="mx-auto max-w-[90rem]">
@@ -444,29 +405,39 @@ export function HomePage() {
           <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-3">
             {newsItems.map((n, i) => (
               <Reveal key={n.id} delay={i}>
-                <Link to={`/news/${n.slug}`} className="block">
-                  <Card className="card-lift h-full">
-                    <CardHeader>
-                      <p className="font-kpi text-xs uppercase tracking-[0.16em] text-muted">
-                        {n.publishedAt
-                          ? new Date(n.publishedAt).toLocaleDateString(
-                              locale === 'ar' ? 'ar-IQ' : 'en-GB',
-                              { year: 'numeric', month: 'short', day: 'numeric' },
-                            )
-                          : '—'}
-                      </p>
-                      <CardTitle className="text-lg leading-snug">{n.title}</CardTitle>
-                      {n.excerpt ? (
-                        <CardDescription className="line-clamp-2">{n.excerpt}</CardDescription>
-                      ) : null}
-                    </CardHeader>
-                    <CardFooter className="border-0 bg-transparent">
-                      <span className="inline-flex items-center gap-1 text-sm font-bold text-accent">
-                        {t.home.learnMore}
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      </span>
-                    </CardFooter>
-                  </Card>
+                <Link
+                  to={`/news/${n.slug}`}
+                  className="card-lift group flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card"
+                >
+                  {n.coverImage ? (
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <img
+                        src={n.coverImage}
+                        alt=""
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                      />
+                    </div>
+                  ) : null}
+                  <CardHeader>
+                    <p className="font-kpi text-xs uppercase tracking-[0.16em] text-muted">
+                      {n.publishedAt
+                        ? new Date(n.publishedAt).toLocaleDateString(
+                            locale === 'ar' ? 'ar-IQ' : 'en-GB',
+                            { year: 'numeric', month: 'short', day: 'numeric' },
+                          )
+                        : '—'}
+                    </p>
+                    <CardTitle className="text-lg leading-snug">{n.title}</CardTitle>
+                    {n.excerpt ? (
+                      <CardDescription className="line-clamp-2">{n.excerpt}</CardDescription>
+                    ) : null}
+                  </CardHeader>
+                  <CardFooter className="mt-auto border-0 bg-transparent">
+                    <span className="inline-flex items-center gap-1 text-sm font-bold text-accent transition group-hover:gap-2">
+                      {t.home.learnMore}
+                      <ArrowUpRight className="h-3.5 w-3.5" />
+                    </span>
+                  </CardFooter>
                 </Link>
               </Reveal>
             ))}

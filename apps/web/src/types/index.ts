@@ -155,10 +155,14 @@ export interface CmsProject {
   slug: string;
   shortDescription?: string | null;
   description?: string | null;
+  content?: string | null;
   coverImage?: string | null;
   imageUrl?: string | null;
   client?: string | null;
   location?: string | null;
+  completedAt?: string | null;
+  featured?: boolean;
+  sortOrder?: number;
   status?: string;
 }
 
@@ -169,6 +173,7 @@ export interface CmsNews {
   excerpt?: string | null;
   content?: string | null;
   author?: string | null;
+  category?: string | null;
   coverImage?: string | null;
   publishedAt?: string | null;
   status?: string;

@@ -15,6 +15,7 @@ import {
   NewsDetailPage,
   BrandsPage,
   ProjectsPage,
+  ProjectDetailPage,
 } from '@/pages/corporate/CmsPages';
 import {
   StoreProductsPage,
@@ -73,6 +74,11 @@ function ServiceDetailRoute() {
 function NewsDetailRoute() {
   const { slug = '' } = useParams();
   return <NewsDetailPage slug={slug} />;
+}
+
+function ProjectDetailRoute() {
+  const { slug = '' } = useParams();
+  return <ProjectDetailPage slug={slug} />;
 }
 
 function ExternalRedirect({ to }: { to: string }) {
@@ -179,6 +185,7 @@ export function AppRouter() {
           <Route path="services/:slug" element={<ServiceDetailRoute />} />
           <Route path="brands" element={<BrandsPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/:slug" element={<ProjectDetailRoute />} />
           <Route path="news" element={<NewsPage />} />
           <Route path="news/:slug" element={<NewsDetailRoute />} />
           <Route path="contact" element={<ContactPage />} />

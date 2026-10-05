@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 
 const HERO_SLIDES = [
-  // Desert oil drilling rig
-  'https://images.unsplash.com/photo-1696059928249-f036c4d54338?auto=format&fit=crop&w=2400&q=80',
-  // Industrial pumps & piping
-  'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=2400&q=80',
-  // Power transmission / electrical
-  'https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=2400&q=80',
-  // Crew in PPE on site
-  'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=2400&q=80',
+  // Company CV — offshore platform cover
+  '/company/p01-1.jpg',
+  // Company CV — drilling rig at sunset
+  '/company/p05-1.jpg',
+  // Company CV — hydraulic systems
+  '/company/p06-1.jpg',
+  // Company CV — PPE kit
+  '/company/p10-1.jpg',
 ];
 
 const INTERVAL_MS = 5500;

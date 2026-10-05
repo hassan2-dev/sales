@@ -449,6 +449,39 @@
     transform: translateY(-4px);
   }
 
+  .logo-mark {
+    opacity: 0.92;
+    transition: opacity 0.25s ease, filter 0.25s ease;
+  }
+
+  .group:hover .logo-mark,
+  .logo-cell:hover .logo-mark {
+    opacity: 1;
+  }
+
+  /*
+   * Logo cells stay readable in both themes:
+   * light = normal card; dark = soft slate panel (no nested white pills).
+   */
+  .logo-cell {
+    background: var(--card);
+  }
+
+  .dark .logo-cell {
+    background: #d9e2ec;
+    border-color: rgb(255 255 255 / 0.06);
+  }
+
+  .logo-marquee {
+    background: var(--card);
+  }
+
+  .dark .logo-marquee {
+    /* same soft slate as logo cells — readable brand colors, no white pills */
+    background: #d9e2ec;
+    border-color: rgb(255 255 255 / 0.06);
+  }
+
   .trust-roster-row {
     position: relative;
     background: transparent;
