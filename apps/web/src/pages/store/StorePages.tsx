@@ -50,6 +50,15 @@ export function StoreProductsPage() {
   const brandSlug = params.get('brand') || '';
   const [mobileFilters, setMobileFilters] = useState(false);
 
+  useEffect(() => {
+    if (!mobileFilters) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileFilters]);
+
   const sortBy =
     sort === 'bestsellers'
       ? 'bestsellers'
@@ -289,58 +298,107 @@ export function StoreProductsPage() {
 
         {/* Mobile filters drawer */}
         {mobileFilters ? (
-          <div className="store-surface space-y-4 p-4 lg:hidden">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-extrabold">
-                {locale === 'ar' ? 'الفلاتر' : 'Filters'}
-              </p>
-              <button
-                type="button"
-                className="text-xs font-bold text-accent"
-                onClick={() => setMobileFilters(false)}
-              >
-                {locale === 'ar' ? 'إغلاق' : 'Close'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {cats.map((c) => (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/45"
+              aria-label={locale === 'ar' ? 'إغلاق' : 'Close'}
+              onClick={() => setMobileFilters(false)}
+            />
+            <div
+              className={cn(
+                'absolute bottom-0 max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:inset-y-0 sm:max-h-none sm:w-[min(22rem,88vw)] sm:rounded-none',
+                locale === 'ar' ? 'sm:right-0 sm:border-l' : 'sm:left-0 sm:border-r',
+              )}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm font-extrabold">
+                  {locale === 'ar' ? 'الفلاتر' : 'Filters'}
+                </p>
                 <button
-                  key={c.id}
+                  type="button"
+                  className="text-xs font-bold text-accent"
+                  onClick={() => setMobileFilters(false)}
+                >
+                  {locale === 'ar' ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+                {locale === 'ar' ? 'الأقسام' : 'Categories'}
+              </p>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button
                   type="button"
                   onClick={() => {
-                    applyParams({ category: c.slug, page: '1' });
+                    applyParams({ category: null, page: '1' });
                     setMobileFilters(false);
                   }}
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-bold',
-                    categorySlug === c.slug
+                    !categorySlug
                       ? 'bg-accent text-white'
                       : 'border border-border text-muted',
                   )}
                 >
-                  {c.name}
+                  {locale === 'ar' ? 'الكل' : 'All'}
                 </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {brandList.map((b) => (
+                {cats.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      applyParams({ category: c.slug, page: '1' });
+                      setMobileFilters(false);
+                    }}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold',
+                      categorySlug === c.slug
+                        ? 'bg-accent text-white'
+                        : 'border border-border text-muted',
+                    )}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+                {locale === 'ar' ? 'العلامات' : 'Brands'}
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={b.id}
                   type="button"
                   onClick={() => {
-                    applyParams({ brand: b.slug, page: '1' });
+                    applyParams({ brand: null, page: '1' });
                     setMobileFilters(false);
                   }}
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-bold',
-                    brandSlug === b.slug
+                    !brandSlug
                       ? 'bg-navy text-white'
                       : 'border border-border text-muted',
                   )}
                 >
-                  {b.name}
+                  {locale === 'ar' ? 'الكل' : 'All'}
                 </button>
-              ))}
+                {brandList.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      applyParams({ brand: b.slug, page: '1' });
+                      setMobileFilters(false);
+                    }}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold',
+                      brandSlug === b.slug
+                        ? 'bg-navy text-white'
+                        : 'border border-border text-muted',
+                    )}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
@@ -410,7 +468,7 @@ export function StoreProductsPage() {
             products.length ? (
               <div
                 key={`${search}-${sort}-${categorySlug}-${brandSlug}-${page}`}
-                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4"
               >
                 {products.map((p, i) => (
                   <ProductCard

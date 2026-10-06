@@ -134,21 +134,23 @@ export function ProductCard({
         ) : null}
       </div>
 
-      <div className="flex flex-1 flex-col gap-2.5 p-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="text-[11px] font-bold uppercase tracking-wide text-accent">
+      <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-4">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-accent sm:text-[11px]">
             {product.brand?.name || product.category?.name || '—'}
           </p>
-          <span className="text-[11px] text-muted">SKU {product.sku}</span>
+          <span className="hidden text-[11px] text-muted sm:inline">SKU {product.sku}</span>
         </div>
 
         <Link to={storePath(`products/${product.slug}`)} className="min-w-0">
-          <h3 className="line-clamp-2 text-[15px] font-bold leading-snug text-fg transition group-hover:text-accent">
+          <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-fg transition group-hover:text-accent sm:text-[15px]">
             {product.name}
           </h3>
         </Link>
 
-        {spec ? <p className="line-clamp-2 text-xs leading-relaxed text-muted">{spec}</p> : null}
+        {spec ? (
+          <p className="line-clamp-2 hidden text-xs leading-relaxed text-muted sm:block">{spec}</p>
+        ) : null}
 
         <AvailabilityBadge
           availability={product.availability}
@@ -157,7 +159,7 @@ export function ProductCard({
         />
 
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
-          <p className="text-lg font-extrabold tabular-nums text-navy dark:text-accent">
+          <p className="text-sm font-extrabold tabular-nums text-navy dark:text-accent sm:text-lg">
             {formatMoney(product.price, product.currency, locale === 'ar' ? 'ar-IQ' : 'en-US')}
           </p>
           {showCart && !(qty > 0 && line) ? (
@@ -165,10 +167,10 @@ export function ProductCard({
               type="button"
               disabled={outOfStock}
               onClick={() => void addItem(product.id, 1, product)}
-              className="store-add-btn inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition hover:bg-accent-soft disabled:opacity-50"
+              className="store-add-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition hover:bg-accent-soft disabled:opacity-50 sm:h-11 sm:w-11"
               aria-label={locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
             >
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
           ) : null}
         </div>

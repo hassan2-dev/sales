@@ -373,7 +373,7 @@ export function StoreHomePage() {
               }
             />
             {featured.isLoading ? <LoadingState variant="products" /> : null}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {featuredList.map((p, i) => (
                 <ProductCard
                   key={p.id}
@@ -429,7 +429,7 @@ export function StoreHomePage() {
             }
           />
           {newest.isLoading ? <LoadingState variant="products" /> : null}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {(newest.data?.data ?? []).map((p, i) => (
               <ProductCard
                 key={p.id}
@@ -461,7 +461,7 @@ export function StoreHomePage() {
             }
           />
           {bestsellers.isLoading ? <LoadingState variant="products" /> : null}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
             {(bestsellers.data?.data ?? []).map((p, i) => (
               <ProductCard
                 key={p.id}

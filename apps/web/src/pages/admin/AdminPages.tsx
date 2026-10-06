@@ -463,11 +463,13 @@ export function AdminProductsPage() {
     }
   }
 
+  const products = query.data?.data ?? [];
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-fg">{t.admin.products}</h1>
+          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.products}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{t.admin.quickActions}</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -477,7 +479,7 @@ export function AdminProductsPage() {
               setPage(1);
               setStatusFilter(e.target.value);
             }}
-            className="w-40"
+            className="w-full sm:w-40"
           >
             <option value="">{t.admin.allStatuses}</option>
             {PRODUCT_STATUSES.map((s) => (
@@ -486,30 +488,102 @@ export function AdminProductsPage() {
               </option>
             ))}
           </Select>
-          <Link to={adminPath('categories')}>
-            <Button variant="outline" className="gap-2">
+          <Link to={adminPath('categories')} className="min-w-0 flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full gap-2 sm:w-auto">
               <FolderTree className="h-4 w-4" />
-              {t.admin.categories}
+              <span className="truncate">{t.admin.categories}</span>
             </Button>
           </Link>
-          <Link to={adminPath('products/new')}>
-            <Button className="gap-2">
+          <Link to={adminPath('products/new')} className="min-w-0 flex-1 sm:flex-none">
+            <Button className="w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
-              {t.admin.addProduct}
+              <span className="truncate">{t.admin.addProduct}</span>
             </Button>
           </Link>
         </div>
       </div>
       {query.isLoading ? <LoadingState variant="table" /> : null}
-      <Card className="overflow-hidden py-0">
+
+      {/* Mobile cards */}
+      <div className="space-y-3 md:hidden">
+        {products.map((p) => {
+          const thumb = p.images?.[0]?.url || p.imageUrl;
+          return (
+            <Card key={p.id} size="sm">
+              <CardContent className="space-y-3 py-0">
+                <div className="flex items-start gap-3">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted">
+                    {thumb ? (
+                      <img src={thumb} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <Link
+                      to={adminPath(`products/${p.id}`)}
+                      className="line-clamp-2 font-semibold text-primary"
+                    >
+                      {p.name}
+                    </Link>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {p.sku} · {p.category?.name || t.admin.noCategory}
+                    </p>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span className="font-kpi text-sm font-bold">
+                        {formatMoney(p.price, p.currency, moneyLocale)}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {t.common.stock}: {p.stock}
+                      </span>
+                      <StatusBadge status={p.status} />
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1.5">
+                  <Link to={adminPath(`products/${p.id}`)}>
+                    <Button variant="outline" size="sm" className="w-full gap-1 px-2">
+                      <Pencil className="h-3.5 w-3.5" />
+                      {t.admin.edit}
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-1 px-2"
+                    onClick={() => void toggleActive(p)}
+                  >
+                    <Power className="h-3.5 w-3.5" />
+                    <span className="truncate">
+                      {p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="w-full gap-1 px-2"
+                    onClick={() => void onDelete(p)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {t.admin.delete}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Desktop table */}
+      <Card className="hidden overflow-hidden py-0 md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-start text-sm">
+            <table className="min-w-[720px] w-full text-start text-sm">
               <thead className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-start">{t.common.name}</th>
                   <th className="px-4 py-3 text-start">{t.common.sku}</th>
-                  <th className="px-4 py-3 text-start">{t.admin.category}</th>
+                  <th className="hidden px-4 py-3 text-start lg:table-cell">{t.admin.category}</th>
                   <th className="px-4 py-3 text-start">{t.common.price}</th>
                   <th className="px-4 py-3 text-start">{t.common.stock}</th>
                   <th className="px-4 py-3 text-start">{t.common.status}</th>
@@ -517,7 +591,7 @@ export function AdminProductsPage() {
                 </tr>
               </thead>
               <tbody>
-                {(query.data?.data ?? []).map((p) => {
+                {products.map((p) => {
                   const thumb = p.images?.[0]?.url || p.imageUrl;
                   return (
                     <tr key={p.id} className="border-b border-border hover:bg-muted/40">
@@ -533,43 +607,49 @@ export function AdminProductsPage() {
                               <ImageIcon className="h-4 w-4 text-muted-foreground" />
                             )}
                           </span>
-                          <span>{p.name}</span>
+                          <span className="line-clamp-2 max-w-[14rem]">{p.name}</span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3">{p.sku}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
+                      <td className="px-4 py-3 whitespace-nowrap">{p.sku}</td>
+                      <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
                         {p.category?.name || t.admin.noCategory}
                       </td>
-                      <td className="px-4 py-3">{formatMoney(p.price, p.currency, moneyLocale)}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {formatMoney(p.price, p.currency, moneyLocale)}
+                      </td>
                       <td className="px-4 py-3">{p.stock}</td>
                       <td className="px-4 py-3">
                         <StatusBadge status={p.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1.5">
+                        <div className="flex flex-nowrap gap-1.5">
                           <Link to={adminPath(`products/${p.id}`)}>
-                            <Button variant="outline" size="sm" className="gap-1.5">
+                            <Button variant="outline" size="sm" className="gap-1.5" title={t.admin.edit}>
                               <Pencil className="h-3.5 w-3.5" />
-                              {t.admin.edit}
+                              <span className="hidden xl:inline">{t.admin.edit}</span>
                             </Button>
                           </Link>
                           <Button
                             variant="outline"
                             size="sm"
                             className="gap-1.5"
+                            title={p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
                             onClick={() => void toggleActive(p)}
                           >
                             <Power className="h-3.5 w-3.5" />
-                            {p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
+                            <span className="hidden xl:inline">
+                              {p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
+                            </span>
                           </Button>
                           <Button
                             variant="danger"
                             size="sm"
                             className="gap-1.5"
+                            title={t.admin.delete}
                             onClick={() => void onDelete(p)}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                            {t.admin.delete}
+                            <span className="hidden xl:inline">{t.admin.delete}</span>
                           </Button>
                         </div>
                       </td>
@@ -581,7 +661,7 @@ export function AdminProductsPage() {
           </div>
         </CardContent>
       </Card>
-      {!query.isLoading && !(query.data?.data ?? []).length ? (
+      {!query.isLoading && !products.length ? (
         <EmptyState
           title={t.admin.emptyList}
           action={{
@@ -1111,26 +1191,60 @@ export function AdminOrdersPage() {
     queryKey: ['admin-orders', page],
     queryFn: async () => (await ordersApi.list({ page, limit: 20 })).data,
   });
+  const orders = query.data?.data ?? [];
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-fg">{t.admin.orders}</h1>
+      <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.orders}</h1>
       {query.isLoading ? <LoadingState variant="table" /> : null}
-      <Card className="overflow-hidden py-0">
+
+      <div className="space-y-3 md:hidden">
+        {orders.map((o) => (
+          <Link key={o.id} to={adminPath(`orders/${o.id}`)} className="block">
+            <Card size="sm">
+              <CardContent className="space-y-2 py-0">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-primary">{o.orderNumber}</p>
+                    <p className="mt-1 truncate text-sm">
+                      {o.customer?.firstName} {o.customer?.lastName}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {o.customer?.phone || o.customer?.email || '—'}
+                    </p>
+                  </div>
+                  <StatusBadge status={o.status} />
+                </div>
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-kpi font-bold">
+                    {formatMoney(o.total, o.currency, moneyLocale)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(o.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+        ))}
+      </div>
+
+      <Card className="hidden overflow-hidden py-0 md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+            <table className="min-w-[720px] w-full text-sm">
               <thead className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-start">{t.common.order}</th>
                   <th className="px-4 py-3 text-start">{t.common.customer}</th>
-                  <th className="px-4 py-3 text-start">{t.admin.phone}</th>
+                  <th className="hidden px-4 py-3 text-start lg:table-cell">{t.admin.phone}</th>
                   <th className="px-4 py-3 text-start">{t.common.total}</th>
                   <th className="px-4 py-3 text-start">{t.common.status}</th>
-                  <th className="px-4 py-3 text-start">{t.admin.orderDate}</th>
+                  <th className="hidden px-4 py-3 text-start xl:table-cell">{t.admin.orderDate}</th>
                 </tr>
               </thead>
               <tbody>
-                {(query.data?.data ?? []).map((o) => (
+                {orders.map((o) => (
                   <tr key={o.id} className="border-b border-border hover:bg-muted/40">
                     <td className="px-4 py-3">
                       <Link
@@ -1148,14 +1262,16 @@ export function AdminOrdersPage() {
                         <p className="text-xs text-muted-foreground">{o.customer?.email}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{o.customer?.phone || '—'}</td>
-                    <td className="px-4 py-3 font-kpi font-semibold">
+                    <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
+                      {o.customer?.phone || '—'}
+                    </td>
+                    <td className="px-4 py-3 font-kpi font-semibold whitespace-nowrap">
                       {formatMoney(o.total, o.currency, moneyLocale)}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                    <td className="hidden px-4 py-3 text-xs text-muted-foreground xl:table-cell">
                       {new Date(o.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
                     </td>
                   </tr>
@@ -1223,7 +1339,7 @@ export function AdminOrderDetailPage() {
               {t.admin.back}
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-fg">
+          <h1 className="text-xl font-bold text-fg sm:text-2xl">
             {t.admin.orderDetail} {o.orderNumber}
           </h1>
           <p className="text-sm text-muted-foreground">
@@ -1242,9 +1358,30 @@ export function AdminOrderDetailPage() {
           <CardHeader>
             <CardTitle>{t.admin.orderItems}</CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="space-y-3 p-4 sm:hidden">
+            {(o.items ?? []).map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="border border-border p-3 text-sm"
+              >
+                <p className="font-medium">{item.productName}</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.sku} · ×{item.quantity}
+                </p>
+                <div className="mt-2 flex justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    {formatMoney(item.unitPrice ?? 0, o.currency, moneyLocale)}
+                  </span>
+                  <span className="font-kpi font-semibold">
+                    {formatMoney(item.lineTotal ?? 0, o.currency, moneyLocale)}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+          <CardContent className="hidden p-0 sm:block">
             <div className="overflow-x-auto">
-              <table className="min-w-full text-sm">
+              <table className="min-w-[560px] w-full text-sm">
                 <thead className="border-y border-border bg-muted/40 text-xs uppercase text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-start">{t.common.name}</th>
