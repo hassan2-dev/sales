@@ -336,6 +336,8 @@ export function AccountOrdersPage() {
     queryKey: ['store-my-orders', user?.id],
     enabled: isAuthenticated,
     queryFn: async () => (await ordersApi.mine()).data.data,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
   });
 
   return (

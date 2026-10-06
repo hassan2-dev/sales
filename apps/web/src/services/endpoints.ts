@@ -53,12 +53,26 @@ export const authApi = {
 export const catalogApi = {
   products: (params?: Params) =>
     api.get<Paginated<Product>>('/products', { params: cleanParams(params) }),
+  productsAdmin: (params?: Params) =>
+    api.get<Paginated<Product>>('/products/admin', { params: cleanParams(params) }),
   productBySlug: (slug: string) => api.get<Product>(`/products/slug/${slug}`),
   productById: (id: string) => api.get<Product>(`/products/${id}`),
   createProduct: (data: Record<string, unknown>) => api.post<Product>('/products', data),
   updateProduct: (id: string, data: Record<string, unknown>) =>
     api.patch<Product>(`/products/${id}`, data),
   deleteProduct: (id: string) => api.delete(`/products/${id}`),
+  addProductImage: (
+    id: string,
+    data: { url: string; alt?: string; isPrimary?: boolean; sortOrder?: number },
+  ) => api.post(`/products/${id}/images`, data),
+  removeProductImage: (id: string, imageId: string) =>
+    api.delete(`/products/${id}/images/${imageId}`),
+  addProductDocument: (
+    id: string,
+    data: { name: string; url: string; mimeType?: string; size?: number },
+  ) => api.post(`/products/${id}/documents`, data),
+  removeProductDocument: (id: string, documentId: string) =>
+    api.delete(`/products/${id}/documents/${documentId}`),
   categories: () => api.get<Category[]>('/categories'),
   categoriesAdmin: () => api.get<Category[]>('/categories/admin/all'),
   categoryBySlug: (slug: string) => api.get<Category>(`/categories/slug/${slug}`),
@@ -68,6 +82,36 @@ export const catalogApi = {
   deleteCategory: (id: string) => api.delete(`/categories/${id}`),
   brands: () => api.get<Brand[]>('/brands'),
   brandBySlug: (slug: string) => api.get<Brand>(`/brands/slug/${slug}`),
+};
+
+export const mediaApi = {
+  upload: (file: File, alt?: string) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.post<{
+      id: string;
+      url: string;
+      fileName: string;
+      originalName: string;
+      mimeType: string;
+      size: number;
+    }>('/media/upload', form, {
+      params: alt ? { alt } : undefined,
+      headers: { 'Content-Type': 'multipart/form-data' },
+      transformRequest: [
+        (data, headers) => {
+          if (data instanceof FormData) {
+            if (headers && typeof (headers as { delete?: (k: string) => void }).delete === 'function') {
+              (headers as { delete: (k: string) => void }).delete('Content-Type');
+            } else if (headers) {
+              delete (headers as Record<string, unknown>)['Content-Type'];
+            }
+          }
+          return data;
+        },
+      ],
+    });
+  },
 };
 
 export const cartApi = {
