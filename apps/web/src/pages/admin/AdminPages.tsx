@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   Hourglass,
   LifeBuoy,
+  Store,
+  Globe,
   Moon,
   Sun,
   Pencil,
@@ -178,6 +180,7 @@ function KpiCard({
   label,
   value,
   icon: Icon,
+  hint,
 }: {
   label: string;
   value: string | number;
@@ -192,6 +195,7 @@ function KpiCard({
       </CardHeader>
       <CardContent className="pt-0">
         <div className="font-kpi text-[1.75rem] font-bold tracking-tight">{value}</div>
+        {hint ? <p className="mt-1 text-xs text-muted-foreground">{hint}</p> : null}
       </CardContent>
     </Card>
   );
@@ -266,6 +270,23 @@ export function AdminDashboardPage() {
       ]
     : [];
 
+  const visitorCards = overview.data?.visitors
+    ? [
+        {
+          label: t.admin.storeVisitors,
+          value: overview.data.visitors.store.total,
+          hint: `${overview.data.visitors.store.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
+          icon: Store,
+        },
+        {
+          label: t.admin.siteVisitors,
+          value: overview.data.visitors.corporate.total,
+          hint: `${overview.data.visitors.corporate.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
+          icon: Globe,
+        },
+      ]
+    : [];
+
   const chartStatuses =
     orderStats.data?.byStatus.map((s) => ({
       status: statusLabel(locale, s.status),
@@ -317,6 +338,14 @@ export function AdminDashboardPage() {
           <KpiCard key={c.label} label={c.label} value={c.value} icon={c.icon} />
         ))}
       </div>
+
+      {visitorCards.length ? (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {visitorCards.map((c) => (
+            <KpiCard key={c.label} label={c.label} value={c.value} icon={c.icon} hint={c.hint} />
+          ))}
+        </div>
+      ) : null}
 
       <div className="grid gap-4 xl:grid-cols-5">
         <Card className="xl:col-span-3">

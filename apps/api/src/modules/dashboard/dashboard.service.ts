@@ -7,10 +7,14 @@ import {
   TicketStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
+import { AnalyticsService } from '../analytics/analytics.service.js';
 
 @Injectable()
 export class DashboardService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly analytics: AnalyticsService,
+  ) {}
 
   async getOverview() {
     const startOfDay = new Date();
@@ -32,6 +36,7 @@ export class DashboardService {
       ticketsOpen,
       monthRevenue,
       recentOrders,
+      visitors,
     ] = await Promise.all([
       this.prisma.order.count(),
       this.prisma.order.count({
@@ -95,6 +100,7 @@ export class DashboardService {
           },
         },
       }),
+      this.analytics.getVisitorStats(),
     ]);
 
     const lowStock = inventoryRows.filter(
@@ -119,6 +125,7 @@ export class DashboardService {
       tickets: {
         open: ticketsOpen,
       },
+      visitors,
       revenue: {
         monthTotal: Number(monthRevenue._sum.total ?? 0),
         currency: 'USD',

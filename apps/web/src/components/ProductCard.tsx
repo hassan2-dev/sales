@@ -163,9 +163,7 @@ export function ProductCard({
           <h3
             className={cn(
               'line-clamp-2 text-[13px] font-bold leading-snug transition sm:text-[15px]',
-              outOfStock
-                ? 'text-muted'
-                : 'text-fg group-hover:text-accent',
+              outOfStock ? 'text-muted' : 'text-fg group-hover:text-accent',
             )}
           >
             {product.name}

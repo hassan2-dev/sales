@@ -207,7 +207,7 @@ export function StoreHomePage() {
                         ? 'ابحث عن منتج أو SKU...'
                         : 'Search product or SKU...'
                     }
-                    className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-muted"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-slate-500 placeholder:opacity-100 dark:placeholder:text-slate-400"
                   />
                 </div>
                 <button

@@ -1,6 +1,6 @@
 ﻿import { Link, NavLink, Outlet } from 'react-router-dom';
 import { Menu, Moon, Sun } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 import { useI18n } from '@/i18n/i18n-context';
 import { useTheme } from '@/stores/theme-context';
@@ -12,12 +12,17 @@ import {
   ScrollToTopButton,
   useSiteScrollChrome,
 } from '@/components/SiteScrollChrome';
+import { trackSiteVisit } from '@/lib/visitor';
 
 export function CorporateLayout() {
   const [open, setOpen] = useState(false);
   const { t, locale, toggleLocale, dir } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { progress, showTop } = useSiteScrollChrome();
+
+  useEffect(() => {
+    trackSiteVisit('corporate');
+  }, []);
 
   const links = [
     { to: '/about', label: t.nav.about },

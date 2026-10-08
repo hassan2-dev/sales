@@ -30,6 +30,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { AuditModule } from './modules/audit/audit.module.js';
 import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { SettingsModule } from './modules/settings/settings.module.js';
+import { AnalyticsModule } from './modules/analytics/analytics.module.js';
 
 @Module({
   imports: [
@@ -67,6 +68,7 @@ import { SettingsModule } from './modules/settings/settings.module.js';
     AuditModule,
     DashboardModule,
     SettingsModule,
+    AnalyticsModule,
   ],
   controllers: [AppController],
   providers: [

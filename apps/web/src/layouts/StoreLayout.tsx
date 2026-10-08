@@ -1,4 +1,4 @@
-﻿import { useState, type FormEvent } from 'react';
+﻿import { useEffect, useState, type FormEvent } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -23,6 +23,7 @@ import { catalogApi } from '@/services/endpoints';
 import { CompareBar } from '@/components/store/CompareBar';
 import { useCompare } from '@/stores/compare-context';
 import { cn } from '@/lib/cn';
+import { trackSiteVisit } from '@/lib/visitor';
 
 export function StoreLayout() {
   const [open, setOpen] = useState(false);
@@ -36,6 +37,10 @@ export function StoreLayout() {
   const { locale, toggleLocale, dir, t } = useI18n();
 
   const location = useLocation();
+
+  useEffect(() => {
+    trackSiteVisit('store');
+  }, []);
   const categories = useQuery({
     queryKey: ['store-categories'],
     queryFn: async () => (await catalogApi.categories()).data,
@@ -143,7 +148,7 @@ export function StoreLayout() {
                       ? 'ابحث بالمنتج أو SKU أو المواصفات...'
                       : 'Search products, SKU, or specs...'
                   }
-                  className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-muted"
+                  className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-slate-500 placeholder:opacity-100 dark:placeholder:text-slate-400"
                 />
               </div>
               <button
@@ -281,7 +286,7 @@ export function StoreLayout() {
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder={locale === 'ar' ? 'ابحث...' : 'Search...'}
-                    className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                    className="min-w-0 flex-1 bg-transparent text-sm text-fg outline-none placeholder:text-slate-500 placeholder:opacity-100 dark:placeholder:text-slate-400"
                   />
                 </div>
                 <button

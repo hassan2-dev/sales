@@ -300,6 +300,10 @@ export interface DashboardOverview {
   products: { total: number; active: number; lowStock: number };
   quotes: { total: number; pending: number };
   tickets: { open: number };
+  visitors: {
+    store: { today: number; total: number };
+    corporate: { today: number; total: number };
+  };
   revenue: { monthTotal: number; currency: string };
   recentOrders: Order[];
 }

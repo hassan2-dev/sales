@@ -92,6 +92,7 @@
   }
 }
 
+/* Exit continues downward — never snaps back up to the top */
 @keyframes curtain-exit {
   from {
     transform: translate3d(0, 0, 0);
@@ -102,11 +103,11 @@
 }
 
 .page-curtain {
-  transform: translate3d(0, -101%, 0);
   will-change: transform;
 }
 
 .page-curtain.is-covering {
+  transform: translate3d(0, -101%, 0);
   animation: curtain-drop 420ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
@@ -116,6 +117,7 @@
 }
 
 .page-curtain.is-revealing {
+  transform: translate3d(0, 0, 0);
   animation: curtain-exit 450ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
@@ -337,6 +339,30 @@
   [type="submit"] {
     font-family: inherit;
     font-weight: 600;
+  }
+
+  /*
+   * Placeholders must stay readable in light mode.
+   * Browsers default to low opacity; Tailwind color tokens alone were not enough.
+   */
+  input::placeholder,
+  textarea::placeholder,
+  input::-webkit-input-placeholder,
+  textarea::-webkit-input-placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b !important;
+    opacity: 1 !important;
+  }
+
+  .dark input::placeholder,
+  .dark textarea::placeholder,
+  .dark input::-webkit-input-placeholder,
+  .dark textarea::-webkit-input-placeholder,
+  [data-theme='dark'] input::placeholder,
+  [data-theme='dark'] textarea::placeholder {
+    color: #94a3b8 !important;
+    -webkit-text-fill-color: #94a3b8 !important;
+    opacity: 1 !important;
   }
 }
 
