@@ -273,6 +273,15 @@ export function AdminLayout() {
     localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
   }, [collapsed]);
 
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileOpen]);
+
   if (loading) return <LoadingState variant="page" />;
   if (!isAuthenticated) return <Navigate to={adminPath('login')} replace />;
   if (user?.role === 'CUSTOMER') return <Navigate to="/" replace />;
@@ -280,7 +289,7 @@ export function AdminLayout() {
   const userLabel = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground" dir={dir}>
+    <div className="flex min-h-screen min-w-0 overflow-x-clip bg-background text-foreground" dir={dir}>
       <aside
         className={cn(
           'sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-e border-sidebar-border bg-sidebar text-sidebar-fg transition-[width] duration-200 lg:flex',
@@ -297,11 +306,11 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col admin-shell">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-border bg-card/90 px-4 py-3 backdrop-blur-md">
-          <div className="flex items-center gap-3">
+        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border bg-card/90 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             <button
               type="button"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
               aria-label={t.admin.menu}
               onClick={() => setMobileOpen(true)}
             >
@@ -315,26 +324,30 @@ export function AdminLayout() {
             >
               {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
             </button>
-            <Logo to={adminPath()} className="lg:hidden" imgClassName="h-8 max-w-[140px]" />
-            <div className="hidden sm:block">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <Logo
+              to={adminPath()}
+              className="min-w-0 shrink lg:hidden"
+              imgClassName="h-7 max-w-[120px] sm:h-8 sm:max-w-[140px]"
+            />
+            <div className="hidden min-w-0 sm:block">
+              <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {locale === 'ar' ? 'افاق الطاقة · Energy Horizon' : 'Energy Horizon · افاق الطاقة'}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
             <button
               type="button"
               onClick={toggleLocale}
-              className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-border bg-background px-2.5 text-[11px] font-bold tracking-wider text-foreground transition hover:border-primary hover:text-primary"
+              className="inline-flex h-9 min-w-9 items-center justify-center rounded-lg border border-border bg-background px-2 text-[11px] font-bold tracking-wider text-foreground transition hover:border-primary hover:text-primary sm:px-2.5"
             >
               {locale === 'en' ? 'ع' : 'EN'}
             </button>
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-foreground transition hover:border-primary hover:text-primary"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition hover:border-primary hover:text-primary sm:w-auto sm:gap-2 sm:px-3"
               aria-label={theme === 'light' ? t.theme.dark : t.theme.light}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -342,7 +355,7 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={() => void logout()}
-              className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/5 px-3 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 dark:text-red-400"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-red-500/30 bg-red-500/5 text-sm font-semibold text-red-600 transition hover:bg-red-500/10 sm:w-auto sm:gap-2 sm:px-3 dark:text-red-400"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline">{t.admin.signOut}</span>
@@ -350,28 +363,40 @@ export function AdminLayout() {
           </div>
         </header>
 
-        {mobileOpen ? (
-          <div className="fixed inset-0 z-50 lg:hidden">
-            <button
-              type="button"
-              className="absolute inset-0 bg-black/50"
-              aria-label={t.admin.close}
-              onClick={() => setMobileOpen(false)}
-            />
-            <aside
-              className={cn(
-                'absolute top-0 flex h-full w-72 flex-col bg-sidebar text-sidebar-fg shadow-2xl',
-                dir === 'rtl' ? 'right-0' : 'left-0',
-              )}
-            >
-              <SidebarChrome userLabel={userLabel} onClose={() => setMobileOpen(false)}>
-                <SidebarNav onNavigate={() => setMobileOpen(false)} />
-              </SidebarChrome>
-            </aside>
-          </div>
-        ) : null}
+        <div
+          className={cn(
+            'fixed inset-0 z-50 lg:hidden',
+            mobileOpen ? 'pointer-events-auto' : 'pointer-events-none',
+          )}
+          aria-hidden={!mobileOpen}
+        >
+          <button
+            type="button"
+            className={cn(
+              'absolute inset-0 bg-black/50 transition-opacity duration-300',
+              mobileOpen ? 'opacity-100' : 'opacity-0',
+            )}
+            aria-label={t.admin.close}
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside
+            className={cn(
+              'absolute top-0 flex h-full w-[min(18rem,88vw)] flex-col bg-sidebar text-sidebar-fg shadow-2xl transition-transform duration-300 ease-out',
+              dir === 'rtl' ? 'right-0' : 'left-0',
+              mobileOpen
+                ? 'translate-x-0'
+                : dir === 'rtl'
+                  ? 'translate-x-full'
+                  : '-translate-x-full',
+            )}
+          >
+            <SidebarChrome userLabel={userLabel} onClose={() => setMobileOpen(false)}>
+              <SidebarNav onNavigate={() => setMobileOpen(false)} />
+            </SidebarChrome>
+          </aside>
+        </div>
 
-        <div className="flex-1 overflow-x-auto p-4 lg:p-8">
+        <div className="min-w-0 flex-1 overflow-x-clip p-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4 lg:p-8">
           <Outlet />
         </div>
       </div>

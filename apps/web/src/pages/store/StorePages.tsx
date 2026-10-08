@@ -27,6 +27,7 @@ import { useCompare } from '@/stores/compare-context';
 import { formatMoney } from '@/lib/cn';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
+import { statusLabel } from '@/i18n/dictionaries';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { saveStoreOrder } from '@/lib/store-orders';
 import { Input } from '@/components/ui/Input';
@@ -36,6 +37,7 @@ import { Seo } from '@/lib/seo';
 import { appToast } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 import { formatOrderDate } from '@/pages/store/AccountPages';
+import type { Order } from '@/types';
 
 export function StoreProductsPage() {
   const { locale } = useI18n();
@@ -47,6 +49,15 @@ export function StoreProductsPage() {
   const categorySlug = params.get('category') || '';
   const brandSlug = params.get('brand') || '';
   const [mobileFilters, setMobileFilters] = useState(false);
+
+  useEffect(() => {
+    if (!mobileFilters) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [mobileFilters]);
 
   const sortBy =
     sort === 'bestsellers'
@@ -287,58 +298,107 @@ export function StoreProductsPage() {
 
         {/* Mobile filters drawer */}
         {mobileFilters ? (
-          <div className="store-surface space-y-4 p-4 lg:hidden">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-extrabold">
-                {locale === 'ar' ? 'الفلاتر' : 'Filters'}
-              </p>
-              <button
-                type="button"
-                className="text-xs font-bold text-accent"
-                onClick={() => setMobileFilters(false)}
-              >
-                {locale === 'ar' ? 'إغلاق' : 'Close'}
-              </button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {cats.map((c) => (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/45"
+              aria-label={locale === 'ar' ? 'إغلاق' : 'Close'}
+              onClick={() => setMobileFilters(false)}
+            />
+            <div
+              className={cn(
+                'absolute bottom-0 max-h-[85vh] w-full overflow-y-auto rounded-t-2xl border border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-2xl sm:inset-y-0 sm:max-h-none sm:w-[min(22rem,88vw)] sm:rounded-none',
+                locale === 'ar' ? 'sm:right-0 sm:border-l' : 'sm:left-0 sm:border-r',
+              )}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm font-extrabold">
+                  {locale === 'ar' ? 'الفلاتر' : 'Filters'}
+                </p>
                 <button
-                  key={c.id}
+                  type="button"
+                  className="text-xs font-bold text-accent"
+                  onClick={() => setMobileFilters(false)}
+                >
+                  {locale === 'ar' ? 'إغلاق' : 'Close'}
+                </button>
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+                {locale === 'ar' ? 'الأقسام' : 'Categories'}
+              </p>
+              <div className="mb-4 flex flex-wrap gap-2">
+                <button
                   type="button"
                   onClick={() => {
-                    applyParams({ category: c.slug, page: '1' });
+                    applyParams({ category: null, page: '1' });
                     setMobileFilters(false);
                   }}
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-bold',
-                    categorySlug === c.slug
+                    !categorySlug
                       ? 'bg-accent text-white'
                       : 'border border-border text-muted',
                   )}
                 >
-                  {c.name}
+                  {locale === 'ar' ? 'الكل' : 'All'}
                 </button>
-              ))}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {brandList.map((b) => (
+                {cats.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => {
+                      applyParams({ category: c.slug, page: '1' });
+                      setMobileFilters(false);
+                    }}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold',
+                      categorySlug === c.slug
+                        ? 'bg-accent text-white'
+                        : 'border border-border text-muted',
+                    )}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
+                {locale === 'ar' ? 'العلامات' : 'Brands'}
+              </p>
+              <div className="flex flex-wrap gap-2">
                 <button
-                  key={b.id}
                   type="button"
                   onClick={() => {
-                    applyParams({ brand: b.slug, page: '1' });
+                    applyParams({ brand: null, page: '1' });
                     setMobileFilters(false);
                   }}
                   className={cn(
                     'rounded-full px-3 py-1.5 text-xs font-bold',
-                    brandSlug === b.slug
+                    !brandSlug
                       ? 'bg-navy text-white'
                       : 'border border-border text-muted',
                   )}
                 >
-                  {b.name}
+                  {locale === 'ar' ? 'الكل' : 'All'}
                 </button>
-              ))}
+                {brandList.map((b) => (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => {
+                      applyParams({ brand: b.slug, page: '1' });
+                      setMobileFilters(false);
+                    }}
+                    className={cn(
+                      'rounded-full px-3 py-1.5 text-xs font-bold',
+                      brandSlug === b.slug
+                        ? 'bg-navy text-white'
+                        : 'border border-border text-muted',
+                    )}
+                  >
+                    {b.name}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         ) : null}
@@ -408,7 +468,7 @@ export function StoreProductsPage() {
             products.length ? (
               <div
                 key={`${search}-${sort}-${categorySlug}-${brandSlug}-${page}`}
-                className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
+                className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4"
               >
                 {products.map((p, i) => (
                   <ProductCard
@@ -1827,6 +1887,7 @@ export function MyOrdersPage() {
 
 export function MyOrderDetailPage() {
   const { locale } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -1834,7 +1895,9 @@ export function MyOrderDetailPage() {
   const order = useQuery({
     queryKey: ['store-order', id],
     enabled: isAuthenticated && Boolean(id),
-    queryFn: async () => (await ordersApi.myOrder(id)).data,
+    queryFn: async () => (await ordersApi.myOrder(id)).data as Order,
+    refetchInterval: 12_000,
+    refetchOnWindowFocus: true,
   });
 
   if (authLoading) return <LoadingState variant="page" />;
@@ -1862,6 +1925,9 @@ export function MyOrderDetailPage() {
   }
 
   const o = order.data;
+  const subtotal = Number(o.subtotal ?? 0);
+  const discount = Number(o.discount ?? 0);
+  const shipping = Number(o.shipping ?? 0);
 
   return (
     <>
@@ -1881,7 +1947,10 @@ export function MyOrderDetailPage() {
             <h1 className="text-3xl font-semibold tracking-tight text-fg">{o.orderNumber}</h1>
             <p className="mt-2 text-sm text-muted">{formatOrderDate(locale, o.createdAt)}</p>
           </div>
-          <StatusBadge status={o.status} />
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={o.status} />
+            {o.paymentStatus ? <StatusBadge status={o.paymentStatus} /> : null}
+          </div>
         </div>
 
         <div className="mt-8 border border-line bg-[var(--card)] p-5 sm:p-6">
@@ -1891,12 +1960,20 @@ export function MyOrderDetailPage() {
           <p className="mt-2 font-semibold text-fg">
             {o.customer?.firstName} {o.customer?.lastName}
           </p>
+          {o.customer?.company ? (
+            <p className="text-sm text-muted">{o.customer.company}</p>
+          ) : null}
           {o.customer?.phone ? <p className="text-sm text-muted">{o.customer.phone}</p> : null}
           {o.customer?.email && !o.customer.email.endsWith('@customers.local') ? (
             <p className="text-sm text-muted">{o.customer.email}</p>
           ) : null}
           {o.shippingAddress ? (
-            <p className="mt-3 text-sm text-muted">{o.shippingAddress}</p>
+            <p className="mt-3 text-sm text-muted whitespace-pre-wrap">{o.shippingAddress}</p>
+          ) : null}
+          {o.notes ? (
+            <p className="mt-3 text-sm text-muted whitespace-pre-wrap">
+              {locale === 'ar' ? 'ملاحظات' : 'Notes'}: {o.notes}
+            </p>
           ) : null}
         </div>
 
@@ -1913,23 +1990,80 @@ export function MyOrderDetailPage() {
                 <div>
                   <p className="font-medium text-fg">{item.productName}</p>
                   <p className="text-xs text-muted">
-                    {item.sku} · ×{item.quantity}
+                    {item.sku} · ×{item.quantity} ·{' '}
+                    {formatMoney(item.unitPrice ?? 0, o.currency, moneyLocale)}
                   </p>
                 </div>
                 <p className="font-kpi text-sm font-bold">
-                  {formatMoney(item.lineTotal ?? 0, o.currency)}
+                  {formatMoney(item.lineTotal ?? 0, o.currency, moneyLocale)}
                 </p>
               </li>
             ))}
           </ul>
-          <div className="flex items-center justify-between border-t border-line px-5 py-4">
-            <span className="text-sm font-semibold text-muted">
-              {locale === 'ar' ? 'الإجمالي' : 'Total'}
-            </span>
-            <span className="font-kpi text-lg font-extrabold text-fg">
-              {formatMoney(o.total, o.currency)}
-            </span>
+          <div className="space-y-2 border-t border-line px-5 py-4 text-sm">
+            <div className="flex justify-between gap-3 text-muted">
+              <span>{locale === 'ar' ? 'المجموع الفرعي' : 'Subtotal'}</span>
+              <span className="font-kpi">
+                {formatMoney(subtotal || o.total, o.currency, moneyLocale)}
+              </span>
+            </div>
+            {discount > 0 ? (
+              <div className="flex justify-between gap-3 text-muted">
+                <span>{locale === 'ar' ? 'الخصم' : 'Discount'}</span>
+                <span className="font-kpi">
+                  −{formatMoney(discount, o.currency, moneyLocale)}
+                </span>
+              </div>
+            ) : null}
+            {shipping > 0 ? (
+              <div className="flex justify-between gap-3 text-muted">
+                <span>{locale === 'ar' ? 'الشحن' : 'Shipping'}</span>
+                <span className="font-kpi">
+                  {formatMoney(shipping, o.currency, moneyLocale)}
+                </span>
+              </div>
+            ) : null}
+            <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+              <span className="text-sm font-semibold text-muted">
+                {locale === 'ar' ? 'الإجمالي' : 'Total'}
+              </span>
+              <span className="font-kpi text-lg font-extrabold text-fg">
+                {formatMoney(o.total, o.currency, moneyLocale)}
+              </span>
+            </div>
           </div>
+        </div>
+
+        <div className="mt-4 border border-line bg-[var(--card)] p-5 sm:p-6">
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-muted">
+            {locale === 'ar' ? 'تتبع الحالة' : 'Status timeline'}
+          </p>
+          {(o.history ?? []).length ? (
+            <ol className="mt-4 space-y-3">
+              {(o.history ?? []).map((h) => (
+                <li
+                  key={h.id}
+                  className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3 text-sm last:border-0 last:pb-0"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <StatusBadge status={h.toStatus} />
+                    <span className="text-muted">
+                      {statusLabel(locale, h.toStatus)}
+                      {h.note ? ` · ${h.note}` : ''}
+                    </span>
+                  </div>
+                  <span className="text-xs text-muted">
+                    {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-3 text-sm text-muted">
+              {statusLabel(locale, o.status)} ·{' '}
+              {locale === 'ar' ? 'يتم تحديث الحالة تلقائياً' : 'Status updates automatically'}
+            </p>
+          )}
         </div>
       </div>
     </>

@@ -39,6 +39,13 @@ export class ProductsController {
     return this.productsService.findBySlug(slug);
   }
 
+  @ApiBearerAuth()
+  @RequirePermissions('products:read')
+  @Get('admin')
+  findAdmin(@Query() query: ProductQueryDto) {
+    return this.productsService.findAdmin(query);
+  }
+
   @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {

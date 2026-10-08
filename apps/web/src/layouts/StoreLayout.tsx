@@ -125,9 +125,13 @@ export function StoreLayout() {
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-page text-fg" dir={dir}>
-      <header className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-md">
-        <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center gap-1.5 px-3 sm:h-[4.25rem] sm:gap-3 sm:px-6 lg:px-10">
-          <Logo to={storePath()} imgClassName="h-8 sm:h-10" className="min-w-0 shrink" />
+      <header className="sticky top-0 z-50 border-b border-border bg-card/95 pt-[env(safe-area-inset-top)] backdrop-blur-md">
+        <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center gap-1 px-2.5 sm:h-[4.25rem] sm:gap-3 sm:px-6 lg:px-10">
+          <Logo
+            to={storePath()}
+            imgClassName="h-7 max-w-[110px] sm:h-10 sm:max-w-none"
+            className="min-w-0 shrink"
+          />
 
           <form onSubmit={onSearch} className="mx-2 hidden min-w-0 flex-1 md:flex">
             <div className="store-search w-full max-w-2xl">
@@ -153,11 +157,11 @@ export function StoreLayout() {
             </div>
           </form>
 
-          <div className="ms-auto flex shrink-0 items-center gap-0 sm:gap-1">
+          <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
             <button
               type="button"
               onClick={toggleLocale}
-              className={cn(iconBtn, 'text-[11px] font-extrabold')}
+              className={cn(iconBtn, 'h-9 w-9 text-[11px] font-extrabold sm:h-10 sm:w-10')}
             >
               {locale === 'en' ? 'ع' : 'EN'}
             </button>
@@ -171,7 +175,7 @@ export function StoreLayout() {
             </button>
             <a
               href={SITE_URL}
-              className={cn(iconBtn, 'hidden sm:inline-flex')}
+              className={cn(iconBtn, 'hidden lg:inline-flex')}
               aria-label={locale === 'ar' ? 'الموقع' : 'Site'}
             >
               <Globe className="h-4 w-4" />
@@ -190,6 +194,13 @@ export function StoreLayout() {
             </Link>
             <Link
               to={accountTo}
+              className={cn(iconBtn, 'md:hidden')}
+              aria-label={accountLabel}
+            >
+              <UserRound className="h-4 w-4" />
+            </Link>
+            <Link
+              to={accountTo}
               className="hidden h-10 items-center gap-1.5 rounded-xl px-2.5 text-sm font-semibold text-muted transition hover:bg-secondary hover:text-fg md:inline-flex"
             >
               <UserRound className="h-4 w-4" />
@@ -198,7 +209,8 @@ export function StoreLayout() {
             <div className="relative">
               <Link
                 to={storePath('cart')}
-                className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-navy px-2.5 text-sm font-bold text-white transition hover:bg-accent sm:h-10 sm:px-3"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-navy text-sm font-bold text-white transition hover:bg-accent sm:h-10 sm:w-auto sm:gap-1.5 sm:px-3"
+                aria-label={locale === 'ar' ? 'السلة' : 'Cart'}
               >
                 <ShoppingCart className="h-4 w-4" />
                 <span className="hidden sm:inline">{locale === 'ar' ? 'السلة' : 'Cart'}</span>
@@ -211,7 +223,7 @@ export function StoreLayout() {
             </div>
             <button
               type="button"
-              className={cn(iconBtn, 'md:hidden')}
+              className={cn(iconBtn, 'h-9 w-9 md:hidden sm:h-10 sm:w-10')}
               aria-label="Menu"
               aria-expanded={open}
               onClick={() => setOpen(true)}

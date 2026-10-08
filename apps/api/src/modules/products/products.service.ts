@@ -233,6 +233,63 @@ export class ProductsService {
     };
   }
 
+  async findAdmin(query: ProductQueryDto) {
+    const page = Number(query.page) || 1;
+    const limit = Math.min(Number(query.limit) || 20, 100);
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.ProductWhereInput = {};
+    if (query.status) where.status = query.status;
+    if (query.categoryId) where.categoryId = query.categoryId;
+    if (query.brandId) where.brandId = query.brandId;
+    if (query.search) {
+      where.OR = [
+        { name: { contains: query.search, mode: 'insensitive' } },
+        { sku: { contains: query.search, mode: 'insensitive' } },
+        { description: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
+
+    const sortBy = query.sortBy || 'updatedAt';
+    const sortOrder = query.sortOrder === 'asc' ? 'asc' : 'desc';
+    const allowedSort = ['createdAt', 'updatedAt', 'name', 'price', 'stock'];
+    const orderBy = {
+      [allowedSort.includes(sortBy) ? sortBy : 'updatedAt']: sortOrder,
+    } as Prisma.ProductOrderByWithRelationInput;
+
+    const [data, total] = await Promise.all([
+      this.prisma.product.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy,
+        include: {
+          brand: true,
+          category: true,
+          images: {
+            orderBy: [
+              { isPrimary: 'desc' as const },
+              { sortOrder: 'asc' as const },
+            ],
+            take: 1,
+          },
+          documents: true,
+        },
+      }),
+      this.prisma.product.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+      },
+    };
+  }
+
   async findBySlug(slug: string) {
     const product = await this.prisma.product.findFirst({
       where: { slug, status: ProductStatus.ACTIVE },

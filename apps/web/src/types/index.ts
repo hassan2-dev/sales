@@ -111,14 +111,27 @@ export interface Cart {
   itemCount?: number;
 }
 
+export interface OrderStatusHistory {
+  id: string;
+  fromStatus?: string | null;
+  toStatus: string;
+  note?: string | null;
+  createdAt: string;
+  changedBy?: string | null;
+}
+
 export interface Order {
   id: string;
   orderNumber: string;
   status: string;
   paymentStatus?: string;
+  subtotal?: number | string;
+  discount?: number | string;
+  shipping?: number | string;
   total: number | string;
   currency: string;
   createdAt: string;
+  updatedAt?: string;
   shippingAddress?: string | null;
   billingAddress?: string | null;
   notes?: string | null;
@@ -129,6 +142,8 @@ export interface Order {
     email?: string;
     company?: string | null;
     phone?: string | null;
+    city?: string | null;
+    address?: string | null;
   };
   items?: {
     id?: string;
@@ -137,6 +152,15 @@ export interface Order {
     sku: string;
     unitPrice?: number | string;
     lineTotal?: number | string;
+    product?: { id?: string; slug?: string; name?: string; sku?: string } | null;
+  }[];
+  history?: OrderStatusHistory[];
+  orderNotes?: {
+    id: string;
+    note: string;
+    isInternal?: boolean;
+    createdAt: string;
+    user?: { firstName?: string; lastName?: string } | null;
   }[];
 }
 
@@ -148,9 +172,37 @@ export interface QuoteRequest {
   email?: string;
   firstName?: string;
   lastName?: string;
+  phone?: string | null;
   company?: string | null;
+  address?: string | null;
+  city?: string | null;
+  quotedAmount?: number | string | null;
+  validUntil?: string | null;
   createdAt?: string;
-  items?: { productId: string; quantity: number; product?: Product }[];
+  customer?: {
+    id?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    company?: string | null;
+    phone?: string | null;
+    city?: string | null;
+    address?: string | null;
+  } | null;
+  items?: {
+    id?: string;
+    productId: string;
+    quantity: number;
+    product?: Product | null;
+  }[];
+  attachments?: { id: string; url: string; fileName?: string | null; name?: string | null }[];
+  currency?: string;
+  assignedTo?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+  } | null;
 }
 
 export interface CmsService {

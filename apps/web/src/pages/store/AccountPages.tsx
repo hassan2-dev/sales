@@ -106,25 +106,25 @@ export function AccountShell() {
   }
 
   return (
-    <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
-      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
-        <div>
+    <div className="mx-auto max-w-[90rem] px-3 py-6 sm:px-6 sm:py-10 lg:px-10">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3 sm:mb-8 sm:gap-4">
+        <div className="min-w-0">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-accent">
             {locale === 'ar' ? 'حسابي' : 'My account'}
           </p>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-fg sm:text-3xl">
+          <h1 className="mt-1 truncate text-xl font-extrabold tracking-tight text-fg sm:text-3xl">
             {user?.firstName} {user?.lastName}
           </h1>
-          <p className="mt-1 text-sm text-muted">{user?.phone || user?.email}</p>
+          <p className="mt-1 truncate text-sm text-muted">{user?.phone || user?.email}</p>
         </div>
         <Button variant="outline" onClick={() => void logout()}>
           {locale === 'ar' ? 'خروج' : 'Sign out'}
         </Button>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+      <div className="grid gap-5 lg:grid-cols-[220px_1fr] lg:gap-8">
         <aside className="store-surface h-fit p-2 lg:sticky lg:top-28">
-          <nav className="flex gap-1 overflow-x-auto lg:flex-col">
+          <nav className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col">
             {tabs(locale).map((tab) => {
               const active = tab.end
                 ? location.pathname === tab.to || location.pathname === `${tab.to}/`
@@ -336,6 +336,8 @@ export function AccountOrdersPage() {
     queryKey: ['store-my-orders', user?.id],
     enabled: isAuthenticated,
     queryFn: async () => (await ordersApi.mine()).data.data,
+    refetchInterval: 15_000,
+    refetchOnWindowFocus: true,
   });
 
   return (
