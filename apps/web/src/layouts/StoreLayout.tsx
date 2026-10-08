@@ -2,7 +2,6 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
-  FileText,
   Globe,
   Heart,
   Menu,
@@ -61,7 +60,6 @@ export function StoreLayout() {
       match: 'newest' as const,
     },
     { to: storePath('categories'), label: locale === 'ar' ? 'الأقسام' : 'Categories' },
-    { to: storePath('quote'), label: locale === 'ar' ? 'طلب عرض سعر' : 'Request quote' },
   ];
 
   function isNavActive(match?: 'products-all' | 'bestsellers' | 'newest') {
@@ -101,8 +99,8 @@ export function StoreLayout() {
 
   const storeActions = [
     {
-      label: locale === 'ar' ? 'طلب عرض سعر' : 'Request quote',
-      to: storePath('quote'),
+      label: locale === 'ar' ? 'السلة' : 'Cart',
+      to: storePath('cart'),
       variant: 'primary' as const,
     },
     {
@@ -263,13 +261,6 @@ export function StoreLayout() {
               </NavLink>
               );
             })}
-            <Link
-              to={storePath('quote')}
-              className="ms-auto inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold text-accent transition hover:bg-accent/5"
-            >
-              <FileText className="h-3.5 w-3.5" />
-              {locale === 'ar' ? 'عرض سعر سريع' : 'Quick quote'}
-            </Link>
           </div>
         </nav>
       </header>
@@ -354,11 +345,11 @@ export function StoreLayout() {
                 : 'Energy Horizon Store — B2B marketplace for oil, gas & industrial equipment in Iraq.'}
             </p>
             <Link
-              to={storePath('quote')}
+              to={storePath('cart')}
               className="mt-5 inline-flex h-11 items-center gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-white hover:bg-accent-soft"
             >
-              <FileText className="h-4 w-4" />
-              {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+              <ShoppingCart className="h-4 w-4" />
+              {locale === 'ar' ? 'عرض السلة' : 'View cart'}
             </Link>
           </div>
           <div className="lg:col-span-2">
@@ -381,8 +372,8 @@ export function StoreLayout() {
           <div className="lg:col-span-2">
             <p className="text-sm font-bold">{locale === 'ar' ? 'الدعم' : 'Support'}</p>
             <div className="mt-3 flex flex-col gap-2.5 text-sm text-muted [&_a]:transition [&_a:hover]:text-fg">
-              <Link to={storePath('quote')}>
-                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+              <Link to={storePath('cart')}>
+                {locale === 'ar' ? 'السلة وعروض المشاريع' : 'Cart & project quotes'}
               </Link>
               <Link to={storePath('favorites')}>
                 {locale === 'ar' ? 'المفضلة' : 'Wishlist'}

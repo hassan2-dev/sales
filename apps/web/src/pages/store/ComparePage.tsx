@@ -159,12 +159,6 @@ export function ComparePage() {
                       <Button className="w-full" onClick={() => void addItem(p.id, 1, p)}>
                         {locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
                       </Button>
-                      <Link
-                        to={`${storePath('quote')}?product=${p.id}`}
-                        className="inline-flex h-10 items-center justify-center rounded-xl border border-border text-sm font-bold hover:border-accent hover:text-accent"
-                      >
-                        {locale === 'ar' ? 'عرض سعر' : 'Quote'}
-                      </Link>
                     </div>
                   </div>
                 </article>
@@ -238,12 +232,6 @@ export function ComparePage() {
                           >
                             {locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
                           </Button>
-                          <Link
-                            to={`${storePath('quote')}?product=${p.id}`}
-                            className="inline-flex h-9 items-center justify-center rounded-lg border border-border text-xs font-bold hover:border-accent hover:text-accent"
-                          >
-                            {locale === 'ar' ? 'عرض سعر' : 'Quote'}
-                          </Link>
                         </div>
                       </td>
                     ))}

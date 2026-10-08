@@ -1046,12 +1046,6 @@ export function ProductDetailPage() {
                   </Button>
                 </>
               )}
-              <Link to={`${storePath('quote')}?product=${p.id}`} className="w-full sm:w-auto">
-                <Button variant="outline" className="h-11 w-full rounded-xl sm:w-auto">
-                  <FileText className="h-4 w-4" />
-                  {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
-                </Button>
-              </Link>
               {datasheet ? (
                 <a
                   href={datasheet.url}
@@ -1219,6 +1213,13 @@ export function CartPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { cart, loading, updateItem, removeItem, clear } = useCart();
   const items = cart?.items ?? [];
+  const QUOTE_MIN_QTY = 10;
+  const totalQty = useMemo(
+    () => items.reduce((sum, i) => sum + (i.quantity || 0), 0),
+    [items],
+  );
+  const quoteEligible =
+    totalQty >= QUOTE_MIN_QTY || items.some((i) => (i.quantity || 0) >= QUOTE_MIN_QTY);
   const subtotal = useMemo(() => {
     if (cart?.subtotal != null) return Number(cart.subtotal);
     return items.reduce((sum, i) => {
@@ -1433,6 +1434,31 @@ export function CartPage() {
                     </span>
                   </div>
                 </div>
+
+                {quoteEligible ? (
+                  <div className="space-y-2 rounded-xl border border-accent/25 bg-accent/5 p-3">
+                    <p className="text-xs leading-relaxed text-muted">
+                      {locale === 'ar'
+                        ? 'طلبك كبير — تقدر تطلب عرض سعر بدل الشراء المباشر.'
+                        : 'Large order — you can request a quote instead of checkout.'}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full rounded-xl"
+                      onClick={() => navigate(storePath('quote'))}
+                    >
+                      <FileText className="h-4 w-4" />
+                      {locale === 'ar' ? 'طلب عرض سعر من السلة' : 'Request quote from cart'}
+                    </Button>
+                  </div>
+                ) : (
+                  <p className="text-xs leading-relaxed text-muted">
+                    {locale === 'ar'
+                      ? `عرض السعر متاح لما يصير مجموع الكميات ${QUOTE_MIN_QTY}+ أو كمية منتج واحد ${QUOTE_MIN_QTY}+.`
+                      : `Quotes unlock at ${QUOTE_MIN_QTY}+ total units, or ${QUOTE_MIN_QTY}+ of one product.`}
+                  </p>
+                )}
 
                 {!isAuthenticated ? (
                   <div className="space-y-3 rounded-xl border border-accent/25 bg-accent/5 p-4">

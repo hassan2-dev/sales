@@ -10,7 +10,6 @@ import {
   CircuitBoard,
   Cog,
   Factory,
-  FileText,
   Flame,
   Gauge,
   HardHat,
@@ -175,8 +174,8 @@ export function StoreHomePage() {
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">
               {locale === 'ar'
-                ? 'كتالوج صناعي حي — اشترِ مباشرة أو اطلب عرض سعر لمشروعك بثقة.'
-                : 'Live industrial catalog — buy directly or request a project quote with confidence.'}
+                ? 'كتالوج صناعي حي — أضف للسلة واشترِ مباشرة، وللطلبات الكبيرة اطلب عرض سعر من السلة.'
+                : 'Live industrial catalog — add to cart and buy directly; for large orders, request a quote from the cart.'}
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
@@ -188,11 +187,10 @@ export function StoreHomePage() {
                 <Arrow className="h-4 w-4" />
               </Link>
               <Link
-                to={storePath('quote')}
+                to={storePath('cart')}
                 className="inline-flex h-12 items-center gap-2 rounded-xl border-2 border-white/55 bg-white/5 px-6 text-sm font-extrabold text-white backdrop-blur-sm transition hover:border-white hover:bg-white/15"
               >
-                <FileText className="h-4 w-4" />
-                {locale === 'ar' ? 'طلب عرض سعر' : 'Request a quote'}
+                {locale === 'ar' ? 'السلة' : 'Cart'}
               </Link>
             </div>
 
@@ -493,23 +491,22 @@ export function StoreHomePage() {
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-white/70">
                 {locale === 'ar'
-                  ? 'أرسل المنتجات والكميات وبيانات شركتك — يرد فريق المبيعات بعرض فني واضح.'
-                  : 'Send products, quantities, and company details — our team responds with a clear technical quote.'}
+                  ? 'أضف 10 قطع أو أكثر للسلة (أو 10 من منتج واحد) — يظهر خيار عرض السعر من ملخص السلة.'
+                  : 'Add 10+ units to the cart (or 10 of one product) — the quote option appears in the cart summary.'}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
-                to={storePath('quote')}
+                to={storePath('products')}
                 className="inline-flex h-12 items-center gap-2 rounded-xl bg-accent px-6 text-sm font-extrabold text-white hover:bg-accent-soft"
               >
-                <FileText className="h-4 w-4" />
-                {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
+                {locale === 'ar' ? 'تصفح المنتجات' : 'Browse products'}
               </Link>
               <Link
-                to={storePath('products')}
+                to={storePath('cart')}
                 className="inline-flex h-12 items-center rounded-xl border border-white/35 px-6 text-sm font-bold text-white hover:bg-white/10"
               >
-                {locale === 'ar' ? 'تصفح المنتجات' : 'Browse products'}
+                {locale === 'ar' ? 'السلة' : 'Cart'}
               </Link>
             </div>
           </div>

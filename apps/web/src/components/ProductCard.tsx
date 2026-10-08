@@ -1,6 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  FileText,
   GitCompareArrows,
   Heart,
   Minus,
@@ -15,7 +14,6 @@ import { useCompare } from '@/stores/compare-context';
 import { useAuth } from '@/stores/auth-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { useCommerceSettings, usdToIqd } from '@/stores/commerce-settings-context';
-import { AvailabilityBadge } from '@/components/store/StoreUI';
 import type { Product } from '@/types';
 
 type ProductCardProps = {
@@ -87,7 +85,11 @@ export function ProductCard({
 
   return (
     <article
-      className={cn('store-card group flex h-full flex-col', className)}
+      className={cn(
+        'store-card group flex h-full flex-col',
+        outOfStock && 'opacity-70 grayscale',
+        className,
+      )}
       style={{ animationDelay: `${Math.min(index, 14) * 45}ms` }}
     >
       <div className="relative overflow-hidden">
@@ -97,7 +99,10 @@ export function ProductCard({
               <img
                 src={img}
                 alt=""
-                className="h-full w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
+                className={cn(
+                  'h-full w-full object-cover transition duration-500 ease-out',
+                  !outOfStock && 'group-hover:scale-[1.04]',
+                )}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center gap-2 text-muted">
@@ -107,6 +112,16 @@ export function ProductCard({
             )}
           </div>
         </Link>
+
+        {outOfStock ? (
+          <span className="absolute start-2.5 top-2.5 rounded-md bg-fg/75 px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white backdrop-blur-sm">
+            {locale === 'ar' ? 'نفاذ' : 'Sold out'}
+          </span>
+        ) : badge ? (
+          <span className="absolute start-2.5 top-2.5 rounded-md bg-navy px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white">
+            {badge}
+          </span>
+        ) : null}
 
         <div className="absolute end-2.5 top-2.5 flex flex-col gap-1.5">
           <button
@@ -134,12 +149,6 @@ export function ProductCard({
             <GitCompareArrows className="h-4 w-4" />
           </button>
         </div>
-
-        {badge ? (
-          <span className="absolute start-2.5 top-2.5 rounded-md bg-navy px-2.5 py-1 text-[10px] font-extrabold tracking-wide text-white">
-            {badge}
-          </span>
-        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-2.5 sm:p-4">
@@ -151,7 +160,14 @@ export function ProductCard({
         </div>
 
         <Link to={storePath(`products/${product.slug}`)} className="min-w-0">
-          <h3 className="line-clamp-2 text-[13px] font-bold leading-snug text-fg transition group-hover:text-accent sm:text-[15px]">
+          <h3
+            className={cn(
+              'line-clamp-2 text-[13px] font-bold leading-snug transition sm:text-[15px]',
+              outOfStock
+                ? 'text-muted'
+                : 'text-fg group-hover:text-accent',
+            )}
+          >
             {product.name}
           </h3>
         </Link>
@@ -160,29 +176,27 @@ export function ProductCard({
           <p className="line-clamp-2 hidden text-xs leading-relaxed text-muted sm:block">{spec}</p>
         ) : null}
 
-        <AvailabilityBadge
-          availability={product.availability}
-          stock={product.stock}
-          locale={locale}
-        />
-
         <div className="mt-auto flex items-center justify-between gap-2 pt-1">
           <div className="min-w-0">
-            <p className="text-sm font-extrabold tabular-nums text-navy dark:text-accent sm:text-lg">
+            <p
+              className={cn(
+                'text-sm font-extrabold tabular-nums sm:text-lg',
+                outOfStock ? 'text-muted' : 'text-navy dark:text-accent',
+              )}
+            >
               {formatMoney(product.price, product.currency, moneyLocale)}
             </p>
-            {showIqd ? (
+            {showIqd && !outOfStock ? (
               <p className="text-xs font-semibold tabular-nums text-muted">
                 {formatMoney(usdToIqd(priceUsd, commerce.usdToIqdRate), 'IQD', moneyLocale)}
               </p>
             ) : null}
           </div>
-          {showCart && !(qty > 0 && line) ? (
+          {showCart && !outOfStock && !(qty > 0 && line) ? (
             <button
               type="button"
-              disabled={outOfStock}
               onClick={() => void addItem(product.id, 1, product)}
-              className="store-add-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition hover:bg-accent-soft disabled:opacity-50 sm:h-11 sm:w-11"
+              className="store-add-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-sm transition hover:bg-accent-soft sm:h-11 sm:w-11"
               aria-label={locale === 'ar' ? 'أضف للسلة' : 'Add to cart'}
             >
               <ShoppingBag className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -190,45 +204,34 @@ export function ProductCard({
           ) : null}
         </div>
 
-        {showCart ? (
-          <div className="space-y-2">
-            {qty > 0 && line ? (
-              <div className="flex h-11 items-center justify-between rounded-xl border border-accent/25 bg-accent/5 px-1">
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg transition hover:bg-accent hover:text-white disabled:opacity-30"
-                  disabled={qty <= 1}
-                  onClick={() => void updateItem(line.id, qty - 1)}
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="min-w-7 text-center text-base font-extrabold tabular-nums">
-                  {qty}
-                </span>
-                <button
-                  type="button"
-                  className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg transition hover:bg-accent hover:text-white disabled:opacity-30"
-                  disabled={qty >= maxStock}
-                  onClick={() => void updateItem(line.id, qty + 1)}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  className="ms-1 rounded-lg px-2.5 py-1 text-[11px] font-bold text-red-600 transition hover:bg-red-600 hover:text-white"
-                  onClick={() => void removeItem(line.id)}
-                >
-                  {locale === 'ar' ? 'حذف' : 'Del'}
-                </button>
-              </div>
-            ) : null}
-            <Link
-              to={`${storePath('quote')}?product=${product.id}`}
-              className="inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-border text-xs font-bold text-fg transition hover:border-accent hover:text-accent"
+        {showCart && qty > 0 && line && !outOfStock ? (
+          <div className="flex h-11 items-center justify-between rounded-xl border border-accent/25 bg-accent/5 px-1">
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg transition hover:bg-accent hover:text-white disabled:opacity-30"
+              disabled={qty <= 1}
+              onClick={() => void updateItem(line.id, qty - 1)}
             >
-              <FileText className="h-3.5 w-3.5" />
-              {locale === 'ar' ? 'طلب عرض سعر' : 'Request quote'}
-            </Link>
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="min-w-7 text-center text-base font-extrabold tabular-nums">
+              {qty}
+            </span>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg text-fg transition hover:bg-accent hover:text-white disabled:opacity-30"
+              disabled={qty >= maxStock}
+              onClick={() => void updateItem(line.id, qty + 1)}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              className="ms-1 rounded-lg px-2.5 py-1 text-[11px] font-bold text-red-600 transition hover:bg-red-600 hover:text-white"
+              onClick={() => void removeItem(line.id)}
+            >
+              {locale === 'ar' ? 'حذف' : 'Del'}
+            </button>
           </div>
         ) : null}
       </div>
