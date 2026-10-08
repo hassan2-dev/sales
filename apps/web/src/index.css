@@ -83,6 +83,49 @@
   }
 }
 
+@keyframes curtain-drop {
+  from {
+    transform: translate3d(0, -101%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes curtain-exit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 101%, 0);
+  }
+}
+
+.page-curtain {
+  transform: translate3d(0, -101%, 0);
+  will-change: transform;
+}
+
+.page-curtain.is-covering {
+  animation: curtain-drop 420ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+.page-curtain.is-holding {
+  transform: translate3d(0, 0, 0);
+  animation: none;
+}
+
+.page-curtain.is-revealing {
+  animation: curtain-exit 450ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-curtain.is-covering,
+  .page-curtain.is-revealing {
+    animation-duration: 1ms;
+  }
+}
+
 @keyframes spin-slow {
   to {
     transform: rotate(360deg);
@@ -565,22 +608,6 @@
 
   .trust-roster-row.is-active::before {
     background: #0070c0;
-  }
-
-  .trust-spotlight-title,
-  .trust-spotlight-logo {
-    animation: trust-fade 0.35s ease;
-  }
-
-  @keyframes trust-fade {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 
   .trust-stat {

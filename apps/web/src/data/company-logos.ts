@@ -1,4 +1,4 @@
-const v = 'v2'; // bust cache after transparent knockout
+const v = 'v3'; // bust cache after transparent knockout
 
 /** Manufacturer brands from company CV (Brands page) */
 export const MANUFACTURER_BRANDS = [

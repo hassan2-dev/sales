@@ -25,13 +25,6 @@ import { IraqOfficesMap } from '@/components/IraqOfficesMap';
 import { OperationalPresenceSection } from '@/components/OperationalPresenceSection';
 import { Reveal } from '@/components/Reveal';
 import { HeroSlideshow } from '@/components/HeroSlideshow';
-import {
-  Card,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 
 /** Drop your real PDF at apps/web/public/company-profile.pdf */
 const COMPANY_PROFILE_PDF = '/company-profile.pdf';
@@ -62,13 +55,6 @@ export function HomePage() {
     queryKey: ['home-offices'],
     queryFn: async () => (await cmsApi.offices()).data,
   });
-  const news = useQuery({
-    queryKey: ['home-news'],
-    queryFn: async () => {
-      const res = await cmsApi.news({ limit: 3 });
-      return Array.isArray(res.data) ? res.data : res.data.data;
-    },
-  });
   const featuredProducts = useQuery({
     queryKey: ['home-featured-products'],
     queryFn: async () => {
@@ -79,7 +65,6 @@ export function HomePage() {
       return fallback.data.data ?? [];
     },
   });
-  const newsItems = news.data ?? [];
   const marquee = [...MARQUEE, ...MARQUEE];
   const intlOffices = (offices.data ?? []).filter(
     (o) => o.country && !/iraq/i.test(o.country),
@@ -129,26 +114,7 @@ export function HomePage() {
       <section className="relative min-h-[min(92svh,44rem)] overflow-x-clip text-white sm:min-h-[min(100svh,52rem)]">
         <HeroSlideshow showDots={false} />
 
-        {/* In-hero scrolling notice */}
-        <div className="absolute inset-x-0 top-[4.25rem] z-20 px-3 sm:top-[4.75rem] sm:px-6 lg:px-10">
-          <div className="mx-auto flex max-w-[90rem] overflow-hidden rounded-full border border-white/15 bg-black/45 shadow-lg shadow-black/20 backdrop-blur-md">
-            <span className="shrink-0 bg-accent px-3.5 py-2 text-[10px] font-extrabold uppercase tracking-[0.18em] text-white sm:px-4 sm:text-[11px]">
-              {t.hero.alertLabel}
-            </span>
-            <div className="relative min-w-0 flex-1 overflow-hidden">
-              <div className="hero-alert-track flex w-max items-center gap-8 py-2 pe-8 ps-4 text-xs font-semibold tracking-wide text-white/90 sm:text-sm">
-                {[...t.hero.alertItems, ...t.hero.alertItems].map((item, i) => (
-                  <span key={`${item}-${i}`} className="inline-flex items-center gap-8 whitespace-nowrap">
-                    {item}
-                    <span className="h-1 w-1 rounded-full bg-accent" aria-hidden />
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative z-10 mx-auto flex min-h-[min(92svh,44rem)] max-w-[90rem] flex-col justify-end px-4 pb-20 pt-36 sm:min-h-[min(100svh,52rem)] sm:px-6 sm:pb-24 sm:pt-40 lg:justify-center lg:px-10 lg:pb-28 lg:pt-36">
+        <div className="relative z-10 mx-auto flex min-h-[min(92svh,44rem)] max-w-[90rem] flex-col justify-end px-4 pb-20 pt-28 sm:min-h-[min(100svh,52rem)] sm:px-6 sm:pb-24 sm:pt-32 lg:justify-center lg:px-10 lg:pb-28 lg:pt-28">
           <div className="max-w-3xl">
             <p className="reveal text-[clamp(2.35rem,8vw,4.75rem)] font-extrabold leading-[0.95] tracking-tight text-white">
               {locale === 'ar' ? t.hero.brandAr : t.hero.brand}
@@ -438,77 +404,6 @@ export function HomePage() {
           allProjects: t.home.partnersAllProjects,
         }}
       />
-
-      <section className="border-b border-line bg-page px-4 py-14 text-fg sm:px-6 sm:py-20 lg:px-10 lg:py-28">
-        <div className="mx-auto max-w-[90rem]">
-          <Reveal className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
-                {t.home.news}
-              </p>
-              <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-3xl">
-                {locale === 'ar' ? 'آخر التحديثات' : 'Latest updates'}
-              </h2>
-            </div>
-            <Link
-              to="/news"
-              className="group inline-flex items-center gap-2 text-sm font-bold text-accent"
-            >
-              {locale === 'ar' ? 'كل الأخبار' : 'All news'}
-              <Arrow className="h-4 w-4 transition group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
-            </Link>
-          </Reveal>
-          {news.isLoading ? <LoadingState variant="cards" /> : null}
-          <div className="mt-8 grid gap-4 sm:mt-10 md:grid-cols-3">
-            {newsItems.map((n, i) => (
-              <Reveal key={n.id} delay={i}>
-                <Link
-                  to={`/news/${n.slug}`}
-                  className="card-lift group flex h-full flex-col overflow-hidden rounded-xl border border-border/80 bg-card"
-                >
-                  {n.coverImage ? (
-                    <div className="relative aspect-[16/10] overflow-hidden">
-                      <img
-                        src={n.coverImage}
-                        alt=""
-                        className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
-                      />
-                    </div>
-                  ) : null}
-                  <CardHeader>
-                    <p className="font-kpi text-xs uppercase tracking-[0.16em] text-muted">
-                      {n.publishedAt
-                        ? new Date(n.publishedAt).toLocaleDateString(
-                            locale === 'ar' ? 'ar-IQ' : 'en-GB',
-                            { year: 'numeric', month: 'short', day: 'numeric' },
-                          )
-                        : '—'}
-                    </p>
-                    <CardTitle className="text-lg leading-snug">{n.title}</CardTitle>
-                    {n.excerpt ? (
-                      <CardDescription className="line-clamp-2">{n.excerpt}</CardDescription>
-                    ) : null}
-                  </CardHeader>
-                  <CardFooter className="mt-auto border-0 bg-transparent">
-                    <span className="inline-flex items-center gap-1 text-sm font-bold text-accent transition group-hover:gap-2">
-                      {t.home.learnMore}
-                      <ArrowUpRight className="h-3.5 w-3.5" />
-                    </span>
-                  </CardFooter>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-          {!news.isLoading && !newsItems.length ? (
-            <EmptyState
-              title={locale === 'ar' ? 'لا توجد أخبار بعد' : 'No news yet'}
-              description={
-                locale === 'ar' ? 'انشر المقالات من لوحة التحكم' : 'Publish articles from admin'
-              }
-            />
-          ) : null}
-        </div>
-      </section>
 
       <section className="relative overflow-hidden border-t border-line bg-page text-fg">
         <div

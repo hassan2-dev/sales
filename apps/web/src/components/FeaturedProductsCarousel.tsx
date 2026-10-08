@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
-import { ProductCard } from '@/components/ProductCard';
 import { Reveal } from '@/components/Reveal';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
-import { cn } from '@/lib/cn';
+import { useCommerceSettings, usdToIqd } from '@/stores/commerce-settings-context';
+import { formatMoney, cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 type Labels = {
@@ -19,10 +19,100 @@ type Labels = {
   next: string;
 };
 
-const GAP = 16;
-const CARD_W = 300;
-const AUTO_SPEED = 0.75;
-const COPIES = 3;
+function productImage(p: Product) {
+  return p.images?.[0]?.url || p.imageUrl || null;
+}
+
+function FeaturedCard({
+  product,
+  index,
+  badge,
+  openLabel,
+  moneyLocale,
+}: {
+  product: Product;
+  index: number;
+  badge: string;
+  openLabel: string;
+  moneyLocale: string;
+}) {
+  const commerce = useCommerceSettings();
+  const img = productImage(product);
+  const priceUsd = Number(product.price ?? 0);
+  const showIqd =
+    commerce.enableIqdDisplay &&
+    (product.currency ?? 'USD').toUpperCase() === 'USD' &&
+    Number.isFinite(priceUsd);
+
+  return (
+    <Link
+      to={storePath(`products/${product.slug}`)}
+      className={cn(
+        'group relative flex w-[min(85vw,19.5rem)] shrink-0 snap-center flex-col overflow-hidden rounded-[1.35rem]',
+        'border border-border/70 bg-card text-fg shadow-[0_18px_50px_-28px_rgb(11_31_58/0.45)]',
+        'transition duration-500 hover:-translate-y-1.5 hover:border-accent/35 hover:shadow-[0_28px_60px_-24px_rgb(0_112_192/0.35)]',
+        'sm:w-[21rem]',
+      )}
+    >
+      <div className="relative aspect-[4/5] overflow-hidden bg-mist dark:bg-[#0b1220]">
+        {img ? (
+          <img
+            src={img}
+            alt=""
+            className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
+            loading="lazy"
+            draggable={false}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm font-bold text-muted">
+            EH
+          </div>
+        )}
+
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-4">
+          <span className="rounded-full bg-accent px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-white shadow-lg shadow-accent/30">
+            {badge}
+          </span>
+          <span className="font-kpi text-3xl font-extrabold leading-none text-white/35 tabular-nums sm:text-4xl">
+            {String(index + 1).padStart(2, '0')}
+          </span>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+          {product.brand?.name ? (
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-accent">
+              {product.brand.name}
+            </p>
+          ) : null}
+          <h3 className="mt-1.5 line-clamp-2 text-lg font-extrabold leading-snug tracking-tight text-white sm:text-xl">
+            {product.name}
+          </h3>
+
+          <div className="mt-4 flex items-end justify-between gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-md">
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/55">
+                {openLabel}
+              </p>
+              <p className="mt-0.5 text-base font-extrabold tabular-nums text-white sm:text-lg">
+                {formatMoney(product.price, product.currency, moneyLocale)}
+              </p>
+              {showIqd ? (
+                <p className="text-[11px] font-semibold tabular-nums text-white/50">
+                  {formatMoney(usdToIqd(priceUsd, commerce.usdToIqdRate), 'IQD', moneyLocale)}
+                </p>
+              ) : null}
+            </div>
+            <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-lg shadow-accent/40 transition group-hover:bg-white group-hover:text-accent">
+              <ArrowUpRight className="h-5 w-5" />
+            </span>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
 
 export function FeaturedProductsCarousel({
   products,
@@ -31,259 +121,85 @@ export function FeaturedProductsCarousel({
   products: Product[];
   labels: Labels;
 }) {
-  const { dir } = useI18n();
-  const trackRef = useRef<HTMLDivElement>(null);
-  const setWidthRef = useRef(0);
-  const offsetRef = useRef(0);
-  const dragStartX = useRef(0);
-  const dragStartOffset = useRef(0);
-  const dragMoved = useRef(false);
-  const draggingRef = useRef(false);
-  const pausedRef = useRef(false);
-  const nudgeLockRef = useRef(false);
-  const [dragging, setDragging] = useState(false);
+  const { dir, locale } = useI18n();
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const list = products.slice(0, 10);
 
-  const loop =
-    products.length > 0
-      ? Array.from({ length: COPIES }, () => products).flat()
-      : [];
-
-  function measureSetWidth() {
-    const track = trackRef.current;
-    if (!track || !products.length) return 0;
-    const w = track.scrollWidth / COPIES;
-    setWidthRef.current = w;
-    return w;
+  function scrollByCard(direction: 1 | -1) {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLElement>('[data-featured-card]');
+    const step = (card?.offsetWidth ?? 320) + 20;
+    el.scrollBy({
+      left: step * direction * (dir === 'rtl' ? -1 : 1),
+      behavior: 'smooth',
+    });
   }
 
-  /** Infinite wrap into [-setWidth, 0) */
-  function normalize(x: number) {
-    const w = setWidthRef.current;
-    if (w <= 0) return 0;
-    // Real modulo into [0, w) then shift to (-w, 0]
-    const r = ((x % w) + w) % w;
-    return r === 0 ? 0 : r - w;
-  }
-
-  function paint(raw: number) {
-    const track = trackRef.current;
-    if (!track) return;
-    if (!setWidthRef.current) measureSetWidth();
-    const x = normalize(raw);
-    offsetRef.current = x;
-    track.style.transform = `translate3d(${x}px,0,0)`;
-  }
-
-  useEffect(() => {
-    const boot = () => {
-      const w = measureSetWidth();
-      // Start on the middle copy so either direction has buffer
-      offsetRef.current = dir === 'rtl' ? -w : -w;
-      paint(offsetRef.current);
-    };
-
-    boot();
-    // Remeasure after images settle
-    const t1 = window.setTimeout(boot, 120);
-    const t2 = window.setTimeout(boot, 600);
-
-    const onResize = () => {
-      measureSetWidth();
-      paint(offsetRef.current);
-    };
-    window.addEventListener('resize', onResize);
-
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) {
-      return () => {
-        window.removeEventListener('resize', onResize);
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
-
-    // Continuous infinite drift — never ends
-    const sign = dir === 'rtl' ? 1 : -1;
-    let raf = 0;
-    const tick = () => {
-      if (!draggingRef.current && !pausedRef.current && !nudgeLockRef.current) {
-        paint(offsetRef.current + sign * AUTO_SPEED);
-      }
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('resize', onResize);
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
-  }, [dir, products]);
-
-  function nudge(screenDir: 1 | -1) {
-    const card = trackRef.current?.querySelector<HTMLElement>('[data-product-card]');
-    const cardW = card?.offsetWidth || CARD_W;
-    const step = (cardW + GAP) * screenDir;
-    const from = offsetRef.current;
-    const to = from + step;
-    const start = performance.now();
-    const dur = 380;
-    nudgeLockRef.current = true;
-    pausedRef.current = true;
-
-    const animate = (now: number) => {
-      const t = Math.min(1, (now - start) / dur);
-      const ease = 1 - Math.pow(1 - t, 3);
-      paint(from + (to - from) * ease);
-      if (t < 1) requestAnimationFrame(animate);
-      else {
-        nudgeLockRef.current = false;
-        setTimeout(() => {
-          pausedRef.current = false;
-        }, 600);
-      }
-    };
-    requestAnimationFrame(animate);
-  }
-
-  function onPointerDown(e: React.PointerEvent) {
-    if (e.button !== 0) return;
-    // Don't capture yet — allow real clicks on product links
-    dragMoved.current = false;
-    draggingRef.current = false;
-    dragStartX.current = e.clientX;
-    dragStartOffset.current = offsetRef.current;
-  }
-
-  function onPointerMove(e: React.PointerEvent) {
-    const dx = e.clientX - dragStartX.current;
-
-    // Activate drag only after a clear slide (so tap opens product)
-    if (!draggingRef.current) {
-      if (Math.abs(dx) < 12) return;
-      draggingRef.current = true;
-      dragMoved.current = true;
-      setDragging(true);
-      pausedRef.current = true;
-      try {
-        trackRef.current?.setPointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
-    }
-
-    paint(dragStartOffset.current + dx);
-  }
-
-  function endDrag(e: React.PointerEvent) {
-    if (draggingRef.current) {
-      draggingRef.current = false;
-      setDragging(false);
-      try {
-        trackRef.current?.releasePointerCapture(e.pointerId);
-      } catch {
-        /* ignore */
-      }
-      setTimeout(() => {
-        pausedRef.current = false;
-        dragMoved.current = false;
-      }, 50);
-    }
-  }
-
-  function onClickCapture(e: React.MouseEvent) {
-    // Block navigation only after a real drag swipe
-    if (dragMoved.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      dragMoved.current = false;
-    }
-  }
-
-  if (!products.length) return null;
+  if (!list.length) return null;
 
   return (
-    <section className="border-b border-line bg-page py-14 text-fg sm:py-28">
+    <section className="overflow-x-clip border-b border-line bg-page py-14 text-fg sm:py-24">
       <div className="mx-auto max-w-[90rem] px-4 sm:px-6 lg:px-10">
-        <Reveal className="mb-8 flex flex-col items-start gap-4 sm:mb-10 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-6">
+        <Reveal className="mb-8 flex flex-col gap-5 sm:mb-10 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-accent">
+            <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-accent">
               {labels.mostRequested}
             </p>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight sm:text-4xl lg:text-[2.75rem] lg:leading-none">
               {labels.featured}
             </h2>
-            <p className="mt-3 text-sm font-medium text-muted sm:text-base">{labels.featuredSub}</p>
+            <p className="mt-3 max-w-xl text-sm font-medium leading-relaxed text-muted sm:text-base">
+              {labels.featuredSub}
+            </p>
           </div>
-          <Link
-            to={storePath('products')}
-            className="btn-cta btn-cta-primary btn-shine h-11 w-full px-5 text-sm sm:w-auto"
-          >
-            {labels.viewCatalog}
-            <ArrowUpRight className="h-4 w-4" />
-          </Link>
-        </Reveal>
 
-        <div
-          dir="ltr"
-          className="carousel-shell relative"
-          onMouseEnter={() => {
-            pausedRef.current = true;
-          }}
-          onMouseLeave={() => {
-            pausedRef.current = false;
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => nudge(1)}
-            className="carousel-side-btn absolute start-0 top-1/2 z-20 hidden -translate-y-1/2 sm:inline-flex"
-            aria-label={labels.prev}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            onClick={() => nudge(-1)}
-            className="carousel-side-btn absolute end-0 top-1/2 z-20 hidden -translate-y-1/2 sm:inline-flex"
-            aria-label={labels.next}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-
-          <div className="carousel-viewport overflow-hidden px-1 sm:px-14">
-            <div
-              ref={trackRef}
-              className={cn(
-                'carousel-track flex w-max gap-4 will-change-transform',
-                dragging ? 'cursor-grabbing' : 'cursor-grab',
-              )}
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-              onClickCapture={onClickCapture}
-              style={{ touchAction: 'pan-y' }}
-            >
-              {loop.map((p, i) => (
-                <div
-                  key={`${p.id}-${i}`}
-                  data-product-card
-                  className="w-[min(82vw,300px)] shrink-0 select-none sm:w-[300px]"
-                  draggable={false}
-                >
-                  <ProductCard
-                    product={p}
-                    showCart={false}
-                    badge={labels.mostRequested}
-                    className="pointer-events-auto h-full"
-                  />
-                </div>
-              ))}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => scrollByCard(-1)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-fg transition hover:border-accent hover:text-accent"
+                aria-label={labels.prev}
+              >
+                <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollByCard(1)}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card text-fg transition hover:border-accent hover:text-accent"
+                aria-label={labels.next}
+              >
+                <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+              </button>
             </div>
+            <Link
+              to={storePath('products')}
+              className="btn-cta btn-cta-primary btn-shine h-11 px-5 text-sm"
+            >
+              {labels.viewCatalog}
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
           </div>
-        </div>
+        </Reveal>
+      </div>
+
+      <div
+        ref={scrollerRef}
+        className="no-scrollbar flex gap-5 overflow-x-auto scroll-smooth px-4 pb-2 snap-x snap-mandatory sm:gap-6 sm:px-6 lg:px-10"
+      >
+        {list.map((p, i) => (
+          <div key={p.id} data-featured-card>
+            <FeaturedCard
+              product={p}
+              index={i}
+              badge={labels.mostRequested}
+              openLabel={labels.openProduct}
+              moneyLocale={moneyLocale}
+            />
+          </div>
+        ))}
       </div>
     </section>
   );

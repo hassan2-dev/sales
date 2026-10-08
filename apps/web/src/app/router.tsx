@@ -4,7 +4,7 @@ import { CorporateLayout } from '@/layouts/CorporateLayout';
 import { StoreLayout } from '@/layouts/StoreLayout';
 import { AdminLayout } from '@/layouts/AdminLayout';
 import { LoadingState } from '@/components/ui/States';
-import { PageTransition } from '@/components/PageTransition';
+import { RouteTransition } from '@/components/PageTransition';
 import { ADMIN_URL, STORE_URL, getAppSurface } from '@/lib/urls';
 import { HomePage } from '@/pages/corporate/HomePage';
 import {
@@ -12,8 +12,6 @@ import {
   ServicesPage,
   ServiceDetailPage,
   ContactPage,
-  NewsPage,
-  NewsDetailPage,
   BrandsPage,
   BrandDetailPage,
   ProjectsPage,
@@ -59,7 +57,6 @@ import {
   AdminSupportDetailPage,
   AdminServicesPage,
   AdminProjectsPage,
-  AdminNewsPage,
   AdminBrandsPage,
   AdminPagesPage,
   AdminOfficesPage,
@@ -81,11 +78,6 @@ function BrandDetailRoute() {
 function ProjectDetailRoute() {
   const { slug = '' } = useParams();
   return <ProjectDetailPage slug={slug} />;
-}
-
-function NewsDetailRoute() {
-  const { slug = '' } = useParams();
-  return <NewsDetailPage slug={slug} />;
 }
 
 function ExternalRedirect({ to }: { to: string }) {
@@ -145,7 +137,6 @@ function adminRoutes(prefix = '') {
         <Route path="support/:id" element={<AdminSupportDetailPage />} />
         <Route path="services" element={<AdminServicesPage />} />
         <Route path="projects" element={<AdminProjectsPage />} />
-        <Route path="news" element={<AdminNewsPage />} />
         <Route path="brands" element={<AdminBrandsPage />} />
         <Route path="pages" element={<AdminPagesPage />} />
         <Route path="offices" element={<AdminOfficesPage />} />
@@ -163,11 +154,14 @@ export function AppRouter() {
   if (surface === 'store') {
     return (
       <BrowserRouter>
-        <PageTransition />
-        <Routes>
-          {storeRoutes()}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <RouteTransition>
+          {(loc) => (
+            <Routes location={loc}>
+              {storeRoutes()}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          )}
+        </RouteTransition>
       </BrowserRouter>
     );
   }
@@ -175,51 +169,55 @@ export function AppRouter() {
   if (surface === 'admin') {
     return (
       <BrowserRouter>
-        <PageTransition />
-        <Routes>
-          {adminRoutes()}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+        <RouteTransition>
+          {(loc) => (
+            <Routes location={loc}>
+              {adminRoutes()}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          )}
+        </RouteTransition>
       </BrowserRouter>
     );
   }
 
   return (
     <BrowserRouter>
-      <PageTransition />
-      <Routes>
-        <Route element={<CorporateLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="services" element={<ServicesPage />} />
-          <Route path="services/:slug" element={<ServiceDetailRoute />} />
-          <Route path="brands" element={<BrandsPage />} />
-          <Route path="brands/:slug" element={<BrandDetailRoute />} />
-          <Route path="projects" element={<ProjectsPage />} />
-          <Route path="projects/:slug" element={<ProjectDetailRoute />} />
-          <Route path="news" element={<NewsPage />} />
-          <Route path="news/:slug" element={<NewsDetailRoute />} />
-          <Route path="contact" element={<ContactPage />} />
-        </Route>
+      <RouteTransition>
+        {(loc) => (
+          <Routes location={loc}>
+            <Route element={<CorporateLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="about" element={<AboutPage />} />
+              <Route path="services" element={<ServicesPage />} />
+              <Route path="services/:slug" element={<ServiceDetailRoute />} />
+              <Route path="brands" element={<BrandsPage />} />
+              <Route path="brands/:slug" element={<BrandDetailRoute />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:slug" element={<ProjectDetailRoute />} />
+              <Route path="contact" element={<ContactPage />} />
+            </Route>
 
-        <Route
-          path="/store/*"
-          element={
-            <ExternalRedirect
-              to={`${STORE_URL.replace(/\/$/, '')}${typeof window !== 'undefined' ? window.location.pathname.replace(/^\/store/, '') || '/' : '/'}`}
+            <Route
+              path="/store/*"
+              element={
+                <ExternalRedirect
+                  to={`${STORE_URL.replace(/\/$/, '')}${typeof window !== 'undefined' ? window.location.pathname.replace(/^\/store/, '') || '/' : '/'}`}
+                />
+              }
             />
-          }
-        />
-        <Route
-          path="/admin/*"
-          element={
-            <ExternalRedirect
-              to={`${ADMIN_URL.replace(/\/$/, '')}${typeof window !== 'undefined' ? window.location.pathname.replace(/^\/admin/, '') || '/' : '/'}`}
+            <Route
+              path="/admin/*"
+              element={
+                <ExternalRedirect
+                  to={`${ADMIN_URL.replace(/\/$/, '')}${typeof window !== 'undefined' ? window.location.pathname.replace(/^\/admin/, '') || '/' : '/'}`}
+                />
+              }
             />
-          }
-        />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        )}
+      </RouteTransition>
     </BrowserRouter>
   );
 }

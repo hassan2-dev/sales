@@ -9,7 +9,6 @@ import {
   LifeBuoy,
   Briefcase,
   FolderKanban,
-  Newspaper,
   Award,
   File,
   Building2,
@@ -44,7 +43,6 @@ type NavKey =
   | 'support'
   | 'services'
   | 'projects'
-  | 'news'
   | 'brands'
   | 'pages'
   | 'offices'
@@ -83,7 +81,6 @@ const navGroups: {
     items: [
       { to: 'services', key: 'services', icon: Briefcase },
       { to: 'projects', key: 'projects', icon: FolderKanban },
-      { to: 'news', key: 'news', icon: Newspaper },
       { to: 'brands', key: 'brands', icon: Award },
       { to: 'pages', key: 'pages', icon: File },
       { to: 'offices', key: 'offices', icon: Building2 },

@@ -1,100 +1,104 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocation, type Location } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 
 const LOGO_SRC =
   import.meta.env.VITE_LOGO_URL?.trim() || '/energy-horizon-logo.svg';
 
-const MIN_MS = 420;
-const EXIT_MS = 280;
+const COVER_MS = 420;
+const HOLD_MS = 260;
+const REVEAL_MS = 450;
+
+type Phase = 'idle' | 'covering' | 'holding' | 'revealing';
 
 /**
- * Branded route transition: top progress + centered logo veil on pathname change.
+ * Keeps the old page visible under an opaque curtain until fully covered,
+ * then swaps to the new route and reveals — curtain first, page second.
  */
-export function PageTransition() {
-  const { pathname, search } = useLocation();
-  const key = `${pathname}${search}`;
-  const prevKey = useRef(key);
-  const [visible, setVisible] = useState(false);
-  const [leaving, setLeaving] = useState(false);
-  const [progress, setProgress] = useState(0);
+export function RouteTransition({ children }: { children: (loc: Location) => ReactNode }) {
+  const location = useLocation();
+  const [displayLocation, setDisplayLocation] = useState(location);
+  const [phase, setPhase] = useState<Phase>('idle');
   const timers = useRef<number[]>([]);
+  const pending = useRef<Location | null>(null);
 
   useEffect(() => {
-    if (prevKey.current === key) return;
-    prevKey.current = key;
+    if (location.key === displayLocation.key) return;
 
+    // New navigation: drop curtain over the CURRENT (old) page first
+    pending.current = location;
     timers.current.forEach((id) => window.clearTimeout(id));
     timers.current = [];
+    setPhase('covering');
 
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    const tCover = window.setTimeout(() => {
+      // Fully covered — swap page content while curtain is opaque
+      const next = pending.current;
+      if (next) {
+        setDisplayLocation(next);
+        pending.current = null;
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      }
+      setPhase('holding');
+    }, COVER_MS);
 
-    setLeaving(false);
-    setVisible(true);
-    setProgress(12);
+    const tReveal = window.setTimeout(() => {
+      setPhase('revealing');
+    }, COVER_MS + HOLD_MS);
 
-    const t1 = window.setTimeout(() => setProgress(55), 80);
-    const t2 = window.setTimeout(() => setProgress(82), 220);
-    const t3 = window.setTimeout(() => {
-      setProgress(100);
-      setLeaving(true);
-      const t4 = window.setTimeout(() => {
-        setVisible(false);
-        setLeaving(false);
-        setProgress(0);
-      }, EXIT_MS);
-      timers.current.push(t4);
-    }, MIN_MS);
+    const tIdle = window.setTimeout(() => {
+      setPhase('idle');
+    }, COVER_MS + HOLD_MS + REVEAL_MS);
 
-    timers.current.push(t1, t2, t3);
+    timers.current.push(tCover, tReveal, tIdle);
 
     return () => {
       timers.current.forEach((id) => window.clearTimeout(id));
       timers.current = [];
     };
-  }, [key]);
-
-  if (!visible) return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only react to URL changes
+  }, [location]);
 
   return (
-    <div
-      className={cn(
-        'pointer-events-none fixed inset-0 z-[200] flex items-center justify-center transition-opacity duration-300',
-        leaving ? 'opacity-0' : 'opacity-100',
-      )}
-      aria-hidden
-      aria-busy={!leaving}
-    >
-      <div className="absolute inset-0 bg-page/85 backdrop-blur-[6px] dark:bg-page/90" />
+    <>
+      {children(displayLocation)}
 
-      <div
-        className="absolute inset-x-0 top-0 h-[2.5px] origin-left bg-accent shadow-[0_0_12px_rgb(0_112_192/0.55)] transition-[transform,opacity] duration-300 ease-out"
-        style={{
-          transform: `scaleX(${Math.max(progress, 4) / 100})`,
-          opacity: leaving ? 0 : 1,
-        }}
-      />
+      {phase !== 'idle' ? (
+        <div className="fixed inset-0 z-[200] overflow-hidden" aria-hidden aria-busy>
+          <div
+            className={cn(
+              'page-curtain absolute inset-0 flex items-center justify-center bg-page',
+              phase === 'covering' && 'is-covering',
+              phase === 'holding' && 'is-holding',
+              phase === 'revealing' && 'is-revealing',
+            )}
+          >
+            <div className="absolute inset-0 bg-page" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_55%_45%_at_50%_35%,rgb(0_112_192/0.16),transparent_70%)] dark:bg-[radial-gradient(ellipse_55%_45%_at_50%_35%,rgb(0_112_192/0.28),transparent_70%)]" />
+            <div className="absolute inset-x-0 top-0 h-1 bg-accent" />
 
-      <div
-        className={cn(
-          'relative z-10 flex flex-col items-center gap-5 px-6 transition duration-300',
-          leaving ? 'scale-95 opacity-0' : 'scale-100 opacity-100',
-        )}
-      >
-        <div className="relative flex h-20 w-20 items-center justify-center sm:h-24 sm:w-24">
-          <span className="absolute inset-0 animate-[page-pulse_1.4s_ease-in-out_infinite] rounded-full border border-accent/25" />
-          <span className="absolute inset-2 animate-[page-pulse_1.4s_ease-in-out_infinite_0.2s] rounded-full bg-accent/8" />
-          <img
-            src={LOGO_SRC}
-            alt=""
-            className="relative z-10 h-11 w-auto max-w-[140px] object-contain sm:h-14 sm:max-w-[168px]"
-            decoding="async"
-          />
+            <div
+              className={cn(
+                'relative z-10 flex flex-col items-center gap-4 px-6 transition duration-300',
+                phase === 'revealing'
+                  ? 'translate-y-2 scale-95 opacity-0'
+                  : 'translate-y-0 scale-100 opacity-100',
+              )}
+            >
+              <img
+                src={LOGO_SRC}
+                alt=""
+                className="h-12 w-auto max-w-[160px] object-contain sm:h-14 sm:max-w-[180px]"
+                decoding="async"
+              />
+              <div className="h-0.5 w-14 overflow-hidden rounded-full bg-line">
+                <div className="h-full w-1/2 animate-[page-shimmer_0.9s_ease-in-out_infinite] rounded-full bg-accent" />
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="h-0.5 w-16 overflow-hidden rounded-full bg-line">
-          <div className="h-full w-1/2 animate-[page-shimmer_0.9s_ease-in-out_infinite] rounded-full bg-accent" />
-        </div>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }
+

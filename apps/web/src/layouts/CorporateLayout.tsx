@@ -24,7 +24,6 @@ export function CorporateLayout() {
     { to: '/services', label: t.nav.services },
     { to: '/brands', label: t.nav.brands },
     { to: '/projects', label: t.nav.projects },
-    { to: '/news', label: t.nav.news },
     { to: '/contact', label: t.nav.contact },
   ];
 
@@ -134,9 +133,6 @@ export function CorporateLayout() {
                 </Link>
                 <Link to="/brands" className="link-underline w-fit">
                   {t.nav.brands}
-                </Link>
-                <Link to="/news" className="link-underline w-fit">
-                  {t.nav.news}
                 </Link>
                 <Link to="/contact" className="link-underline w-fit">
                   {t.nav.contact}

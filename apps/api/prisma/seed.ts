@@ -325,30 +325,26 @@ async function main() {
       sortOrder: 2,
     },
     {
-      name: 'Canada Office',
-      city: 'Canada',
-      country: 'Canada',
-      address: 'Canada',
-      phone: '+1 587 777 0488',
-      email: 'aalia@energy-horizon.net',
-      contactPerson: 'Aalia Al-Quraishi',
-      sortOrder: 3,
-    },
-    {
-      name: 'USA Office',
-      city: 'USA',
+      name: 'America Office',
+      city: 'America',
       country: 'USA',
       address: 'USA',
       phone: '+1 314 201 3439',
       email: 'mustafa.alsaffar@energy-horizon.net',
       contactPerson: 'Mustafa Al Saffar',
-      sortOrder: 4,
+      sortOrder: 3,
     },
   ];
 
   for (const office of offices) {
     const existing = await prisma.office.findFirst({
-      where: { name: office.name },
+      where: {
+        OR: [
+          { name: office.name },
+          // Migrate legacy USA Office name
+          ...(office.name === 'America Office' ? [{ name: 'USA Office' }] : []),
+        ],
+      },
     });
     if (existing) {
       await prisma.office.update({
@@ -362,7 +358,7 @@ async function main() {
     }
   }
 
-  // Only Baghdad + Basra — archive any other seeded offices
+  // Keep only Baghdad, Basra, America — archive Canada and any other offices
   await prisma.office.updateMany({
     where: {
       name: { notIn: offices.map((o) => o.name) },
@@ -384,7 +380,7 @@ async function main() {
         '',
         'We provide electrical, mechanical, hydraulics, and drilling equipment from reputable international manufacturers, plus EN-certified PPE, explosion-proof electrical solutions, and single-point procurement through strategic supply relationships worldwide.',
         '',
-        'Operational offices in Baghdad and Basra — with international branch contacts in Canada and the USA — support field delivery across Iraq.',
+        'Operational offices in Baghdad and Basra — with an international branch contact in America — support field delivery across Iraq.',
       ].join('\n'),
       status: ContentStatus.PUBLISHED,
     },
