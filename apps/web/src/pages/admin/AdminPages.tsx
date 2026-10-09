@@ -2306,11 +2306,25 @@ export function AdminAuditPage() {
   );
 }
 
+function parseExchangeRate(raw: string) {
+  const normalized = raw
+    .trim()
+    .replace(/[٬，]/g, '')
+    .replace(/[٫]/g, '.')
+    .replace(/,/g, '')
+    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+  const value = Number(normalized);
+  return value;
+}
+
 export function AdminSettingsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const qc = useQueryClient();
   const [rate, setRate] = useState('');
   const [enableIqd, setEnableIqd] = useState(true);
+  const [hydrated, setHydrated] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const settings = useQuery({
     queryKey: ['admin-commerce-settings'],
@@ -2318,25 +2332,36 @@ export function AdminSettingsPage() {
   });
 
   useEffect(() => {
-    if (!settings.data) return;
-    setRate(String(settings.data.usdToIqdRate));
-    setEnableIqd(settings.data.enableIqdDisplay);
-  }, [settings.data]);
+    if (!settings.data || hydrated) return;
+    const n = Number(settings.data.usdToIqdRate);
+    setRate(Number.isFinite(n) ? String(n) : '');
+    setEnableIqd(Boolean(settings.data.enableIqdDisplay));
+    setHydrated(true);
+  }, [settings.data, hydrated]);
 
   async function saveCommerce(e: React.FormEvent) {
     e.preventDefault();
-    const usdToIqdRate = Number(rate);
-    if (!Number.isFinite(usdToIqdRate) || usdToIqdRate <= 0) {
+    const usdToIqdRate = parseExchangeRate(rate);
+    if (!Number.isFinite(usdToIqdRate) || usdToIqdRate < 1) {
       toast.error(t.admin.exchangeRateInvalid);
       return;
     }
+    setSaving(true);
     try {
-      await settingsApi.updateCommerce({ usdToIqdRate, enableIqdDisplay: enableIqd });
+      const { data } = await settingsApi.updateCommerce({
+        usdToIqdRate,
+        enableIqdDisplay: enableIqd,
+      });
+      const saved = Number(data.usdToIqdRate);
+      setRate(Number.isFinite(saved) ? String(saved) : String(usdToIqdRate));
+      setEnableIqd(Boolean(data.enableIqdDisplay));
       toast.success(t.admin.settingsSaved);
       await qc.invalidateQueries({ queryKey: ['admin-commerce-settings'] });
       await qc.invalidateQueries({ queryKey: ['commerce-settings'] });
     } catch {
       toast.error(t.admin.saveFailed);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -2355,9 +2380,12 @@ export function AdminSettingsPage() {
             {t.admin.usdToIqdRate}
           </label>
           <Input
-            type="number"
-            step="0.0001"
-            min={1}
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            dir="ltr"
+            className="font-kpi tabular-nums"
+            placeholder={locale === 'ar' ? 'مثال: 1480' : 'e.g. 1480'}
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             required
@@ -2373,8 +2401,8 @@ export function AdminSettingsPage() {
           />
           {t.admin.enableIqdDisplay}
         </label>
-        <Button type="submit" disabled={settings.isLoading}>
-          {t.common.save}
+        <Button type="submit" disabled={settings.isLoading || saving}>
+          {saving ? (locale === 'ar' ? 'جاري الحفظ…' : 'Saving…') : t.common.save}
         </Button>
       </form>
 

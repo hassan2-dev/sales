@@ -261,7 +261,8 @@ const dict = {
       commerceSettingsHint:
         'Store prices are in USD. Set how many Iraqi dinars equal one US dollar for secondary display.',
       usdToIqdRate: 'USD → IQD rate (1 USD = … IQD)',
-      usdToIqdHint: 'Example: 1310 means $100 shows about 131,000 IQD on product cards.',
+      usdToIqdHint:
+        'Enter today\'s market rate: how many IQD equal 1 USD. Example: 1480 means $100 shows about 148,000 IQD.',
       enableIqdDisplay: 'Show IQD price under USD on the store',
       settingsSaved: 'Settings saved',
       exchangeRateInvalid: 'Enter a valid exchange rate greater than zero',
@@ -769,7 +770,8 @@ const dict = {
       commerceSettingsHint:
         'أسعار المتجر بالدولار. حدّد كم ديناراً عراقياً يساوي دولاراً واحداً للعرض الثانوي.',
       usdToIqdRate: 'سعر الصرف (1 USD = … IQD)',
-      usdToIqdHint: 'مثال: 1310 يعني 100$ تظهر تقريباً 131,000 د.ع على بطاقات المنتجات.',
+      usdToIqdHint:
+        'اكتب سعر الدولار اليوم (كم ديناراً = 1 دولار). مثال: 1480 يعني 100$ تظهر تقريباً 148,000 د.ع.',
       enableIqdDisplay: 'إظهار السعر بالدينار تحت الدولار في المتجر',
       settingsSaved: 'تم حفظ الإعدادات',
       exchangeRateInvalid: 'أدخل سعر صرف صحيحاً أكبر من صفر',

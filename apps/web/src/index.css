@@ -92,23 +92,23 @@
   }
 }
 
-/* Exit continues downward — never snaps back up to the top */
+/* Keep sliding down off-screen — never reverse back to the top */
 @keyframes curtain-exit {
   from {
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(0, 101%, 0);
+    transform: translate3d(0, 105%, 0);
   }
 }
 
 .page-curtain {
   will-change: transform;
+  transform: translate3d(0, -101%, 0);
 }
 
 .page-curtain.is-covering {
-  transform: translate3d(0, -101%, 0);
-  animation: curtain-drop 420ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation: curtain-drop 420ms cubic-bezier(0.76, 0, 0.24, 1) both;
 }
 
 .page-curtain.is-holding {
@@ -117,8 +117,7 @@
 }
 
 .page-curtain.is-revealing {
-  transform: translate3d(0, 0, 0);
-  animation: curtain-exit 450ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation: curtain-exit 480ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

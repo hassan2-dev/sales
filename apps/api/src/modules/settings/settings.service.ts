@@ -18,21 +18,29 @@ export class SettingsService {
     });
   }
 
-  async getPublic() {
-    const row = await this.ensure();
+  private toPublic(row: { usdToIqdRate: { toString(): string } | number; enableIqdDisplay: boolean }) {
     return {
       usdToIqdRate: Number(row.usdToIqdRate),
       enableIqdDisplay: row.enableIqdDisplay,
     };
   }
 
+  async getPublic() {
+    return this.toPublic(await this.ensure());
+  }
+
   async getAdmin() {
-    return this.ensure();
+    const row = await this.ensure();
+    return {
+      id: row.id,
+      ...this.toPublic(row),
+      updatedAt: row.updatedAt,
+    };
   }
 
   async update(dto: UpdateSiteSettingsDto) {
     await this.ensure();
-    return this.prisma.siteSettings.update({
+    const row = await this.prisma.siteSettings.update({
       where: { id: SETTINGS_ID },
       data: {
         ...(dto.usdToIqdRate !== undefined
@@ -43,5 +51,10 @@ export class SettingsService {
           : {}),
       },
     });
+    return {
+      id: row.id,
+      ...this.toPublic(row),
+      updatedAt: row.updatedAt,
+    };
   }
 }
