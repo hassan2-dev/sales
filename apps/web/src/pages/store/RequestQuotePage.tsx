@@ -24,7 +24,7 @@ import { useCart } from '@/stores/cart-context';
 import { useAuth } from '@/stores/auth-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
-import { formatMoney } from '@/lib/cn';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
 import { appToast } from '@/lib/toast';
 import type { Product } from '@/types';
 
@@ -162,6 +162,8 @@ export function QuoteExplainSection({
 
 export function RequestQuotePage() {
   const { locale } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const commerce = useCommerceSettings();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const productParam = params.get('product') || '';
@@ -388,7 +390,11 @@ export function RequestQuotePage() {
                       </Link>
                       <p className="mt-0.5 text-xs text-muted">SKU {line.product?.sku}</p>
                       <p className="mt-1 text-sm font-bold text-navy dark:text-accent">
-                        {formatMoney(line.product?.price, line.product?.currency)}
+                        {commerce.formatDisplayPrice(
+                          line.product?.price,
+                          line.product?.currency,
+                          moneyLocale,
+                        )}
                       </p>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -547,7 +553,9 @@ export function RequestQuotePage() {
                   <span className="text-muted">
                     {locale === 'ar' ? 'تقدير المنتجات' : 'Catalog estimate'}
                   </span>
-                  <span className="font-bold text-fg">{formatMoney(subtotal)}</span>
+                  <span className="font-bold text-fg">
+                    {commerce.formatDisplayPrice(subtotal, 'USD', moneyLocale)}
+                  </span>
                 </div>
 
                 <Button type="submit" size="lg" className="w-full rounded-xl" disabled={busy}>

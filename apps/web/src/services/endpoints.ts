@@ -85,10 +85,28 @@ export const catalogApi = {
   brandBySlug: (slug: string) => api.get<Brand>(`/brands/slug/${slug}`),
 };
 
+export type MediaFolder =
+  | 'products/images'
+  | 'products/documents'
+  | 'brands/logos'
+  | 'cms/media'
+  | 'users/avatars'
+  | 'misc';
+
 export const mediaApi = {
-  upload: (file: File, alt?: string) => {
+  storageStatus: () =>
+    api.get<{
+      backend: string;
+      configured: boolean;
+      bucket: string | null;
+      publicBaseUrl: string | null;
+      folders: MediaFolder[];
+    }>('/media/storage'),
+  upload: (file: File, opts?: { alt?: string; folder?: MediaFolder }) => {
     const form = new FormData();
     form.append('file', file);
+    const alt = typeof opts === 'string' ? opts : opts?.alt;
+    const folder = typeof opts === 'object' ? opts?.folder : undefined;
     return api.post<{
       id: string;
       url: string;
@@ -96,8 +114,9 @@ export const mediaApi = {
       originalName: string;
       mimeType: string;
       size: number;
+      storageKey?: string;
     }>('/media/upload', form, {
-      params: alt ? { alt } : undefined,
+      params: cleanParams({ alt, folder }),
       headers: { 'Content-Type': 'multipart/form-data' },
       transformRequest: [
         (data, headers) => {
@@ -217,15 +236,28 @@ export const auditApi = {
   list: (params?: Params) => api.get('/audit', { params: cleanParams(params) }),
 };
 
+export type DashboardRangeParams = {
+  from?: string;
+  to?: string;
+  days?: number;
+};
+
 export const dashboardApi = {
-  overview: () => api.get<DashboardOverview>('/dashboard/overview'),
-  sales: (_days = 30) => api.get('/dashboard/sales'),
-  salesTrend: (days = 30) =>
-    api.get<{
+  overview: (params?: DashboardRangeParams) =>
+    api.get<DashboardOverview>('/dashboard/overview', { params: cleanParams(params) }),
+  sales: (params?: DashboardRangeParams) =>
+    api.get('/dashboard/sales', { params: cleanParams(params) }),
+  salesTrend: (params?: DashboardRangeParams | number) => {
+    const query =
+      typeof params === 'number' ? { days: params } : params ?? { days: 30 };
+    return api.get<{
       days: number;
       currency: string;
       series: { date: string; revenue: number; orders: number }[];
-    }>('/dashboard/sales-trend', { params: { days } }),
-  orders: () => api.get('/dashboard/orders'),
+      range?: { from: string; to: string };
+    }>('/dashboard/sales-trend', { params: cleanParams(query) });
+  },
+  orders: (params?: DashboardRangeParams) =>
+    api.get('/dashboard/orders', { params: cleanParams(params) }),
   recentActivity: () => auditApi.list({ limit: 10 }),
 };

@@ -35,6 +35,7 @@ import { useCompare } from '@/stores/compare-context';
 import { formatMoney } from '@/lib/cn';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
 import { statusLabel } from '@/i18n/dictionaries';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { saveStoreOrder } from '@/lib/store-orders';
@@ -758,6 +759,8 @@ export function StoreBrandPage() {
 
 export function ProductDetailPage() {
   const { locale } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const commerce = useCommerceSettings();
   const { slug = '' } = useParams();
   const { cart, addItem, updateItem, removeItem } = useCart();
   const { isFavorite, toggle } = useFavorites();
@@ -901,10 +904,22 @@ export function ProductDetailPage() {
               {p.name}
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <p className="text-2xl font-extrabold tabular-nums text-navy dark:text-accent">
-                {formatMoney(p.price, p.currency)}
-              </p>
+            <div className="mt-4 flex flex-wrap items-end gap-3">
+              <div>
+                <p className="text-2xl font-extrabold tabular-nums text-navy dark:text-accent">
+                  {commerce.formatDisplayPrice(p.price, p.currency, moneyLocale)}
+                </p>
+                {(() => {
+                  const secondary = commerce.formatSecondaryPrice(
+                    p.price,
+                    p.currency,
+                    moneyLocale,
+                  );
+                  return secondary ? (
+                    <p className="text-sm font-semibold tabular-nums text-muted">{secondary}</p>
+                  ) : null;
+                })()}
+              </div>
               <AvailabilityBadge
                 availability={p.availability}
                 stock={p.stock}
@@ -1174,6 +1189,8 @@ type CheckoutForm = z.infer<typeof checkoutSchema>;
 
 export function CartPage() {
   const { locale } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const commerce = useCommerceSettings();
   const navigate = useNavigate();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { cart, loading, updateItem, removeItem, clear } = useCart();
@@ -1327,7 +1344,7 @@ export function CartPage() {
                         </Link>
                         <p className="mt-0.5 text-xs text-muted">{item.product?.sku}</p>
                         <p className="mt-1 text-sm font-bold text-accent">
-                          {formatMoney(unit, item.product?.currency)}
+                          {commerce.formatDisplayPrice(unit, item.product?.currency, moneyLocale)}
                         </p>
                       </div>
                     </div>
@@ -1356,7 +1373,11 @@ export function CartPage() {
                       </div>
                       <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-2">
                         <p className="text-sm font-semibold text-fg">
-                          {formatMoney(lineTotal, item.product?.currency)}
+                          {commerce.formatDisplayPrice(
+                            lineTotal,
+                            item.product?.currency,
+                            moneyLocale,
+                          )}
                         </p>
                         <button
                           type="button"
@@ -1388,14 +1409,16 @@ export function CartPage() {
                     <span className="text-muted">
                       {locale === 'ar' ? 'المنتجات' : 'Items'} ({items.length})
                     </span>
-                    <span className="font-semibold">{formatMoney(subtotal)}</span>
+                    <span className="font-semibold">
+                      {commerce.formatDisplayPrice(subtotal, 'USD', moneyLocale)}
+                    </span>
                   </div>
                   <div className="mt-2 flex items-center justify-between border-t border-border pt-2">
                     <span className="font-bold">
                       {locale === 'ar' ? 'الإجمالي' : 'Total'}
                     </span>
                     <span className="text-xl font-bold text-accent">
-                      {formatMoney(subtotal)}
+                      {commerce.formatDisplayPrice(subtotal, 'USD', moneyLocale)}
                     </span>
                   </div>
                 </div>

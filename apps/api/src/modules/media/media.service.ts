@@ -19,6 +19,7 @@ export class MediaService {
     file: Express.Multer.File,
     uploadedById?: string,
     alt?: string,
+    folder?: string,
   ) {
     if (!file) throw new BadRequestException('File is required');
 
@@ -26,6 +27,7 @@ export class MediaService {
       file.buffer,
       file.originalname,
       file.mimetype,
+      { folder },
     );
 
     return this.prisma.media.create({
@@ -41,6 +43,10 @@ export class MediaService {
         uploadedById,
       },
     });
+  }
+
+  storageStatus() {
+    return this.storage.getStatus();
   }
 
   async findAll(query: MediaQueryDto) {

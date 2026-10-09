@@ -6,14 +6,14 @@ import {
   Plus,
   ShoppingBag,
 } from 'lucide-react';
-import { formatMoney, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { storePath } from '@/lib/urls';
 import { useCart } from '@/stores/cart-context';
 import { useFavorites } from '@/stores/favorites-context';
 import { useCompare } from '@/stores/compare-context';
 import { useAuth } from '@/stores/auth-context';
 import { useI18n } from '@/i18n/i18n-context';
-import { useCommerceSettings, usdToIqd } from '@/stores/commerce-settings-context';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
 import type { Product } from '@/types';
 
 type ProductCardProps = {
@@ -52,11 +52,11 @@ export function ProductCard({
   const commerce = useCommerceSettings();
   const navigate = useNavigate();
   const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
-  const priceUsd = Number(product.price ?? 0);
-  const showIqd =
-    commerce.enableIqdDisplay &&
-    (product.currency ?? 'USD').toUpperCase() === 'USD' &&
-    Number.isFinite(priceUsd);
+  const secondary = commerce.formatSecondaryPrice(
+    product.price,
+    product.currency,
+    moneyLocale,
+  );
   const img = productImage(product);
   const fav = isFavorite(product.id);
   const compared = isCompared(product.id);
@@ -182,12 +182,10 @@ export function ProductCard({
                 outOfStock ? 'text-muted' : 'text-navy dark:text-accent',
               )}
             >
-              {formatMoney(product.price, product.currency, moneyLocale)}
+              {commerce.formatDisplayPrice(product.price, product.currency, moneyLocale)}
             </p>
-            {showIqd && !outOfStock ? (
-              <p className="text-xs font-semibold tabular-nums text-muted">
-                {formatMoney(usdToIqd(priceUsd, commerce.usdToIqdRate), 'IQD', moneyLocale)}
-              </p>
+            {secondary && !outOfStock ? (
+              <p className="text-xs font-semibold tabular-nums text-muted">{secondary}</p>
             ) : null}
           </div>
           {showCart && !outOfStock && !(qty > 0 && line) ? (

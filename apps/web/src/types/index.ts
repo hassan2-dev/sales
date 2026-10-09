@@ -296,15 +296,16 @@ export interface SupportTicket {
 }
 
 export interface DashboardOverview {
-  orders: { total: number; pending: number; today: number };
+  range?: { from: string; to: string };
+  orders: { total: number; pending: number; today: number; period?: number };
   products: { total: number; active: number; lowStock: number };
   quotes: { total: number; pending: number };
   tickets: { open: number };
   visitors: {
-    store: { today: number; total: number };
-    corporate: { today: number; total: number };
+    store: { today: number; total: number; period?: number };
+    corporate: { today: number; total: number; period?: number };
   };
-  revenue: { monthTotal: number; currency: string };
+  revenue: { monthTotal: number; periodTotal?: number; currency: string };
   recentOrders: Order[];
 }
 

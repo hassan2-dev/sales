@@ -4,8 +4,8 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Reveal } from '@/components/Reveal';
 import { storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
-import { useCommerceSettings, usdToIqd } from '@/stores/commerce-settings-context';
-import { formatMoney, cn } from '@/lib/utils';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
+import { cn } from '@/lib/utils';
 import type { Product } from '@/types';
 
 type Labels = {
@@ -38,11 +38,11 @@ function FeaturedCard({
 }) {
   const commerce = useCommerceSettings();
   const img = productImage(product);
-  const priceUsd = Number(product.price ?? 0);
-  const showIqd =
-    commerce.enableIqdDisplay &&
-    (product.currency ?? 'USD').toUpperCase() === 'USD' &&
-    Number.isFinite(priceUsd);
+  const secondary = commerce.formatSecondaryPrice(
+    product.price,
+    product.currency,
+    moneyLocale,
+  );
 
   return (
     <Link
@@ -96,12 +96,10 @@ function FeaturedCard({
                 {openLabel}
               </p>
               <p className="mt-0.5 text-base font-extrabold tabular-nums text-white sm:text-lg">
-                {formatMoney(product.price, product.currency, moneyLocale)}
+                {commerce.formatDisplayPrice(product.price, product.currency, moneyLocale)}
               </p>
-              {showIqd ? (
-                <p className="text-[11px] font-semibold tabular-nums text-white/50">
-                  {formatMoney(usdToIqd(priceUsd, commerce.usdToIqdRate), 'IQD', moneyLocale)}
-                </p>
+              {secondary ? (
+                <p className="text-[11px] font-semibold tabular-nums text-white/50">{secondary}</p>
               ) : null}
             </div>
             <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent text-white shadow-lg shadow-accent/40 transition group-hover:bg-white group-hover:text-accent">

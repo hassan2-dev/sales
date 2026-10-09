@@ -67,7 +67,7 @@ import {
   mediaApi,
 } from '@/services/endpoints';
 import type { CmsService } from '@/types';
-import { formatMoney } from '@/lib/cn';
+import { cn, formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
 import type { Order, Product, QuoteRequest } from '@/types';
 
@@ -201,18 +201,52 @@ function KpiCard({
   );
 }
 
+type DashboardPreset = 'today' | '7d' | '30d' | 'month' | 'custom';
+
+function toDateInputValue(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function buildDashboardRange(
+  preset: DashboardPreset,
+  customFrom: string,
+  customTo: string,
+): { from?: string; to?: string; days?: number } {
+  const today = toDateInputValue(new Date());
+  if (preset === 'today') return { from: today, to: today };
+  if (preset === '7d') return { days: 7 };
+  if (preset === '30d') return { days: 30 };
+  if (preset === 'month') return {};
+  if (customFrom && customTo) return { from: customFrom, to: customTo };
+  if (customFrom) return { from: customFrom, to: today };
+  return { days: 30 };
+}
+
 export function AdminDashboardPage() {
   const { t, locale } = useI18n();
   const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const [preset, setPreset] = useState<DashboardPreset>('month');
+  const [customFrom, setCustomFrom] = useState('');
+  const [customTo, setCustomTo] = useState('');
+  const [appliedCustom, setAppliedCustom] = useState({ from: '', to: '' });
+
+  const rangeParams = buildDashboardRange(
+    preset,
+    preset === 'custom' ? appliedCustom.from : customFrom,
+    preset === 'custom' ? appliedCustom.to : customTo,
+  );
 
   const overview = useQuery({
-    queryKey: ['dashboard-overview'],
-    queryFn: async () => (await dashboardApi.overview()).data,
+    queryKey: ['dashboard-overview', rangeParams],
+    queryFn: async () => (await dashboardApi.overview(rangeParams)).data,
   });
   const sales = useQuery({
-    queryKey: ['dashboard-sales'],
+    queryKey: ['dashboard-sales', rangeParams],
     queryFn: async () =>
-      (await dashboardApi.sales()).data as {
+      (await dashboardApi.sales(rangeParams)).data as {
         monthOrders: number;
         monthRevenue: number;
         completedOrders: number;
@@ -221,13 +255,15 @@ export function AdminDashboardPage() {
       },
   });
   const trend = useQuery({
-    queryKey: ['dashboard-sales-trend'],
-    queryFn: async () => (await dashboardApi.salesTrend(30)).data,
+    queryKey: ['dashboard-sales-trend', rangeParams],
+    queryFn: async () => (await dashboardApi.salesTrend(rangeParams)).data,
   });
   const orderStats = useQuery({
-    queryKey: ['dashboard-orders'],
+    queryKey: ['dashboard-orders', rangeParams],
     queryFn: async () =>
-      (await dashboardApi.orders()).data as { byStatus: { status: string; count: number }[] },
+      (await dashboardApi.orders(rangeParams)).data as {
+        byStatus: { status: string; count: number }[];
+      },
   });
   const activity = useQuery({
     queryKey: ['dashboard-activity'],
@@ -244,12 +280,17 @@ export function AdminDashboardPage() {
     },
   });
 
+  const rangeLabel =
+    overview.data?.range != null
+      ? `${overview.data.range.from} → ${overview.data.range.to}`
+      : null;
+
   const primaryCards = overview.data
     ? [
         {
-          label: t.admin.monthRevenue,
+          label: preset === 'month' ? t.admin.monthRevenue : t.admin.periodRevenue,
           value: formatMoney(
-            overview.data.revenue.monthTotal,
+            overview.data.revenue.periodTotal ?? overview.data.revenue.monthTotal,
             overview.data.revenue.currency,
             moneyLocale,
           ),
@@ -263,7 +304,11 @@ export function AdminDashboardPage() {
 
   const secondaryCards = overview.data
     ? [
-        { label: t.admin.ordersToday, value: overview.data.orders.today, icon: CalendarDays },
+        {
+          label: preset === 'today' ? t.admin.ordersToday : t.admin.ordersInPeriod,
+          value: overview.data.orders.period ?? overview.data.orders.total,
+          icon: CalendarDays,
+        },
         { label: t.admin.products, value: overview.data.products.total, icon: Package },
         { label: t.admin.lowStock, value: overview.data.products.lowStock, icon: AlertTriangle },
         { label: t.admin.pendingQuotes, value: overview.data.quotes.pending, icon: Hourglass },
@@ -274,13 +319,13 @@ export function AdminDashboardPage() {
     ? [
         {
           label: t.admin.storeVisitors,
-          value: overview.data.visitors.store.total,
+          value: overview.data.visitors.store.period ?? overview.data.visitors.store.total,
           hint: `${overview.data.visitors.store.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
           icon: Store,
         },
         {
           label: t.admin.siteVisitors,
-          value: overview.data.visitors.corporate.total,
+          value: overview.data.visitors.corporate.period ?? overview.data.visitors.corporate.total,
           hint: `${overview.data.visitors.corporate.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
           icon: Globe,
         },
@@ -293,6 +338,14 @@ export function AdminDashboardPage() {
       count: s.count,
     })) ?? [];
 
+  const presets: { id: DashboardPreset; label: string }[] = [
+    { id: 'today', label: t.admin.rangeToday },
+    { id: '7d', label: t.admin.range7d },
+    { id: '30d', label: t.admin.range30d },
+    { id: 'month', label: t.admin.rangeMonth },
+    { id: 'custom', label: t.admin.rangeCustom },
+  ];
+
   return (
     <div className="space-y-8">
       <Seo title={t.admin.overviewTitle} path="/admin" />
@@ -302,7 +355,12 @@ export function AdminDashboardPage() {
           <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
             {t.admin.overviewTitle}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t.admin.overviewSub}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t.admin.overviewSub}
+            {rangeLabel ? (
+              <span className="ms-2 font-medium text-foreground tabular-nums">({rangeLabel})</span>
+            ) : null}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link to={adminPath('products/new')}>
@@ -319,6 +377,79 @@ export function AdminDashboardPage() {
           </Link>
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:flex-wrap sm:items-end">
+          <div className="min-w-0 flex-1">
+            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+              {t.admin.dateRange}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {presets.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    setPreset(p.id);
+                    if (p.id === 'custom' && !customFrom) {
+                      const to = toDateInputValue(new Date());
+                      const fromDate = new Date();
+                      fromDate.setDate(fromDate.getDate() - 6);
+                      const from = toDateInputValue(fromDate);
+                      setCustomFrom(from);
+                      setCustomTo(to);
+                      setAppliedCustom({ from, to });
+                    }
+                  }}
+                  className={cn(
+                    'rounded-lg border px-3 py-1.5 text-sm font-semibold transition',
+                    preset === p.id
+                      ? 'border-accent bg-accent text-white'
+                      : 'border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground',
+                  )}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {preset === 'custom' ? (
+            <div className="flex flex-wrap items-end gap-2">
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                  {t.admin.rangeFrom}
+                </label>
+                <Input
+                  type="date"
+                  value={customFrom}
+                  onChange={(e) => setCustomFrom(e.target.value)}
+                  className="h-9 w-[10.5rem]"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                  {t.admin.rangeTo}
+                </label>
+                <Input
+                  type="date"
+                  value={customTo}
+                  onChange={(e) => setCustomTo(e.target.value)}
+                  className="h-9 w-[10.5rem]"
+                />
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                className="h-9"
+                onClick={() => setAppliedCustom({ from: customFrom, to: customTo || customFrom })}
+                disabled={!customFrom}
+              >
+                {t.admin.applyRange}
+              </Button>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       {overview.isLoading ? <LoadingState variant="dashboard" /> : null}
       {overview.isError ? (
@@ -351,7 +482,9 @@ export function AdminDashboardPage() {
         <Card className="xl:col-span-3">
           <CardHeader>
             <CardTitle>{t.admin.revenueTrend}</CardTitle>
-            <CardDescription>{t.admin.revenueTrendSub}</CardDescription>
+            <CardDescription>
+              {rangeLabel ?? t.admin.revenueTrendSub}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {trend.isLoading ? <LoadingState variant="chart" /> : null}
@@ -805,7 +938,10 @@ export function AdminProductFormPage() {
       const hasPrimary = Boolean(existing.data?.images?.some((img) => img.isPrimary));
       for (let i = 0; i < files.length; i += 1) {
         const file = files[i];
-        const { data: media } = await mediaApi.upload(file, file.name);
+        const { data: media } = await mediaApi.upload(file, {
+          alt: existing.data?.name || file.name,
+          folder: 'products/images',
+        });
         await catalogApi.addProductImage(id, {
           url: media.url,
           alt: existing.data?.name || file.name,
@@ -826,7 +962,9 @@ export function AdminProductFormPage() {
     setUploading(true);
     try {
       for (const file of Array.from(files)) {
-        const { data: media } = await mediaApi.upload(file);
+        const { data: media } = await mediaApi.upload(file, {
+          folder: 'products/documents',
+        });
         await catalogApi.addProductDocument(id, {
           name: file.name,
           url: media.url,
@@ -2406,6 +2544,8 @@ export function AdminSettingsPage() {
         </Button>
       </form>
 
+      <StorageStatusCard />
+
       <Button
         variant="secondary"
         onClick={() =>
@@ -2417,6 +2557,57 @@ export function AdminSettingsPage() {
       >
         {t.admin.validateSession}
       </Button>
+    </div>
+  );
+}
+
+function StorageStatusCard() {
+  const { t, locale } = useI18n();
+  const storage = useQuery({
+    queryKey: ['media-storage-status'],
+    queryFn: async () => (await mediaApi.storageStatus()).data,
+  });
+
+  return (
+    <div className="surface max-w-lg space-y-3 p-4">
+      <h2 className="text-lg font-bold text-fg">{t.admin.storageTitle}</h2>
+      <p className="text-sm text-muted">{t.admin.storageHint}</p>
+      {storage.isLoading ? <LoadingState /> : null}
+      {storage.data ? (
+        <dl className="space-y-2 text-sm">
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted">{t.admin.storageBackend}</dt>
+            <dd className="font-semibold text-fg">
+              {storage.data.configured
+                ? storage.data.backend
+                : t.admin.storageLocal}
+            </dd>
+          </div>
+          {storage.data.configured ? (
+            <>
+              <div className="flex justify-between gap-3">
+                <dt className="text-muted">{t.admin.storageBucket}</dt>
+                <dd className="font-mono text-xs text-fg">{storage.data.bucket || '—'}</dd>
+              </div>
+              <div className="flex flex-col gap-1">
+                <dt className="text-muted">{t.admin.storagePublicUrl}</dt>
+                <dd className="break-all font-mono text-xs text-accent">
+                  {storage.data.publicBaseUrl || '—'}
+                </dd>
+              </div>
+              <p className="text-xs font-semibold text-emerald-600">
+                {t.admin.storageConfigured}
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-amber-700 dark:text-amber-400">
+              {locale === 'ar'
+                ? 'عبّئ R2_* داخل apps/api/.env ثم أعد تشغيل الـ API.'
+                : 'Fill R2_* in apps/api/.env then restart the API.'}
+            </p>
+          )}
+        </dl>
+      ) : null}
     </div>
   );
 }

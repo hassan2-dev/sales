@@ -16,6 +16,7 @@ import { useTheme } from '@/stores/theme-context';
 import { useAuth } from '@/stores/auth-context';
 import { useFavorites } from '@/stores/favorites-context';
 import { useI18n } from '@/i18n/i18n-context';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
 import { SITE_URL, storePath } from '@/lib/urls';
 import { Logo } from '@/components/Logo';
 import { MobileNavPanel } from '@/components/MobileNavPanel';
@@ -35,6 +36,7 @@ export function StoreLayout() {
   const { ids: favIds } = useFavorites();
   const { count: compareCount } = useCompare();
   const { locale, toggleLocale, dir, t } = useI18n();
+  const commerce = useCommerceSettings();
 
   const location = useLocation();
 
@@ -161,6 +163,42 @@ export function StoreLayout() {
           </form>
 
           <div className="ms-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+            {commerce.enableIqdDisplay ? (
+              <button
+                type="button"
+                onClick={commerce.toggleDisplayCurrency}
+                className={cn(
+                  iconBtn,
+                  'h-9 min-w-9 gap-0.5 px-1.5 text-[10px] font-extrabold tabular-nums sm:h-10 sm:min-w-10 sm:px-2 sm:text-[11px]',
+                )}
+                aria-label={
+                  commerce.displayCurrency === 'USD'
+                    ? t.currencyToggle.switchToIqd
+                    : t.currencyToggle.switchToUsd
+                }
+                title={
+                  commerce.displayCurrency === 'USD'
+                    ? t.currencyToggle.switchToIqd
+                    : t.currencyToggle.switchToUsd
+                }
+              >
+                <span
+                  className={cn(
+                    commerce.displayCurrency === 'USD' ? 'text-accent' : 'opacity-45',
+                  )}
+                >
+                  $
+                </span>
+                <span className="opacity-30">/</span>
+                <span
+                  className={cn(
+                    commerce.displayCurrency === 'IQD' ? 'text-accent' : 'opacity-45',
+                  )}
+                >
+                  د.ع
+                </span>
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={toggleLocale}

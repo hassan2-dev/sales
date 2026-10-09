@@ -85,9 +85,24 @@ R2_REGION=auto
 1. Cloudflare Dashboard → **R2** → create bucket  
 2. **Manage R2 API Tokens** → create Access Key ID + Secret  
 3. Enable a **public bucket URL** or attach a custom domain → put that in `R2_PUBLIC_URL`  
-4. Restart the API — logs should show: `Storage configured for Cloudflare R2`
+4. Restart the API — logs should show: `Storage ready: Cloudflare R2`
 
-If `R2_ACCOUNT_ID` is empty, the API falls back to `S3_*` (MinIO/AWS) or local `./uploads`.
+If R2 keys are empty, the API falls back to `S3_*` (MinIO/AWS) or local `./uploads`.
+
+### Folder layout (professional prefixes)
+
+| Folder | Use |
+|--------|-----|
+| `products/images/` | Product gallery photos |
+| `products/documents/` | Datasheets / PDFs |
+| `brands/logos/` | Brand logos |
+| `cms/media/` | CMS / marketing assets |
+| `users/avatars/` | User avatars |
+| `misc/` | Everything else |
+
+Object keys: `{folder}/{yyyy}/{mm}/{uuid}-{filename}`  
+Example: `products/images/2026/10/a1b2-pump.jpg`  
+Check live status: `GET /api/media/storage` (auth + `media:read`).
 
 ## Database migrations
 

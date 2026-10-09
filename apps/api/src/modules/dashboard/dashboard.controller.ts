@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import { DashboardService } from './dashboard.service.js';
+import { DashboardRangeDto } from './dto/dashboard.dto.js';
 
 @ApiTags('dashboard')
 @ApiBearerAuth()
@@ -11,25 +12,25 @@ export class DashboardController {
 
   @RequirePermissions('dashboard:read')
   @Get('overview')
-  overview() {
-    return this.dashboardService.getOverview();
+  overview(@Query() query: DashboardRangeDto) {
+    return this.dashboardService.getOverview(query);
   }
 
   @RequirePermissions('dashboard:read')
   @Get('sales')
-  sales() {
-    return this.dashboardService.getSales();
+  sales(@Query() query: DashboardRangeDto) {
+    return this.dashboardService.getSales(query);
   }
 
   @RequirePermissions('dashboard:read')
   @Get('sales-trend')
-  salesTrend(@Query('days') days?: string) {
-    return this.dashboardService.getSalesTrend(days ? Number(days) : 30);
+  salesTrend(@Query() query: DashboardRangeDto) {
+    return this.dashboardService.getSalesTrend(query);
   }
 
   @RequirePermissions('dashboard:read')
   @Get('orders')
-  orders() {
-    return this.dashboardService.getOrderStats();
+  orders(@Query() query: DashboardRangeDto) {
+    return this.dashboardService.getOrderStats(query);
   }
 }

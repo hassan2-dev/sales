@@ -12,13 +12,19 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { MediaService } from './media.service.js';
-import { MediaQueryDto } from './dto/media.dto.js';
+import { MediaQueryDto, MediaUploadQueryDto } from './dto/media.dto.js';
 import { RequirePermissions } from '../../common/decorators/auth.decorators.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 
 @Controller('media')
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
+
+  @RequirePermissions('media:read')
+  @Get('storage')
+  storageStatus() {
+    return this.mediaService.storageStatus();
+  }
 
   @RequirePermissions('media:create')
   @Post('upload')
@@ -31,9 +37,9 @@ export class MediaController {
   upload(
     @UploadedFile() file: Express.Multer.File,
     @CurrentUser('id') userId?: string,
-    @Query('alt') alt?: string,
+    @Query() query?: MediaUploadQueryDto,
   ) {
-    return this.mediaService.upload(file, userId, alt);
+    return this.mediaService.upload(file, userId, query?.alt, query?.folder);
   }
 
   @RequirePermissions('media:read')

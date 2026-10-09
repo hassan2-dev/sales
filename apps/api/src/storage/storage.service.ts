@@ -2,22 +2,42 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   DeleteObjectCommand,
+  HeadBucketCommand,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { randomUUID } from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
+import {
+  STORAGE_FOLDERS,
+  resolveStorageFolder,
+  type StorageFolder,
+} from './storage.folders.js';
+
+export interface UploadOptions {
+  folder?: StorageFolder | string | null;
+}
 
 export interface UploadResult {
   url: string;
   storageKey: string;
   size: number;
+  folder: StorageFolder;
+}
+
+export interface StorageStatus {
+  backend: 'Cloudflare R2' | 'S3-compatible' | 'local';
+  configured: boolean;
+  bucket: string | null;
+  publicBaseUrl: string | null;
+  folders: StorageFolder[];
 }
 
 /**
  * Media object storage.
  * Prefers Cloudflare R2, then generic S3/MinIO, else local ./uploads.
+ * Objects are partitioned by folder for a clean CDN layout.
  */
 @Injectable()
 export class StorageService implements OnModuleInit {
@@ -27,7 +47,7 @@ export class StorageService implements OnModuleInit {
   private bucket: string | null = null;
   private publicBaseUrl: string | null = null;
   private useRemote = false;
-  private backendLabel = 'local';
+  private backendLabel: StorageStatus['backend'] = 'local';
 
   constructor(private readonly configService: ConfigService) {}
 
@@ -56,8 +76,8 @@ export class StorageService implements OnModuleInit {
 
     if (!bucket || !accessKey || !secretKey) {
       await fs.mkdir(this.localUploadDir, { recursive: true });
-      this.logger.log(
-        `Object storage not configured — using local uploads at ${this.localUploadDir}`,
+      this.logger.warn(
+        'R2/S3 not configured — using local ./uploads. Set R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, R2_PUBLIC_URL',
       );
       return;
     }
@@ -86,9 +106,28 @@ export class StorageService implements OnModuleInit {
 
     this.useRemote = true;
     this.backendLabel = isR2 ? 'Cloudflare R2' : 'S3-compatible';
-    this.logger.log(
-      `Storage configured for ${this.backendLabel} (bucket: ${this.bucket})`,
-    );
+
+    try {
+      await this.s3Client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      this.logger.log(
+        `Storage ready: ${this.backendLabel} · bucket=${this.bucket} · public=${this.publicBaseUrl}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Storage credentials loaded but bucket check failed (${this.backendLabel}/${this.bucket}). Uploads may fail.`,
+        error instanceof Error ? error.message : error,
+      );
+    }
+  }
+
+  getStatus(): StorageStatus {
+    return {
+      backend: this.useRemote ? this.backendLabel : 'local',
+      configured: this.useRemote,
+      bucket: this.bucket,
+      publicBaseUrl: this.publicBaseUrl,
+      folders: [...STORAGE_FOLDERS],
+    };
   }
 
   get backend(): string {
@@ -99,9 +138,14 @@ export class StorageService implements OnModuleInit {
     buffer: Buffer,
     filename: string,
     mimeType: string,
+    options: UploadOptions = {},
   ): Promise<UploadResult> {
-    const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const storageKey = `${new Date().toISOString().slice(0, 10)}/${randomUUID()}-${safeName}`;
+    const folder = resolveStorageFolder(options.folder, mimeType);
+    const safeName = this.sanitizeFilename(filename);
+    const now = new Date();
+    const yyyy = String(now.getUTCFullYear());
+    const mm = String(now.getUTCMonth() + 1).padStart(2, '0');
+    const storageKey = `${folder}/${yyyy}/${mm}/${randomUUID()}-${safeName}`;
 
     if (this.useRemote && this.s3Client && this.bucket) {
       await this.s3Client.send(
@@ -109,7 +153,12 @@ export class StorageService implements OnModuleInit {
           Bucket: this.bucket,
           Key: storageKey,
           Body: buffer,
-          ContentType: mimeType,
+          ContentType: mimeType || 'application/octet-stream',
+          CacheControl: 'public, max-age=31536000, immutable',
+          Metadata: {
+            folder,
+            original: safeName.slice(0, 180),
+          },
         }),
       );
 
@@ -117,6 +166,7 @@ export class StorageService implements OnModuleInit {
         url: `${this.publicBaseUrl!.replace(/\/$/, '')}/${storageKey}`,
         storageKey,
         size: buffer.length,
+        folder,
       };
     }
 
@@ -131,13 +181,12 @@ export class StorageService implements OnModuleInit {
       url: `${baseUrl.replace(/\/$/, '')}/uploads/${storageKey}`,
       storageKey,
       size: buffer.length,
+      folder,
     };
   }
 
   async delete(storageKey: string): Promise<void> {
-    if (!storageKey) {
-      return;
-    }
+    if (!storageKey) return;
 
     if (this.useRemote && this.s3Client && this.bucket) {
       await this.s3Client.send(
@@ -154,9 +203,12 @@ export class StorageService implements OnModuleInit {
       await fs.unlink(absolutePath);
     } catch (error) {
       const err = error as NodeJS.ErrnoException;
-      if (err.code !== 'ENOENT') {
-        throw error;
-      }
+      if (err.code !== 'ENOENT') throw error;
     }
+  }
+
+  private sanitizeFilename(filename: string) {
+    const base = path.basename(filename || 'file').replace(/[^a-zA-Z0-9._-]/g, '_');
+    return base.length > 120 ? base.slice(-120) : base || 'file';
   }
 }

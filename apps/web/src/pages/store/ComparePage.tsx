@@ -9,11 +9,13 @@ import { useCompare } from '@/stores/compare-context';
 import { useCart } from '@/stores/cart-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
-import { formatMoney } from '@/lib/cn';
+import { useCommerceSettings } from '@/stores/commerce-settings-context';
 import type { Product } from '@/types';
 
 export function ComparePage() {
   const { locale } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const commerce = useCommerceSettings();
   const navigate = useNavigate();
   const { ids, remove, clear } = useCompare();
   const { addItem } = useCart();
@@ -58,7 +60,8 @@ export function ComparePage() {
     {
       key: 'price',
       label: locale === 'ar' ? 'السعر' : 'Price',
-      render: (p: Product) => formatMoney(p.price, p.currency),
+      render: (p: Product) =>
+        commerce.formatDisplayPrice(p.price, p.currency, moneyLocale),
     },
     {
       key: 'stock',
