@@ -7,7 +7,7 @@ const LOGO_SRC =
 
 const COVER_MS = 420;
 const HOLD_MS = 280;
-const REVEAL_MS = 480;
+const REVEAL_MS = 560; // slightly longer than curtain-rise so it finishes upward before unmount
 
 type Phase = 'idle' | 'covering' | 'holding' | 'revealing';
 

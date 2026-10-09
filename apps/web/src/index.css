@@ -83,27 +83,29 @@
   }
 }
 
+/* Enter: from above the viewport */
 @keyframes curtain-drop {
   from {
-    transform: translate3d(0, -101%, 0);
+    transform: translate3d(0, -110vh, 0);
   }
   to {
     transform: translate3d(0, 0, 0);
   }
 }
 
-/* Retract the same way it entered — slide back up off-screen */
-@keyframes curtain-exit {
+/* Exit: rise back UP — never slide down */
+@keyframes curtain-rise {
   from {
     transform: translate3d(0, 0, 0);
   }
   to {
-    transform: translate3d(0, -101%, 0);
+    transform: translate3d(0, -110vh, 0);
   }
 }
 
 .page-curtain {
   will-change: transform;
+  backface-visibility: hidden;
 }
 
 .page-curtain.is-covering {
@@ -117,7 +119,7 @@
 
 .page-curtain.is-revealing {
   transform: translate3d(0, 0, 0);
-  animation: curtain-exit 480ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
+  animation: curtain-rise 520ms cubic-bezier(0.76, 0, 0.24, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {

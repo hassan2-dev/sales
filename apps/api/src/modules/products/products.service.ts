@@ -437,6 +437,26 @@ export class ProductsService {
     return { success: true };
   }
 
+  async setPrimaryImage(productId: string, imageId: string) {
+    const image = await this.prisma.productImage.findFirst({
+      where: { id: imageId, productId },
+    });
+    if (!image) throw new NotFoundException('Image not found');
+
+    await this.prisma.$transaction([
+      this.prisma.productImage.updateMany({
+        where: { productId },
+        data: { isPrimary: false },
+      }),
+      this.prisma.productImage.update({
+        where: { id: imageId },
+        data: { isPrimary: true },
+      }),
+    ]);
+
+    return this.findOne(productId);
+  }
+
   async addDocument(
     productId: string,
     data: { name: string; url: string; mimeType?: string; size?: number },

@@ -83,13 +83,6 @@ export function CommerceSettingsProvider({ children }: { children: ReactNode }) 
   const rate = Number(query.data?.usdToIqdRate ?? defaults.usdToIqdRate) || defaults.usdToIqdRate;
   const enableIqdDisplay = query.data?.enableIqdDisplay ?? defaults.enableIqdDisplay;
 
-  // If admin disabled IQD display, force USD
-  useEffect(() => {
-    if (!enableIqdDisplay && displayCurrency === 'IQD') {
-      setDisplayCurrencyState('USD');
-    }
-  }, [enableIqdDisplay, displayCurrency]);
-
   const setDisplayCurrency = useCallback((c: DisplayCurrency) => {
     setDisplayCurrencyState(c);
   }, []);
@@ -146,7 +139,7 @@ export function CommerceSettingsProvider({ children }: { children: ReactNode }) 
     () => ({
       usdToIqdRate: rate,
       enableIqdDisplay,
-      displayCurrency: enableIqdDisplay ? displayCurrency : 'USD',
+      displayCurrency,
       toggleDisplayCurrency,
       setDisplayCurrency,
       formatDisplayPrice,

@@ -82,6 +82,13 @@ export class ProductsController {
 
   @ApiBearerAuth()
   @RequirePermissions('products:update')
+  @Patch(':id/images/:imageId/primary')
+  setPrimaryImage(@Param('id') id: string, @Param('imageId') imageId: string) {
+    return this.productsService.setPrimaryImage(id, imageId);
+  }
+
+  @ApiBearerAuth()
+  @RequirePermissions('products:update')
   @Delete(':id/images/:imageId')
   removeImage(@Param('id') id: string, @Param('imageId') imageId: string) {
     return this.productsService.removeImage(id, imageId);

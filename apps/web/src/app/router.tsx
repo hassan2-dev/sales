@@ -45,7 +45,6 @@ import {
   AdminLoginPage,
   AdminDashboardPage,
   AdminProductsPage,
-  AdminProductFormPage,
   AdminCategoriesPage,
   AdminOrdersPage,
   AdminOrderDetailPage,
@@ -64,6 +63,7 @@ import {
   AdminAuditPage,
   AdminSettingsPage,
 } from '@/pages/admin/AdminPages';
+import { AdminProductFormPage } from '@/pages/admin/AdminProductFormPage';
 
 function ServiceDetailRoute() {
   const { slug = '' } = useParams();

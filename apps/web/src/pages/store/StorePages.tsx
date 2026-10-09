@@ -27,6 +27,11 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ProductCard } from '@/components/ProductCard';
 import { AvailabilityBadge } from '@/components/store/StoreUI';
+import {
+  CategoryCatalog,
+  CategoryChildrenGrid,
+  CategoryHero,
+} from '@/components/store/CategoryDirectory';
 import { catalogApi, ordersApi } from '@/services/endpoints';
 import { useCart } from '@/stores/cart-context';
 import { useAuth } from '@/stores/auth-context';
@@ -505,90 +510,28 @@ export function StoreCategoriesPage() {
   return (
     <>
       <Seo title={locale === 'ar' ? 'الأقسام' : 'Categories'} path={storePath('categories')} />
-      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
-            {locale === 'ar' ? 'مجموعات الأقسام' : 'Category groups'}
+      <div className="border-b border-border bg-navy text-white">
+        <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 sm:py-14 lg:px-10">
+          <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-accent-soft">
+            {locale === 'ar' ? 'دليل المتجر' : 'Store directory'}
+          </p>
+          <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+            {locale === 'ar' ? 'كتالوج الأقسام' : 'Category catalog'}
           </h1>
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/65 sm:text-base">
             {locale === 'ar'
-              ? 'كروبات رئيسية وتحتها أقسام المنتجات'
-              : 'Main groups with product sections inside'}
+              ? 'مجموعات صناعية واضحة — افتح المجموعة ثم اختر القسم المناسب لمنتجاتك.'
+              : 'Clear industrial groups — open a group, then choose the section that fits.'}
           </p>
         </div>
+      </div>
 
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
         {categories.isLoading ? <LoadingState variant="cards" /> : null}
         {categories.isError ? <ErrorState onRetry={() => void categories.refetch()} /> : null}
-
-        <div className="space-y-8">
-          {(categories.data ?? []).map((group, i) => (
-            <section key={group.id} className="store-surface overflow-hidden">
-              <Link
-                to={storePath(`categories/${group.slug}`)}
-                className="group relative block overflow-hidden"
-              >
-                <div className="relative aspect-[21/9] max-h-48 w-full bg-mist sm:max-h-56">
-                  {group.imageUrl ? (
-                    <img
-                      src={group.imageUrl}
-                      alt={group.name}
-                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center bg-navy/10 text-navy">
-                      <span className="text-sm font-bold">{String(i + 1).padStart(2, '0')}</span>
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-linear-to-t from-navy/85 via-navy/35 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
-                      {locale === 'ar' ? 'مجموعة' : 'Group'}
-                    </p>
-                    <h2 className="mt-1 text-xl font-extrabold text-white sm:text-2xl">
-                      {group.name}
-                    </h2>
-                    {group.description ? (
-                      <p className="mt-1 max-w-2xl text-sm text-white/75">{group.description}</p>
-                    ) : null}
-                  </div>
-                </div>
-              </Link>
-
-              {(group.children?.length ?? 0) > 0 ? (
-                <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {(group.children ?? []).map((child) => (
-                    <Link
-                      key={child.id}
-                      to={storePath(`categories/${child.slug}`)}
-                      className="flex items-center gap-3 rounded-xl border border-border bg-page p-3 transition hover:border-accent/40 hover:shadow-sm"
-                    >
-                      {child.imageUrl ? (
-                        <img
-                          src={child.imageUrl}
-                          alt=""
-                          className="h-14 w-14 shrink-0 rounded-lg object-cover"
-                        />
-                      ) : (
-                        <span className="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent text-xs font-bold">
-                          EH
-                        </span>
-                      )}
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-bold text-fg">{child.name}</p>
-                        {child.description ? (
-                          <p className="mt-0.5 line-clamp-2 text-xs text-muted">
-                            {child.description}
-                          </p>
-                        ) : null}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </section>
-          ))}
-        </div>
-
+        {!categories.isLoading && (categories.data ?? []).length ? (
+          <CategoryCatalog categories={categories.data ?? []} locale={locale} />
+        ) : null}
         {!categories.isLoading && !(categories.data ?? []).length ? (
           <EmptyState title={locale === 'ar' ? 'لا توجد أقسام' : 'No categories yet'} />
         ) : null}
@@ -620,102 +563,70 @@ export function StoreCategoryPage() {
     );
   }
 
+  const productCount =
+    products.data?.meta.total ?? products.data?.data?.length ?? 0;
+  const kids = category.data.children ?? [];
+
   return (
     <>
       <Seo title={category.data.name} path={storePath(`categories/${slug}`)} />
-      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10">
-        <Link
-          to={storePath('categories')}
-          className="text-sm font-semibold text-accent"
-        >
-          {locale === 'ar' ? '← كل الأقسام' : '← All categories'}
-        </Link>
+      <CategoryHero category={category.data} locale={locale} />
 
-        {category.data.imageUrl ? (
-          <div className="mt-5 overflow-hidden rounded-2xl border border-border">
-            <div className="relative aspect-[21/9] max-h-64 w-full sm:max-h-72">
-              <img
-                src={category.data.imageUrl}
-                alt={category.data.name}
-                className="h-full w-full object-cover"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-navy/75 via-navy/20 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-5 sm:p-6">
-                {(category.data.children?.length ?? 0) > 0 ? (
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
-                    {locale === 'ar' ? 'مجموعة أقسام' : 'Category group'}
-                  </p>
-                ) : null}
-                <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
-                  {category.data.name}
-                </h1>
-                {category.data.description ? (
-                  <p className="mt-1 max-w-2xl text-sm text-white/75">
-                    {category.data.description}
-                  </p>
-                ) : null}
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        {kids.length > 0 ? (
+          <section className="mb-12">
+            <div className="mb-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
+                  {locale === 'ar' ? 'داخل المجموعة' : 'Inside this group'}
+                </p>
+                <h2 className="mt-1 text-xl font-extrabold tracking-tight text-fg sm:text-2xl">
+                  {locale === 'ar' ? 'الأقسام' : 'Sections'}
+                </h2>
               </div>
+              <span className="text-xs font-semibold tabular-nums text-muted">
+                {kids.length} {locale === 'ar' ? 'قسم' : 'sections'}
+              </span>
             </div>
-          </div>
-        ) : (
-          <>
-            <h1 className="mt-3 text-2xl font-bold tracking-tight text-fg">
-              {category.data.name}
-            </h1>
-            {category.data.description ? (
-              <p className="mt-1 max-w-2xl text-sm text-muted">{category.data.description}</p>
-            ) : null}
-          </>
-        )}
-
-        {(category.data.children?.length ?? 0) > 0 ? (
-          <div className="mt-8">
-            <h2 className="text-lg font-extrabold text-fg">
-              {locale === 'ar' ? 'الأقسام داخل المجموعة' : 'Sections in this group'}
-            </h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {(category.data.children ?? []).map((child) => (
-                <Link
-                  key={child.id}
-                  to={storePath(`categories/${child.slug}`)}
-                  className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 transition hover:border-accent/40 hover:shadow-sm"
-                >
-                  {child.imageUrl ? (
-                    <img
-                      src={child.imageUrl}
-                      alt=""
-                      className="h-16 w-16 shrink-0 rounded-xl object-cover"
-                    />
-                  ) : null}
-                  <div className="min-w-0">
-                    <p className="truncate font-bold text-fg">{child.name}</p>
-                    {child.description ? (
-                      <p className="mt-0.5 line-clamp-2 text-xs text-muted">
-                        {child.description}
-                      </p>
-                    ) : null}
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+            <CategoryChildrenGrid items={kids} locale={locale} />
+          </section>
         ) : null}
 
-        <p className="mt-8 text-sm font-semibold text-muted">
-          {products.data?.meta.total ?? products.data?.data?.length ?? 0}{' '}
-          {locale === 'ar' ? 'منتج في هذه المجموعة / القسم' : 'products in this group / category'}
-        </p>
-        {products.isLoading ? <LoadingState variant="products" /> : null}
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-          {(products.data?.data ?? []).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-        {!products.isLoading && !(products.data?.data ?? []).length ? (
-          <EmptyState
-            title={locale === 'ar' ? 'لا توجد منتجات في هذا القسم' : 'No products in this category'}
-          />
-        ) : null}
+        <section>
+          <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
+                {locale === 'ar' ? 'المنتجات' : 'Products'}
+              </p>
+              <h2 className="mt-1 text-xl font-extrabold tracking-tight text-fg sm:text-2xl">
+                {kids.length > 0
+                  ? locale === 'ar'
+                    ? 'منتجات المجموعة'
+                    : 'Group products'
+                  : locale === 'ar'
+                    ? 'منتجات القسم'
+                    : 'Section products'}
+              </h2>
+            </div>
+            <p className="text-sm font-semibold tabular-nums text-muted">
+              {productCount}{' '}
+              {locale === 'ar' ? 'منتج' : productCount === 1 ? 'product' : 'products'}
+            </p>
+          </div>
+          {products.isLoading ? <LoadingState variant="products" /> : null}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+            {(products.data?.data ?? []).map((p) => (
+              <ProductCard key={p.id} product={p} />
+            ))}
+          </div>
+          {!products.isLoading && !(products.data?.data ?? []).length ? (
+            <EmptyState
+              title={
+                locale === 'ar' ? 'لا توجد منتجات في هذا القسم' : 'No products in this category'
+              }
+            />
+          ) : null}
+        </section>
       </div>
     </>
   );

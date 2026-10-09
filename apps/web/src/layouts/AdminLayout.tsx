@@ -203,44 +203,38 @@ function SidebarChrome({
   children,
   collapsed,
   onClose,
-  onToggleCollapse,
 }: {
   userLabel: string;
   children: ReactNode;
   collapsed?: boolean;
   onClose?: () => void;
-  onToggleCollapse?: () => void;
 }) {
   const { t } = useI18n();
 
   return (
     <>
       <div className="border-b border-sidebar-border px-3 py-4">
-        <div className={cn('flex items-start gap-2', collapsed ? 'justify-center' : 'justify-between')}>
-          {!collapsed ? <Logo to={adminPath()} imgClassName="h-9 max-w-[140px]" /> : null}
-          <div className="flex items-center gap-1">
-            {onToggleCollapse ? (
-              <button
-                type="button"
-                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-sidebar-muted transition hover:bg-sidebar-hover hover:text-sidebar-fg"
-                onClick={onToggleCollapse}
-                aria-label={collapsed ? t.admin.expandSidebar : t.admin.collapseSidebar}
-                title={collapsed ? t.admin.expandSidebar : t.admin.collapseSidebar}
-              >
-                {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-              </button>
-            ) : null}
-            {onClose ? (
-              <button
-                type="button"
-                className="inline-flex h-8 w-8 items-center justify-center text-sidebar-muted"
-                onClick={onClose}
-                aria-label={t.admin.close}
-              >
-                <X className="h-5 w-5" />
-              </button>
-            ) : null}
-          </div>
+        <div
+          className={cn(
+            'flex items-start gap-2',
+            collapsed ? 'justify-center' : 'justify-between',
+          )}
+        >
+          {!collapsed || onClose ? (
+            <Logo to={adminPath()} imgClassName="h-9 max-w-[min(140px,100%)]" />
+          ) : (
+            <Logo to={adminPath()} imgClassName="h-8 max-w-[40px] object-contain object-center" />
+          )}
+          {onClose ? (
+            <button
+              type="button"
+              className="inline-flex h-8 w-8 shrink-0 items-center justify-center text-sidebar-muted"
+              onClick={onClose}
+              aria-label={t.admin.close}
+            >
+              <X className="h-5 w-5" />
+            </button>
+          ) : null}
         </div>
         {!collapsed ? (
           <>
@@ -296,18 +290,14 @@ export function AdminLayout() {
           collapsed ? 'w-[72px]' : 'w-64',
         )}
       >
-        <SidebarChrome
-          userLabel={userLabel}
-          collapsed={collapsed}
-          onToggleCollapse={() => setCollapsed((v) => !v)}
-        >
+        <SidebarChrome userLabel={userLabel} collapsed={collapsed}>
           <SidebarNav collapsed={collapsed} />
         </SidebarChrome>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col admin-shell">
-        <header className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-border bg-card/90 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <header className="sticky top-0 z-30 flex min-w-0 items-center justify-between gap-2 border-b border-border bg-card/90 px-3 py-2.5 pt-[max(0.625rem,env(safe-area-inset-top))] backdrop-blur-md sm:gap-3 sm:px-4 sm:py-3">
+          <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
             <button
               type="button"
               className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
@@ -318,8 +308,9 @@ export function AdminLayout() {
             </button>
             <button
               type="button"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-border text-foreground lg:inline-flex"
+              className="hidden h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-border text-foreground lg:inline-flex"
               aria-label={collapsed ? t.admin.expandSidebar : t.admin.collapseSidebar}
+              title={collapsed ? t.admin.expandSidebar : t.admin.collapseSidebar}
               onClick={() => setCollapsed((v) => !v)}
             >
               {collapsed ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
@@ -327,9 +318,9 @@ export function AdminLayout() {
             <Logo
               to={adminPath()}
               className="min-w-0 shrink lg:hidden"
-              imgClassName="h-7 max-w-[120px] sm:h-8 sm:max-w-[140px]"
+              imgClassName="h-7 max-w-[110px] sm:h-8 sm:max-w-[140px]"
             />
-            <div className="hidden min-w-0 sm:block">
+            <div className="hidden min-w-0 lg:block">
               <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
                 {locale === 'ar' ? 'افاق الطاقة · Energy Horizon' : 'Energy Horizon · افاق الطاقة'}
               </p>
@@ -347,7 +338,7 @@ export function AdminLayout() {
             <button
               type="button"
               onClick={toggleTheme}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition hover:border-primary hover:text-primary sm:w-auto sm:gap-2 sm:px-3"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-foreground transition hover:border-primary hover:text-primary"
               aria-label={theme === 'light' ? t.theme.dark : t.theme.light}
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
@@ -396,8 +387,10 @@ export function AdminLayout() {
           </aside>
         </div>
 
-        <div className="min-w-0 flex-1 overflow-x-clip p-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4 lg:p-8">
-          <Outlet />
+        <div className="min-w-0 flex-1 overflow-x-clip p-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4 md:p-5 lg:p-6 xl:p-8">
+          <div className="mx-auto w-full min-w-0 max-w-[1600px]">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

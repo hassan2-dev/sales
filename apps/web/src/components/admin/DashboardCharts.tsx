@@ -13,6 +13,7 @@ import {
 import { useTheme } from '@/stores/theme-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { formatMoney } from '@/lib/cn';
+import { usdToIqd, type DisplayCurrency } from '@/stores/commerce-settings-context';
 
 const STATUS_COLORS = [
   '#0070c0',
@@ -33,11 +34,13 @@ function ChartTooltip({
   payload,
   label,
   money,
+  currency = 'USD',
 }: {
   active?: boolean;
   payload?: { value?: number; name?: string }[];
   label?: string;
   money?: boolean;
+  currency?: 'USD' | 'IQD';
 }) {
   const { locale } = useI18n();
   if (!active || !payload?.length) return null;
@@ -46,20 +49,32 @@ function ChartTooltip({
     <div className="border border-line bg-elevated px-3 py-2 text-xs shadow-lg">
       <p className="text-muted">{label}</p>
       <p className="mt-1 font-kpi text-fg">
-        {money ? formatMoney(value, 'USD', locale === 'ar' ? 'ar-IQ' : 'en-US') : value}
+        {money
+          ? formatMoney(value, currency, locale === 'ar' ? 'ar-IQ' : 'en-US')
+          : value}
       </p>
     </div>
   );
 }
 
-export function RevenueTrendChart({ data }: { data: TrendPoint[] }) {
+export function RevenueTrendChart({
+  data,
+  displayCurrency = 'USD',
+  usdToIqdRate = 1310,
+}: {
+  data: TrendPoint[];
+  displayCurrency?: DisplayCurrency;
+  usdToIqdRate?: number;
+}) {
   const { theme } = useTheme();
   const { locale } = useI18n();
   const axis = theme === 'dark' ? '#9a9a9a' : '#5c6670';
   const grid = theme === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const asIqd = displayCurrency === 'IQD';
 
   const series = data.map((d) => ({
     ...d,
+    revenue: asIqd ? usdToIqd(d.revenue, usdToIqdRate) : d.revenue,
     label: new Date(d.date).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB', {
       month: 'short',
       day: 'numeric',
@@ -92,7 +107,7 @@ export function RevenueTrendChart({ data }: { data: TrendPoint[] }) {
             width={48}
             tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : String(v))}
           />
-          <Tooltip content={<ChartTooltip money />} />
+          <Tooltip content={<ChartTooltip money currency={asIqd ? 'IQD' : 'USD'} />} />
           <Area
             type="monotone"
             dataKey="revenue"

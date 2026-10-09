@@ -4,73 +4,24 @@ import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft,
   ArrowRight,
-  Bolt,
-  Box,
-  Cable,
-  CircuitBoard,
-  Cog,
-  Factory,
-  Flame,
-  Gauge,
-  HardHat,
   Headphones,
-  Layers,
-  Package,
   Percent,
   Search,
   ShieldCheck,
   Truck,
-  Wrench,
-  type LucideIcon,
 } from 'lucide-react';
 import { Seo } from '@/lib/seo';
 import { LoadingState, EmptyState } from '@/components/ui/States';
 import { ProductCard } from '@/components/ProductCard';
 import { SectionHead } from '@/components/store/StoreUI';
+import { CategoryHomeShowcase } from '@/components/store/CategoryDirectory';
 import { catalogApi } from '@/services/endpoints';
 import { useI18n } from '@/i18n/i18n-context';
 import { storePath } from '@/lib/urls';
-import { cn } from '@/lib/cn';
 
 /** Industrial sunset / refinery — matches mockup energy */
 const HERO_BG =
   'https://images.unsplash.com/photo-1513828583688-c52646db42da?auto=format&fit=crop&w=2400&q=80';
-
-const CAT_ICONS: LucideIcon[] = [
-  Wrench,
-  Bolt,
-  Gauge,
-  Cable,
-  CircuitBoard,
-  Cog,
-  Flame,
-  HardHat,
-  Factory,
-  Layers,
-  Box,
-  Package,
-];
-
-const CAT_TONES = [
-  'bg-[#e8f3fb] text-[#0070c0]',
-  'bg-[#eef2f7] text-[#0b1f3a]',
-  'bg-[#e8f6f2] text-[#0f766e]',
-  'bg-[#f0f4f8] text-[#334155]',
-  'bg-[#eef6ff] text-[#0369a1]',
-  'bg-[#f5f7fa] text-[#475569]',
-];
-
-function pickIcon(slug: string, index: number): LucideIcon {
-  const s = slug.toLowerCase();
-  if (s.includes('cable') || s.includes('wire')) return Cable;
-  if (s.includes('pump') || s.includes('valve')) return Gauge;
-  if (s.includes('electr') || s.includes('power')) return Bolt;
-  if (s.includes('tool') || s.includes('wrench')) return Wrench;
-  if (s.includes('safe') || s.includes('ppe')) return HardHat;
-  if (s.includes('fire')) return Flame;
-  if (s.includes('indust') || s.includes('factory')) return Factory;
-  return CAT_ICONS[index % CAT_ICONS.length];
-}
 
 export function StoreHomePage() {
   const { locale } = useI18n();
@@ -245,85 +196,26 @@ export function StoreHomePage() {
       <div className="mx-auto w-full max-w-[90rem] space-y-16 px-4 py-12 sm:px-6 lg:px-10 lg:py-16">
         <section>
           <SectionHead
-            title={locale === 'ar' ? 'مجموعات الأقسام' : 'Category groups'}
+            title={locale === 'ar' ? 'كتالوج الأقسام' : 'Category catalog'}
             subtitle={
               locale === 'ar'
-                ? 'كروبات رئيسية وتحتها أقسام المنتجات'
-                : 'Main groups with product sections inside'
+                ? 'مجموعات صناعية مرتّبة — اختر المجموعة ثم القسم المناسب'
+                : 'Industrial groups, organized — pick a group, then the right section'
             }
             action={
               <Link
                 to={storePath('categories')}
                 className="inline-flex items-center gap-1 text-sm font-bold text-accent hover:text-accent-soft"
               >
-                {locale === 'ar' ? 'عرض الكل' : 'View all'}
+                {locale === 'ar' ? 'الدليل الكامل' : 'Full directory'}
                 <Arrow className="h-3.5 w-3.5" />
               </Link>
             }
           />
           {categories.isLoading ? <LoadingState variant="cards" /> : null}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {cats.map((c, i) => {
-              const Icon = pickIcon(c.slug, i);
-              const tone = CAT_TONES[i % CAT_TONES.length];
-              const childCount = c.children?.length ?? 0;
-              return (
-                <Link
-                  key={c.id}
-                  to={storePath(`categories/${c.slug}`)}
-                  className="store-cat group overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition duration-300 hover:-translate-y-1 hover:border-accent/40 hover:shadow-lg"
-                  style={{ animationDelay: `${Math.min(i, 10) * 40}ms` }}
-                >
-                  <div
-                    className={cn(
-                      'relative aspect-5/4 overflow-hidden',
-                      !c.imageUrl && tone,
-                    )}
-                  >
-                    {c.imageUrl ? (
-                      <img
-                        src={c.imageUrl}
-                        alt={c.name}
-                        className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full items-center justify-center">
-                        <Icon className="h-10 w-10" />
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-linear-to-t from-navy/85 via-navy/20 to-transparent" />
-                    <div className="absolute inset-x-0 bottom-0 p-4">
-                      <p className="text-[11px] font-bold uppercase tracking-wide text-accent-soft">
-                        {locale === 'ar' ? 'مجموعة' : 'Group'}
-                        {childCount
-                          ? ` · ${childCount} ${locale === 'ar' ? 'أقسام' : 'sections'}`
-                          : ''}
-                      </p>
-                      <p className="mt-1 text-lg font-extrabold text-white">{c.name}</p>
-                      {c.description ? (
-                        <p className="mt-0.5 line-clamp-1 text-xs text-white/75">
-                          {c.description}
-                        </p>
-                      ) : null}
-                      {childCount > 0 ? (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {(c.children ?? []).slice(0, 3).map((ch) => (
-                            <span
-                              key={ch.id}
-                              className="rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm"
-                            >
-                              {ch.name}
-                            </span>
-                          ))}
-                        </div>
-                      ) : null}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+          {!categories.isLoading && cats.length ? (
+            <CategoryHomeShowcase categories={cats} locale={locale} />
+          ) : null}
           {!categories.isLoading && !cats.length ? (
             <EmptyState title={locale === 'ar' ? 'لا توجد أقسام' : 'No categories'} />
           ) : null}

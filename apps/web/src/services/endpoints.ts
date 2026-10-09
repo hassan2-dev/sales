@@ -66,6 +66,8 @@ export const catalogApi = {
     id: string,
     data: { url: string; alt?: string; isPrimary?: boolean; sortOrder?: number },
   ) => api.post(`/products/${id}/images`, data),
+  setPrimaryProductImage: (id: string, imageId: string) =>
+    api.patch(`/products/${id}/images/${imageId}/primary`),
   removeProductImage: (id: string, imageId: string) =>
     api.delete(`/products/${id}/images/${imageId}`),
   addProductDocument: (

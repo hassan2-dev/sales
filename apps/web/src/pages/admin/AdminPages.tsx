@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -28,6 +28,8 @@ import {
   FileText,
   ImageIcon,
   Power,
+  ChevronDown,
+  Check,
   type LucideIcon,
 } from 'lucide-react';
 import { Seo } from '@/lib/seo';
@@ -64,11 +66,11 @@ import {
   settingsApi,
   usersApi,
   auditApi,
-  mediaApi,
 } from '@/services/endpoints';
 import type { CmsService } from '@/types';
 import { cn, formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
+import { usdToIqd, useCommerceSettings } from '@/stores/commerce-settings-context';
 import type { Order, Product, QuoteRequest } from '@/types';
 
 const ORDER_STATUSES = [
@@ -129,7 +131,7 @@ export function AdminLoginPage() {
           onClick={toggleLocale}
           className="inline-flex h-9 min-w-9 items-center justify-center border border-white/20 px-2.5 text-[11px] font-bold tracking-wider text-white/80 transition hover:border-accent hover:text-white"
         >
-          {locale === 'en' ? 'ع' : 'EN'}
+          {locale === 'en' ? 'Ø¹' : 'EN'}
         </button>
         <button
           type="button"
@@ -148,7 +150,7 @@ export function AdminLoginPage() {
           <Logo to="/" className="mb-4" imgClassName="h-12 max-w-[220px] sm:h-14" />
           <h1 className="text-xl font-bold text-fg">{t.admin.brand}</h1>
           <p className="text-sm text-muted">
-            {locale === 'ar' ? 'افاق الطاقة · Energy Horizon' : 'Energy Horizon · افاق الطاقة'}
+            {locale === 'ar' ? 'Ø§ÙØ§Ù‚ Ø§Ù„Ø·Ø§Ù‚Ø© Â· Energy Horizon' : 'Energy Horizon Â· Ø§ÙØ§Ù‚ Ø§Ù„Ø·Ø§Ù‚Ø©'}
           </p>
         </div>
         <Input
@@ -227,11 +229,43 @@ function buildDashboardRange(
 
 export function AdminDashboardPage() {
   const { t, locale } = useI18n();
+  const commerce = useCommerceSettings();
   const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
   const [preset, setPreset] = useState<DashboardPreset>('month');
+  const [rangeOpen, setRangeOpen] = useState(false);
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [appliedCustom, setAppliedCustom] = useState({ from: '', to: '' });
+  const rangeMenuRef = useRef<HTMLDivElement>(null);
+
+  function formatDashMoney(amount: number | string | null | undefined, currency = 'USD') {
+    const n = Number(amount ?? 0);
+    const safe = Number.isFinite(n) ? n : 0;
+    const src = (currency || 'USD').toUpperCase();
+    if (commerce.displayCurrency === 'IQD') {
+      const iqd = src === 'IQD' ? safe : usdToIqd(safe, commerce.usdToIqdRate);
+      return formatMoney(iqd, 'IQD', moneyLocale);
+    }
+    return formatMoney(safe, src === 'IQD' ? 'IQD' : 'USD', moneyLocale);
+  }
+
+  useEffect(() => {
+    if (!rangeOpen) return;
+    function onPointerDown(e: MouseEvent) {
+      if (rangeMenuRef.current && !rangeMenuRef.current.contains(e.target as Node)) {
+        setRangeOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setRangeOpen(false);
+    }
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [rangeOpen]);
 
   const rangeParams = buildDashboardRange(
     preset,
@@ -289,10 +323,9 @@ export function AdminDashboardPage() {
     ? [
         {
           label: preset === 'month' ? t.admin.monthRevenue : t.admin.periodRevenue,
-          value: formatMoney(
+          value: formatDashMoney(
             overview.data.revenue.periodTotal ?? overview.data.revenue.monthTotal,
             overview.data.revenue.currency,
-            moneyLocale,
           ),
           icon: DollarSign,
         },
@@ -320,13 +353,13 @@ export function AdminDashboardPage() {
         {
           label: t.admin.storeVisitors,
           value: overview.data.visitors.store.period ?? overview.data.visitors.store.total,
-          hint: `${overview.data.visitors.store.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
+          hint: `${overview.data.visitors.store.today} ${t.admin.rangeToday}`,
           icon: Store,
         },
         {
           label: t.admin.siteVisitors,
           value: overview.data.visitors.corporate.period ?? overview.data.visitors.corporate.total,
-          hint: `${overview.data.visitors.corporate.today} ${locale === 'ar' ? 'اليوم' : 'today'}`,
+          hint: `${overview.data.visitors.corporate.today} ${t.admin.rangeToday}`,
           icon: Globe,
         },
       ]
@@ -350,27 +383,29 @@ export function AdminDashboardPage() {
     <div className="space-y-8">
       <Seo title={t.admin.overviewTitle} path="/admin" />
 
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight text-foreground sm:text-2xl lg:text-3xl">
             {t.admin.overviewTitle}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {t.admin.overviewSub}
             {rangeLabel ? (
-              <span className="ms-2 font-medium text-foreground tabular-nums">({rangeLabel})</span>
+              <span className="ms-2 inline-block font-medium text-foreground tabular-nums">
+                ({rangeLabel})
+              </span>
             ) : null}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link to={adminPath('products/new')}>
-            <Button className="gap-2">
+          <Link to={adminPath('products/new')} className="min-w-0 flex-1 sm:flex-none">
+            <Button className="w-full gap-2 sm:w-auto">
               <Plus className="h-4 w-4" />
               {t.admin.addProduct}
             </Button>
           </Link>
-          <Link to={adminPath('categories')}>
-            <Button variant="outline" className="gap-2">
+          <Link to={adminPath('categories')} className="min-w-0 flex-1 sm:flex-none">
+            <Button variant="outline" className="w-full gap-2 sm:w-auto">
               <FolderTree className="h-4 w-4" />
               {t.admin.categories}
             </Button>
@@ -378,19 +413,41 @@ export function AdminDashboardPage() {
         </div>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-3 pt-4 sm:flex-row sm:flex-wrap sm:items-end">
-          <div className="min-w-0 flex-1">
-            <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted-foreground">
-              {t.admin.dateRange}
-            </p>
-            <div className="flex flex-wrap gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+        <div className="relative w-full sm:w-auto" ref={rangeMenuRef}>
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            {t.admin.dateRange}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full min-w-0 justify-between gap-2 sm:min-w-[12rem] sm:w-auto"
+            aria-expanded={rangeOpen}
+            aria-haspopup="listbox"
+            onClick={() => setRangeOpen((o) => !o)}
+          >
+            <span className="inline-flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              {presets.find((p) => p.id === preset)?.label ?? t.admin.dateRange}
+            </span>
+            <ChevronDown
+              className={cn('h-4 w-4 text-muted-foreground transition', rangeOpen && 'rotate-180')}
+            />
+          </Button>
+          {rangeOpen ? (
+            <div
+              role="listbox"
+              className="absolute start-0 z-40 mt-1.5 min-w-full overflow-hidden rounded-xl border border-border bg-card py-1 shadow-lg"
+            >
               {presets.map((p) => (
                 <button
                   key={p.id}
                   type="button"
+                  role="option"
+                  aria-selected={preset === p.id}
                   onClick={() => {
                     setPreset(p.id);
+                    setRangeOpen(false);
                     if (p.id === 'custom' && !customFrom) {
                       const to = toDateInputValue(new Date());
                       const fromDate = new Date();
@@ -402,54 +459,94 @@ export function AdminDashboardPage() {
                     }
                   }}
                   className={cn(
-                    'rounded-lg border px-3 py-1.5 text-sm font-semibold transition',
+                    'flex w-full items-center justify-between gap-3 px-3 py-2 text-sm font-semibold transition',
                     preset === p.id
-                      ? 'border-accent bg-accent text-white'
-                      : 'border-border bg-card text-muted-foreground hover:border-accent/40 hover:text-foreground',
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-foreground hover:bg-muted/60',
                   )}
                 >
                   {p.label}
+                  {preset === p.id ? <Check className="h-4 w-4 shrink-0" /> : null}
                 </button>
               ))}
             </div>
-          </div>
-          {preset === 'custom' ? (
-            <div className="flex flex-wrap items-end gap-2">
-              <div>
-                <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
-                  {t.admin.rangeFrom}
-                </label>
-                <Input
-                  type="date"
-                  value={customFrom}
-                  onChange={(e) => setCustomFrom(e.target.value)}
-                  className="h-9 w-[10.5rem]"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
-                  {t.admin.rangeTo}
-                </label>
-                <Input
-                  type="date"
-                  value={customTo}
-                  onChange={(e) => setCustomTo(e.target.value)}
-                  className="h-9 w-[10.5rem]"
-                />
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                className="h-9"
-                onClick={() => setAppliedCustom({ from: customFrom, to: customTo || customFrom })}
-                disabled={!customFrom}
-              >
-                {t.admin.applyRange}
-              </Button>
-            </div>
           ) : null}
-        </CardContent>
-      </Card>
+        </div>
+
+        {preset === 'custom' ? (
+          <div className="flex flex-wrap items-end gap-2">
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                {t.admin.rangeFrom}
+              </label>
+              <Input
+                type="date"
+                value={customFrom}
+                onChange={(e) => setCustomFrom(e.target.value)}
+                className="h-9 w-[10.5rem]"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-[11px] font-bold text-muted-foreground">
+                {t.admin.rangeTo}
+              </label>
+              <Input
+                type="date"
+                value={customTo}
+                onChange={(e) => setCustomTo(e.target.value)}
+                className="h-9 w-[10.5rem]"
+              />
+            </div>
+            <Button
+              type="button"
+              size="sm"
+              className="h-9"
+              onClick={() => setAppliedCustom({ from: customFrom, to: customTo || customFrom })}
+              disabled={!customFrom}
+            >
+              {t.admin.applyRange}
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="w-full sm:w-auto">
+          <p className="mb-1.5 text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            {locale === 'ar' ? 'العملة' : 'Currency'}
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full min-w-0 gap-1.5 font-extrabold tabular-nums sm:w-auto sm:min-w-[7.5rem]"
+            onClick={commerce.toggleDisplayCurrency}
+            aria-label={
+              commerce.displayCurrency === 'USD'
+                ? t.currencyToggle.switchToIqd
+                : t.currencyToggle.switchToUsd
+            }
+            title={
+              commerce.displayCurrency === 'USD'
+                ? t.currencyToggle.switchToIqd
+                : t.currencyToggle.switchToUsd
+            }
+          >
+            <span
+              className={cn(
+                commerce.displayCurrency === 'USD' ? 'text-accent' : 'text-muted-foreground opacity-45',
+              )}
+            >
+              $
+            </span>
+            <span className="text-muted-foreground opacity-30">/</span>
+            <span
+              className={cn(
+                commerce.displayCurrency === 'IQD' ? 'text-accent' : 'text-muted-foreground opacity-45',
+              )}
+            >
+              د.ع
+            </span>
+          </Button>
+        </div>
+      </div>
 
       {overview.isLoading ? <LoadingState variant="dashboard" /> : null}
       {overview.isError ? (
@@ -488,7 +585,13 @@ export function AdminDashboardPage() {
           </CardHeader>
           <CardContent>
             {trend.isLoading ? <LoadingState variant="chart" /> : null}
-            {trend.data?.series ? <RevenueTrendChart data={trend.data.series} /> : null}
+            {trend.data?.series ? (
+              <RevenueTrendChart
+                data={trend.data.series}
+                displayCurrency={commerce.displayCurrency}
+                usdToIqdRate={commerce.usdToIqdRate}
+              />
+            ) : null}
           </CardContent>
         </Card>
 
@@ -523,7 +626,7 @@ export function AdminDashboardPage() {
                 <div>
                   <dt className="text-sm text-muted-foreground">{t.admin.monthRevenue}</dt>
                   <dd className="mt-1 font-kpi text-2xl font-bold">
-                    {formatMoney(sales.data.monthRevenue, sales.data.currency, moneyLocale)}
+                    {formatDashMoney(sales.data.monthRevenue, sales.data.currency)}
                   </dd>
                 </div>
                 <div>
@@ -533,7 +636,7 @@ export function AdminDashboardPage() {
                 <div>
                   <dt className="text-sm text-muted-foreground">{t.admin.completedRevenue}</dt>
                   <dd className="mt-1 font-kpi text-2xl font-bold">
-                    {formatMoney(sales.data.completedRevenue, sales.data.currency, moneyLocale)}
+                    {formatDashMoney(sales.data.completedRevenue, sales.data.currency)}
                   </dd>
                 </div>
               </dl>
@@ -556,14 +659,14 @@ export function AdminDashboardPage() {
                     {o.orderNumber}
                   </Link>
                   <span className="tabular-nums text-muted-foreground">
-                    {formatMoney(o.total, o.currency, moneyLocale)}
+                    {formatDashMoney(o.total, o.currency)}
                   </span>
                 </li>
               ))}
               {(activity.data ?? []).slice(0, 3).map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-muted-foreground">
-                    {a.action} · {a.entity}
+                    {a.action} Â· {a.entity}
                   </span>
                   <span className="text-muted-foreground">
                     {new Date(a.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
@@ -691,7 +794,7 @@ export function AdminProductsPage() {
                       {p.name}
                     </Link>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {p.sku} · {p.category?.name || t.admin.noCategory}
+                      {p.sku} Â· {p.category?.name || t.admin.noCategory}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="font-kpi text-sm font-bold">
@@ -843,384 +946,8 @@ export function AdminProductsPage() {
   );
 }
 
-const productSchema = z.object({
-  name: z.string().min(2),
-  sku: z.string().min(1),
-  price: z.number().min(0),
-  stock: z.number().min(0),
-  shortDescription: z.string().optional(),
-  description: z.string().optional(),
-  status: z.enum(['DRAFT', 'ACTIVE', 'ARCHIVED']),
-  currency: z.string(),
-  categoryId: z.string().optional(),
-});
 
-type ProductForm = z.infer<typeof productSchema>;
-
-export function AdminProductFormPage() {
-  const { t, locale, dir } = useI18n();
-  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
-  const { id } = useParams();
-  const isNew = !id || id === 'new';
-  const navigate = useNavigate();
-  const qc = useQueryClient();
-  const [uploading, setUploading] = useState(false);
-  const existing = useQuery({
-    queryKey: ['admin-product', id],
-    enabled: !isNew,
-    queryFn: async () => (await catalogApi.productById(id!)).data,
-  });
-  const categories = useQuery({
-    queryKey: ['admin-categories'],
-    queryFn: async () => (await catalogApi.categoriesAdmin()).data,
-  });
-
-  const form = useForm<ProductForm>({
-    resolver: zodResolver(productSchema) as never,
-    defaultValues: {
-      name: '',
-      sku: '',
-      price: 0,
-      stock: 0,
-      shortDescription: '',
-      description: '',
-      status: 'DRAFT',
-      currency: 'USD',
-      categoryId: '',
-    },
-    values: existing.data
-      ? {
-          name: existing.data.name,
-          sku: existing.data.sku,
-          price: Number(existing.data.price),
-          stock: existing.data.stock,
-          shortDescription: existing.data.shortDescription || '',
-          description: existing.data.description || '',
-          status: (['DRAFT', 'ACTIVE', 'ARCHIVED'].includes(existing.data.status)
-            ? existing.data.status
-            : 'DRAFT') as ProductForm['status'],
-          currency: existing.data.currency,
-          categoryId: existing.data.category?.id || '',
-        }
-      : undefined,
-  });
-
-  async function refreshProduct() {
-    await qc.invalidateQueries({ queryKey: ['admin-product', id] });
-    await qc.invalidateQueries({ queryKey: ['admin-products'] });
-  }
-
-  async function onSubmit(values: ProductForm) {
-    const payload = {
-      ...values,
-      categoryId: values.categoryId || null,
-    };
-    try {
-      if (isNew) {
-        const { data } = await catalogApi.createProduct(payload);
-        toast.success(t.admin.productCreated);
-        await qc.invalidateQueries({ queryKey: ['admin-products'] });
-        navigate(adminPath(`products/${data.id}`));
-      } else {
-        await catalogApi.updateProduct(id!, payload);
-        toast.success(t.admin.productUpdated);
-        await refreshProduct();
-      }
-    } catch {
-      toast.error(t.admin.saveFailed);
-    }
-  }
-
-  async function uploadImages(files: FileList | null) {
-    if (!files?.length || isNew || !id) return;
-    setUploading(true);
-    try {
-      const hasPrimary = Boolean(existing.data?.images?.some((img) => img.isPrimary));
-      for (let i = 0; i < files.length; i += 1) {
-        const file = files[i];
-        const { data: media } = await mediaApi.upload(file, {
-          alt: existing.data?.name || file.name,
-          folder: 'products/images',
-        });
-        await catalogApi.addProductImage(id, {
-          url: media.url,
-          alt: existing.data?.name || file.name,
-          isPrimary: !hasPrimary && i === 0,
-        });
-      }
-      toast.success(t.admin.productUpdated);
-      await refreshProduct();
-    } catch {
-      toast.error(t.admin.uploadFailed);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function uploadSheets(files: FileList | null) {
-    if (!files?.length || isNew || !id) return;
-    setUploading(true);
-    try {
-      for (const file of Array.from(files)) {
-        const { data: media } = await mediaApi.upload(file, {
-          folder: 'products/documents',
-        });
-        await catalogApi.addProductDocument(id, {
-          name: file.name,
-          url: media.url,
-          mimeType: media.mimeType || file.type,
-          size: media.size || file.size,
-        });
-      }
-      toast.success(t.admin.productUpdated);
-      await refreshProduct();
-    } catch {
-      toast.error(t.admin.uploadFailed);
-    } finally {
-      setUploading(false);
-    }
-  }
-
-  async function removeImage(imageId: string) {
-    if (!id) return;
-    try {
-      await catalogApi.removeProductImage(id, imageId);
-      await refreshProduct();
-    } catch {
-      toast.error(t.admin.deleteFailed);
-    }
-  }
-
-  async function removeDocument(documentId: string) {
-    if (!id) return;
-    try {
-      await catalogApi.removeProductDocument(id, documentId);
-      await refreshProduct();
-    } catch {
-      toast.error(t.admin.deleteFailed);
-    }
-  }
-
-  async function onDelete() {
-    if (!id || !window.confirm(t.admin.confirmDeleteProduct)) return;
-    try {
-      await catalogApi.deleteProduct(id);
-      toast.success(t.admin.productDeleted);
-      await qc.invalidateQueries({ queryKey: ['admin-products'] });
-      navigate(adminPath('products'));
-    } catch {
-      toast.error(t.admin.deleteFailed);
-    }
-  }
-
-  async function onToggleActive() {
-    if (!id || !existing.data) return;
-    const next = existing.data.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE';
-    if (next === 'ARCHIVED' && !window.confirm(t.admin.confirmDeactivate)) return;
-    try {
-      await catalogApi.updateProduct(id, { status: next });
-      toast.success(next === 'ACTIVE' ? t.admin.productActivated : t.admin.productDeactivated);
-      await refreshProduct();
-    } catch {
-      toast.error(t.admin.updateFailed);
-    }
-  }
-
-  if (!isNew && existing.isLoading) return <LoadingState variant="form" />;
-
-  return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <Link to={adminPath('products')}>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <BackIcon className="h-4 w-4" />
-              {t.admin.back}
-            </Button>
-          </Link>
-          <h1 className="text-2xl font-bold text-fg">
-            {isNew ? t.admin.newProduct : t.admin.editProduct}
-          </h1>
-        </div>
-        {!isNew ? (
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" size="sm" className="gap-1.5" onClick={() => void onToggleActive()}>
-              <Power className="h-3.5 w-3.5" />
-              {existing.data?.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
-            </Button>
-            <Button variant="danger" size="sm" className="gap-1.5" onClick={() => void onDelete()}>
-              <Trash2 className="h-3.5 w-3.5" />
-              {t.admin.delete}
-            </Button>
-          </div>
-        ) : null}
-      </div>
-
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>{isNew ? t.admin.newProduct : t.admin.editProduct}</CardTitle>
-            <CardDescription>{t.admin.products}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Input placeholder={t.common.name} {...form.register('name')} />
-            <Input placeholder={t.common.sku} {...form.register('sku')} />
-            <Select {...form.register('categoryId')}>
-              <option value="">{t.admin.noCategory}</option>
-              {(categories.data ?? []).map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Input
-                type="number"
-                step="0.01"
-                placeholder={t.common.price}
-                {...form.register('price', { valueAsNumber: true })}
-              />
-              <Input
-                type="number"
-                placeholder={t.common.stock}
-                {...form.register('stock', { valueAsNumber: true })}
-              />
-              <Input placeholder={t.admin.currency} {...form.register('currency')} />
-            </div>
-            <Select {...form.register('status')}>
-              <option value="DRAFT">{statusLabel(locale, 'DRAFT')}</option>
-              <option value="ACTIVE">{statusLabel(locale, 'ACTIVE')}</option>
-              <option value="ARCHIVED">{statusLabel(locale, 'ARCHIVED')}</option>
-            </Select>
-            <Textarea placeholder={t.admin.shortDescription} {...form.register('shortDescription')} />
-            <Textarea placeholder={t.admin.description} {...form.register('description')} />
-          </CardContent>
-          <CardFooter className="gap-2">
-            <Button type="submit">{t.common.save}</Button>
-            <Link to={adminPath('products')}>
-              <Button type="button" variant="outline">
-                {t.admin.back}
-              </Button>
-            </Link>
-          </CardFooter>
-        </Card>
-      </form>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="h-4 w-4" />
-            {t.admin.productImages}
-          </CardTitle>
-          <CardDescription>
-            {isNew ? t.admin.saveFirstMedia : t.admin.productImagesHint}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!isNew ? (
-            <label
-              className={`inline-flex h-11 cursor-pointer items-center gap-2 border-2 border-line px-5 text-sm font-semibold transition hover:border-accent hover:text-accent ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-            >
-              <Upload className="h-4 w-4" />
-              {uploading ? t.admin.uploading : t.admin.uploadImage}
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                className="sr-only"
-                disabled={uploading}
-                onChange={(e) => {
-                  void uploadImages(e.target.files);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          ) : null}
-          <div className="grid gap-3 sm:grid-cols-3">
-            {(existing.data?.images ?? []).map((img) => (
-              <div key={img.id} className="overflow-hidden border border-border">
-                <img src={img.url} alt="" className="aspect-square w-full object-cover" />
-                <div className="flex items-center justify-between gap-2 p-2">
-                  {img.isPrimary ? (
-                    <span className="text-xs font-semibold text-primary">{t.admin.setPrimary}</span>
-                  ) : (
-                    <span />
-                  )}
-                  <Button
-                    type="button"
-                    variant="danger"
-                    size="sm"
-                    onClick={() => void removeImage(img.id)}
-                  >
-                    {t.admin.removeImage}
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            {t.admin.datasheets}
-          </CardTitle>
-          <CardDescription>
-            {isNew ? t.admin.saveFirstMedia : t.admin.datasheetsHint}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {!isNew ? (
-            <label
-              className={`inline-flex h-11 cursor-pointer items-center gap-2 border-2 border-line px-5 text-sm font-semibold transition hover:border-accent hover:text-accent ${uploading ? 'pointer-events-none opacity-50' : ''}`}
-            >
-              <Upload className="h-4 w-4" />
-              {uploading ? t.admin.uploading : t.admin.uploadSheet}
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                multiple
-                className="sr-only"
-                disabled={uploading}
-                onChange={(e) => {
-                  void uploadSheets(e.target.files);
-                  e.target.value = '';
-                }}
-              />
-            </label>
-          ) : null}
-          <ul className="space-y-2">
-            {(existing.data?.documents ?? []).map((doc) => (
-              <li
-                key={doc.id}
-                className="flex flex-wrap items-center justify-between gap-3 border border-border px-3 py-2 text-sm"
-              >
-                <a
-                  href={doc.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
-                  {doc.name}
-                </a>
-                <Button
-                  type="button"
-                  variant="danger"
-                  size="sm"
-                  onClick={() => void removeDocument(doc.id)}
-                >
-                  {t.admin.removeDocument}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+export { AdminProductFormPage } from './AdminProductFormPage';
 
 export function AdminCategoriesPage() {
   const { t } = useI18n();
@@ -1330,7 +1057,7 @@ export function AdminCategoriesPage() {
               <div>
                 <p className="font-medium">{row.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {row.slug} · {row.description || '—'}
+                  {row.slug} Â· {row.description || 'â€”'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1379,7 +1106,7 @@ export function AdminOrdersPage() {
                       {o.customer?.firstName} {o.customer?.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {o.customer?.phone || o.customer?.email || '—'}
+                      {o.customer?.phone || o.customer?.email || 'â€”'}
                     </p>
                   </div>
                   <StatusBadge status={o.status} />
@@ -1432,7 +1159,7 @@ export function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
-                      {o.customer?.phone || '—'}
+                      {o.customer?.phone || 'â€”'}
                     </td>
                     <td className="px-4 py-3 font-kpi font-semibold whitespace-nowrap">
                       {formatMoney(o.total, o.currency, moneyLocale)}
@@ -1535,7 +1262,7 @@ export function AdminOrderDetailPage() {
               >
                 <p className="font-medium">{item.productName}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {item.sku} · ×{item.quantity}
+                  {item.sku} Â· Ã—{item.quantity}
                 </p>
                 <div className="mt-2 flex justify-between gap-2">
                   <span className="text-muted-foreground">
@@ -1594,7 +1321,7 @@ export function AdminOrderDetailPage() {
             <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">{t.admin.discount}</span>
               <span className="font-kpi">
-                −{formatMoney(discount, o.currency, moneyLocale)}
+                âˆ’{formatMoney(discount, o.currency, moneyLocale)}
               </span>
             </div>
             <div className="flex justify-between gap-3">
@@ -1693,9 +1420,9 @@ export function AdminOrderDetailPage() {
                 >
                   <div className="flex flex-wrap items-center gap-2">
                     {h.fromStatus ? <StatusBadge status={h.fromStatus} /> : null}
-                    <span className="text-muted-foreground">→</span>
+                    <span className="text-muted-foreground">â†’</span>
                     <StatusBadge status={h.toStatus} />
-                    {h.note ? <span className="text-muted-foreground">· {h.note}</span> : null}
+                    {h.note ? <span className="text-muted-foreground">Â· {h.note}</span> : null}
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
@@ -1770,7 +1497,7 @@ export function AdminCustomersPage() {
       fetcher={() => customersApi.list()}
       columns={(row) => (
         <Link to={adminPath(`customers/${row.id}`)} className="font-medium text-accent">
-          {String(row.firstName)} {String(row.lastName)} · {String(row.email)}
+          {String(row.firstName)} {String(row.lastName)} Â· {String(row.email)}
         </Link>
       )}
     />
@@ -1897,7 +1624,7 @@ export function AdminQuoteDetailPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{item.product?.name || item.productId}</p>
                     <p className="text-xs text-muted-foreground">
-                      {item.product?.sku || '—'} · ×{item.quantity}
+                      {item.product?.sku || 'â€”'} Â· Ã—{item.quantity}
                     </p>
                   </div>
                   {item.product?.price != null ? (
@@ -2024,7 +1751,7 @@ export function AdminSupportPage() {
       columns={(row) => (
         <Link to={adminPath(`support/${row.id}`)} className="flex justify-between gap-3">
           <span className="font-medium text-accent">
-            {String(row.ticketNumber)} — {String(row.subject)}
+            {String(row.ticketNumber)} â€” {String(row.subject)}
           </span>
           <StatusBadge status={String(row.status)} />
         </Link>
@@ -2074,7 +1801,7 @@ export function AdminSupportDetailPage() {
         {(ticket.data.messages ?? []).map((m) => (
           <div key={m.id} className="surface p-3 text-sm">
             <p className="text-xs text-muted">
-              {m.sender?.firstName} ·{' '}
+              {m.sender?.firstName} Â·{' '}
               {new Date(m.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
             </p>
             <p className="mt-1">{m.message}</p>
@@ -2150,7 +1877,7 @@ function CmsCrudPage({
       <div className="space-y-2">
         {(list.data as Record<string, unknown>[] | undefined)?.map((row) => (
           <div key={String(row.id)} className="surface p-3 text-sm">
-            {String(row.name || row.title)} · {String(row.slug || '')} ·{' '}
+            {String(row.name || row.title)} Â· {String(row.slug || '')} Â·{' '}
             <StatusBadge status={String(row.status || 'DRAFT')} />
           </div>
         ))}
@@ -2281,7 +2008,7 @@ export function AdminServicesPage() {
           >
             <span>
               {row.name}
-              {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
+              {row.nameAr ? ` Â· ${row.nameAr}` : ''} Â· {row.slug} Â·{' '}
               <StatusBadge status={String(row.status || 'DRAFT')} />
             </span>
             <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
@@ -2420,7 +2147,7 @@ export function AdminUsersPage() {
       fetcher={() => usersApi.list()}
       columns={(row) => (
         <span>
-          {String(row.email)} · {String((row.role as { code?: string })?.code || row.role || '')}
+          {String(row.email)} Â· {String((row.role as { code?: string })?.code || row.role || '')}
         </span>
       )}
     />
@@ -2436,7 +2163,7 @@ export function AdminAuditPage() {
       fetcher={() => auditApi.list()}
       columns={(row) => (
         <span className="text-sm">
-          {String(row.action)} · {String(row.entity)} ·{' '}
+          {String(row.action)} Â· {String(row.entity)} Â·{' '}
           {new Date(String(row.createdAt)).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
         </span>
       )}
@@ -2447,11 +2174,11 @@ export function AdminAuditPage() {
 function parseExchangeRate(raw: string) {
   const normalized = raw
     .trim()
-    .replace(/[٬，]/g, '')
-    .replace(/[٫]/g, '.')
+    .replace(/[Ù¬ï¼Œ]/g, '')
+    .replace(/[Ù«]/g, '.')
     .replace(/,/g, '')
-    .replace(/[٠-٩]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
-    .replace(/[۰-۹]/g, (d) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)));
+    .replace(/[Ù -Ù©]/g, (d) => String('Ù Ù¡Ù¢Ù£Ù¤Ù¥Ù¦Ù§Ù¨Ù©'.indexOf(d)))
+    .replace(/[Û°-Û¹]/g, (d) => String('Û°Û±Û²Û³Û´ÛµÛ¶Û·Û¸Û¹'.indexOf(d)));
   const value = Number(normalized);
   return value;
 }
@@ -2523,7 +2250,7 @@ export function AdminSettingsPage() {
             autoComplete="off"
             dir="ltr"
             className="font-kpi tabular-nums"
-            placeholder={locale === 'ar' ? 'مثال: 1480' : 'e.g. 1480'}
+            placeholder={locale === 'ar' ? 'Ù…Ø«Ø§Ù„: 1480' : 'e.g. 1480'}
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             required
@@ -2540,11 +2267,9 @@ export function AdminSettingsPage() {
           {t.admin.enableIqdDisplay}
         </label>
         <Button type="submit" disabled={settings.isLoading || saving}>
-          {saving ? (locale === 'ar' ? 'جاري الحفظ…' : 'Saving…') : t.common.save}
+          {saving ? (locale === 'ar' ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø­ÙØ¸â€¦' : 'Savingâ€¦') : t.common.save}
         </Button>
       </form>
-
-      <StorageStatusCard />
 
       <Button
         variant="secondary"
@@ -2557,57 +2282,6 @@ export function AdminSettingsPage() {
       >
         {t.admin.validateSession}
       </Button>
-    </div>
-  );
-}
-
-function StorageStatusCard() {
-  const { t, locale } = useI18n();
-  const storage = useQuery({
-    queryKey: ['media-storage-status'],
-    queryFn: async () => (await mediaApi.storageStatus()).data,
-  });
-
-  return (
-    <div className="surface max-w-lg space-y-3 p-4">
-      <h2 className="text-lg font-bold text-fg">{t.admin.storageTitle}</h2>
-      <p className="text-sm text-muted">{t.admin.storageHint}</p>
-      {storage.isLoading ? <LoadingState /> : null}
-      {storage.data ? (
-        <dl className="space-y-2 text-sm">
-          <div className="flex justify-between gap-3">
-            <dt className="text-muted">{t.admin.storageBackend}</dt>
-            <dd className="font-semibold text-fg">
-              {storage.data.configured
-                ? storage.data.backend
-                : t.admin.storageLocal}
-            </dd>
-          </div>
-          {storage.data.configured ? (
-            <>
-              <div className="flex justify-between gap-3">
-                <dt className="text-muted">{t.admin.storageBucket}</dt>
-                <dd className="font-mono text-xs text-fg">{storage.data.bucket || '—'}</dd>
-              </div>
-              <div className="flex flex-col gap-1">
-                <dt className="text-muted">{t.admin.storagePublicUrl}</dt>
-                <dd className="break-all font-mono text-xs text-accent">
-                  {storage.data.publicBaseUrl || '—'}
-                </dd>
-              </div>
-              <p className="text-xs font-semibold text-emerald-600">
-                {t.admin.storageConfigured}
-              </p>
-            </>
-          ) : (
-            <p className="text-xs text-amber-700 dark:text-amber-400">
-              {locale === 'ar'
-                ? 'عبّئ R2_* داخل apps/api/.env ثم أعد تشغيل الـ API.'
-                : 'Fill R2_* in apps/api/.env then restart the API.'}
-            </p>
-          )}
-        </dl>
-      ) : null}
     </div>
   );
 }
