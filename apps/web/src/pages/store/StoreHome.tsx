@@ -284,18 +284,34 @@ export function StoreHomePage() {
                 locale === 'ar' ? 'شركاء توريد صناعي موثوقون' : 'Trusted industrial supply partners'
               }
             />
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
               {brandList.map((b) => (
                 <Link
                   key={b.id}
                   to={storePath(`brands/${b.slug}`)}
-                  className="flex h-20 w-[calc(50%-0.375rem)] items-center justify-center rounded-2xl border border-border bg-card px-4 transition hover:border-accent/40 hover:shadow-md sm:w-36 md:w-40"
+                  title={
+                    locale === 'ar' ? `عرض منتجات ${b.name}` : `View ${b.name} products`
+                  }
+                  aria-label={
+                    locale === 'ar' ? `فتح صفحة ${b.name}` : `Open ${b.name} brand page`
+                  }
+                  className="group flex flex-col items-center justify-center gap-2 border border-border bg-card px-3 py-4 transition duration-300 hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md sm:px-4 sm:py-5"
                 >
-                  {b.logo ? (
-                    <img src={b.logo} alt={b.name} className="max-h-9 max-w-full object-contain" />
-                  ) : (
-                    <span className="text-center text-sm font-bold text-fg">{b.name}</span>
-                  )}
+                  <span className="flex h-12 w-full items-center justify-center sm:h-14">
+                    {b.logo ? (
+                      <img
+                        src={b.logo}
+                        alt={b.name}
+                        className="max-h-10 max-w-full object-contain transition duration-300 group-hover:scale-[1.04] sm:max-h-11"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-center text-sm font-extrabold text-fg">{b.name}</span>
+                    )}
+                  </span>
+                  <span className="line-clamp-1 text-center text-[11px] font-bold tracking-wide text-muted transition group-hover:text-accent sm:text-xs">
+                    {b.name}
+                  </span>
                 </Link>
               ))}
             </div>

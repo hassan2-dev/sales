@@ -633,35 +633,103 @@ export function StoreCategoryPage() {
 }
 
 export function StoreBrandPage() {
+  const { locale } = useI18n();
   const { slug = '' } = useParams();
   const brand = useQuery({
     queryKey: ['brand', slug],
     queryFn: async () => (await catalogApi.brandBySlug(slug)).data,
   });
   const products = useQuery({
-    queryKey: ['brand-products', brand.data?.id],
-    enabled: Boolean(brand.data?.id),
+    queryKey: ['brand-products', brand.data?.id, brand.data?.slug],
+    enabled: Boolean(brand.data?.id || brand.data?.slug),
     queryFn: async () =>
-      (await catalogApi.products({ brandId: brand.data!.id, limit: 24 })).data,
+      (
+        await catalogApi.products({
+          brandId: brand.data!.id,
+          brandSlug: brand.data!.slug,
+          limit: 48,
+        })
+      ).data,
   });
 
   if (brand.isLoading) return <LoadingState variant="page" />;
-  if (brand.isError || !brand.data) return <ErrorState title="Brand not found" />;
+  if (brand.isError || !brand.data) {
+    return (
+      <ErrorState
+        title={locale === 'ar' ? 'العلامة غير موجودة' : 'Brand not found'}
+      />
+    );
+  }
+
+  const b = brand.data;
+  const productCount = products.data?.meta.total ?? products.data?.data?.length ?? 0;
 
   return (
     <>
-      <Seo title={brand.data.name} path={storePath(`brands/${slug}`)} />
-      <div className="mx-auto max-w-[90rem] px-4 py-12 sm:px-6 lg:px-10">
-        <h1 className="text-3xl font-semibold tracking-tight text-fg">{brand.data.name}</h1>
-        <p className="mt-2 text-muted">{brand.data.description}</p>
+      <Seo
+        title={b.name}
+        path={storePath(`brands/${slug}`)}
+        description={b.description || undefined}
+      />
+      <div className="border-b border-border bg-navy text-white">
+        <div className="mx-auto flex max-w-[90rem] flex-col gap-6 px-4 py-10 sm:flex-row sm:items-end sm:justify-between sm:px-6 sm:py-14 lg:px-10">
+          <div className="min-w-0">
+            <Link
+              to={storePath()}
+              className="text-xs font-bold uppercase tracking-wider text-white/60 transition hover:text-white"
+            >
+              {locale === 'ar' ? '← المتجر' : '← Store'}
+            </Link>
+            <p className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-accent-soft">
+              {locale === 'ar' ? 'علامة تجارية' : 'Brand'}
+            </p>
+            <h1 className="mt-2 text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl">
+              {b.name}
+            </h1>
+            {b.description ? (
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65 sm:text-base">
+                {b.description}
+              </p>
+            ) : null}
+          </div>
+          {b.logo ? (
+            <div className="flex h-20 w-40 shrink-0 items-center justify-center bg-white px-4 sm:h-24 sm:w-48">
+              <img src={b.logo} alt={b.name} className="max-h-14 max-w-full object-contain" />
+            </div>
+          ) : null}
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-[90rem] px-4 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-border pb-4">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted">
+              {locale === 'ar' ? 'المنتجات' : 'Products'}
+            </p>
+            <h2 className="mt-1 text-xl font-extrabold tracking-tight text-fg sm:text-2xl">
+              {locale === 'ar' ? `منتجات ${b.name}` : `${b.name} products`}
+            </h2>
+          </div>
+          <p className="text-sm font-semibold tabular-nums text-muted">
+            {productCount}{' '}
+            {locale === 'ar' ? 'منتج' : productCount === 1 ? 'product' : 'products'}
+          </p>
+        </div>
+
         {products.isLoading ? <LoadingState variant="products" /> : null}
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           {(products.data?.data ?? []).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
         {!products.isLoading && !(products.data?.data ?? []).length ? (
-          <EmptyState title="No products for this brand" />
+          <EmptyState
+            title={
+              locale === 'ar'
+                ? 'لا توجد منتجات لهذه العلامة بعد'
+                : 'No products for this brand yet'
+            }
+          />
         ) : null}
       </div>
     </>

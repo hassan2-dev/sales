@@ -22,12 +22,4 @@ export function formatMoney(
   }
 }
 
-export function getOrCreateSessionId() {
-  const key = 'eh_session_id';
-  let id = localStorage.getItem(key);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(key, id);
-  }
-  return id;
-}
+export { getOrCreateSessionId } from '@/lib/cart-storage';
