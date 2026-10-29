@@ -7,13 +7,15 @@
 NIXPACKS_NODE_VERSION = "22"
 PORT = "3000"
 NPM_CONFIG_ENGINE_STRICT = "false"
+# Coolify sets production=true; we still need typescript/@nestjs/cli/prisma for build+migrate
+NPM_CONFIG_PRODUCTION = "false"
 
-# "..." keeps Nixpacks defaults (nodejs + npm). Do NOT list only openssl.
 [phases.setup]
 nixPkgs = ["...", "openssl"]
 
 [phases.install]
-cmds = ["npm ci"]
+# npm install (not ci): Coolify npm 10 is stricter about optional peer lock entries
+cmds = ["npm install --include=dev --no-audit --no-fund"]
 
 [phases.build]
 cmds = [
