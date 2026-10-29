@@ -17,14 +17,37 @@ cp apps/store/.env.example apps/store/.env
 cp apps/admin/.env.example apps/admin/.env
 ```
 
-## Subdomains
+Local ports:
 
-| Host | App |
-|------|-----|
-| `www.domain.com` | `apps/website/dist` |
-| `store.domain.com` | `apps/store/dist` |
-| `admin.domain.com` | `apps/admin/dist` |
-| `api.domain.com` | NestJS (`/api`, `/docs`, `/uploads`) |
+| App | Command | URL |
+|-----|---------|-----|
+| Website | `npm run dev:website` | http://localhost:5173 |
+| Store | `npm run dev:store` | http://localhost:5174 |
+| Admin | `npm run dev:admin` | http://localhost:5175 |
+| API | `npm run dev:api` | http://localhost:3000/api |
+
+## Subdomains (independent deploys)
+
+| Host | App | Build |
+|------|-----|-------|
+| `www.domain.com` | `apps/website` | `npm run build:website` → `apps/website/dist` |
+| `store.domain.com` | `apps/store` | `npm run build:store` → `apps/store/dist` |
+| `admin.domain.com` | `apps/admin` | `npm run build:admin` → `apps/admin/dist` |
+| `api.domain.com` | NestJS (`/api`, `/docs`, `/uploads`) | `npm run build:api` |
+
+Shared backend: one NestJS API + one PostgreSQL database for all three frontends.
+
+## Vercel (frontends)
+
+`404 NOT_FOUND` (e.g. `fra1::…`) usually means the project Root Directory is the repo root, or Output Directory is wrong.
+
+1. Vercel → **Add New Project** → import `hassan2-dev/sales`
+2. Set **Root Directory** to `apps/website` (then repeat for `apps/store` and `apps/admin`)
+3. Framework: Vite — `vercel.json` in each app sets install/build/output + SPA rewrite
+4. Add Production env: `VITE_API_URL`, `VITE_SITE_URL`, `VITE_STORE_URL`, `VITE_ADMIN_URL`
+5. Deploy → attach custom domain / subdomain
+
+Do not point one Vercel project at the monorepo root. The API is **not** deployed on Vercel.
 
 ## Docker Compose
 
