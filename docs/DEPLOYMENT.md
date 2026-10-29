@@ -49,6 +49,75 @@ Shared backend: one NestJS API + one PostgreSQL database for all three frontends
 
 Do not point one Vercel project at the monorepo root. The API is **not** deployed on Vercel.
 
+## Coolify (API server)
+
+Wrong defaults (`php artisan migrate`, `ghcr.io/your-org/your-app`, monorepo root) cause failed deploys.
+
+### 1) PostgreSQL first
+
+Coolify → **New Resource** → **PostgreSQL** → create DB (e.g. `energy_horizon`).  
+Copy the internal `DATABASE_URL` Coolify shows (host like `postgres-xxxx`, not localhost).
+
+### 2) API app — Nixpacks (what Coolify may show as deprecated)
+
+Config file: `apps/api/nixpacks.toml`
+
+| Field | Value |
+|-------|--------|
+| Source | GitHub `hassan2-dev/sales` branch `main` |
+| Build Pack | **Nixpacks** |
+| Base directory | `apps/api` |
+| Port | `3000` |
+| Install / Build / Start | *(empty — use nixpacks.toml)* |
+| Pre-deployment | *(empty — delete `php artisan …`)* |
+| Post-deployment | *(empty)* |
+| Custom Docker options | *(empty)* |
+| Publish directory | *(empty / ignore for Node API)* |
+
+### 2b) Prefer Dockerfile (recommended if available)
+
+| Field | Value |
+|-------|--------|
+| Build Pack | **Dockerfile** |
+| Base directory | `/` (repo root) |
+| Dockerfile location | `apps/api/Dockerfile` |
+| Port | `3000` |
+| Start / Pre / Post | *(empty)* |
+
+Public URL example: `https://api.your-domain.com` or the Coolify `*.sslip.io` URL.
+
+### 3) Environment variables
+
+```env
+NODE_ENV=production
+PORT=3000
+API_PREFIX=api
+DATABASE_URL=<from Coolify Postgres>
+JWT_ACCESS_SECRET=<random ≥32 chars>
+JWT_REFRESH_SECRET=<random ≥32 chars>
+JWT_ACCESS_EXPIRES=15m
+JWT_REFRESH_EXPIRES=7d
+APP_URL=https://yks3frl77xhsonnej0za7yt3.62.84.181.5.sslip.io
+CORS_ORIGIN=https://www.your-domain.com,https://store.your-domain.com,https://admin.your-domain.com
+UPLOAD_MAX_SIZE_MB=10
+```
+
+Add Cloudflare R2 vars when ready (`R2_ACCOUNT_ID`, keys, `R2_BUCKET`, `R2_PUBLIC_URL`).
+
+### 4) Deploy & seed once
+
+Deploy → open `https://YOUR-API-HOST/docs` (Swagger).  
+Seed once (Coolify terminal / one-off exec):
+
+```bash
+npx tsx prisma/seed.ts
+```
+
+(or run seed from a machine that can reach the same `DATABASE_URL`).  
+Admin: `admin@energy-horizon.net` / `Admin@12345` — change after first login.
+
+Frontends (Vercel): set `VITE_API_URL=https://YOUR-API-HOST/api` and redeploy.
+
 ## Docker Compose
 
 ```bash

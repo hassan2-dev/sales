@@ -1,0 +1,25 @@
+# Coolify → Nixpacks
+# Base directory: apps/api
+# Port: 3000
+# Leave Install / Build / Start empty (this file owns them)
+# Delete any "php artisan" pre/post commands
+
+[variables]
+NODE_ENV = "production"
+NIXPACKS_NODE_VERSION = "22"
+PORT = "3000"
+
+[phases.setup]
+nixPkgs = ["openssl"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = [
+  "npx prisma generate",
+  "npm run build",
+]
+
+[start]
+cmd = "npx prisma migrate deploy && node dist/main.js"
