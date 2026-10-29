@@ -1,25 +1,23 @@
-# Coolify → Nixpacks
-# Base directory MUST be: apps/api
-# Port: 3000
-# Leave Install / Build / Start empty in the UI
+# Coolify → Nixpacks (prefer Dockerfile if this keeps failing)
+# Base directory: apps/api | Port: 3000 | Install/Build/Start: empty
 
 [variables]
-NIXPACKS_NODE_VERSION = "22"
+# 22.11 from Nixpacks breaks Nest; 20.x satisfies most engine ranges
+NIXPACKS_NODE_VERSION = "20"
 PORT = "3000"
 NPM_CONFIG_ENGINE_STRICT = "false"
-# Coolify sets production=true; we still need typescript/@nestjs/cli/prisma for build+migrate
 NPM_CONFIG_PRODUCTION = "false"
 
 [phases.setup]
 nixPkgs = ["...", "openssl"]
 
 [phases.install]
-# npm install (not ci): Coolify npm 10 is stricter about optional peer lock entries
 cmds = ["npm install --include=dev --no-audit --no-fund"]
 
 [phases.build]
 cmds = [
   "npx prisma generate",
+  "rm -rf dist",
   "npm run build",
 ]
 
