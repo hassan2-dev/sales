@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { Building2, Mail, MapPin, Phone, UserRound } from 'lucide-react';
 import type { Office } from '@/types';
 import {

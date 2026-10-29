@@ -1,9 +1,6 @@
 ﻿import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
   DollarSign,
@@ -24,8 +21,6 @@ import {
   ArrowRight,
   FolderTree,
   Trash2,
-  Upload,
-  FileText,
   ImageIcon,
   Power,
   ChevronDown,

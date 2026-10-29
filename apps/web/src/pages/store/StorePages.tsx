@@ -146,11 +146,6 @@ export function StoreProductsPage() {
     setFiltersOpen(false);
   }
 
-  function applyFilterAndClose(next: Record<string, string | null | undefined>) {
-    applyParams(next);
-    setFiltersOpen(false);
-  }
-
   const activeCategory = (categories.data ?? []).find((c) => c.slug === categorySlug);
   const activeBrand = (brands.data ?? []).find((b) => b.slug === brandSlug);
   const total = query.data?.meta.total ?? 0;

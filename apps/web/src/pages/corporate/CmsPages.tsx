@@ -16,9 +16,7 @@ import {
   Package,
   Phone,
   ShieldCheck,
-  Truck,
   Users,
-  Warehouse,
   Wrench,
   Zap,
 } from 'lucide-react';
@@ -29,7 +27,6 @@ import { catalogApi, cmsApi } from '@/services/endpoints';
 import { STORE_URL, storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
 import { localizeService } from '@/lib/localize-cms';
-import { cn } from '@/lib/cn';
 import { Reveal } from '@/components/Reveal';
 import { CountUpStat } from '@/components/CountUpStat';
 import { NationwideCoverage } from '@/components/NationwideCoverage';

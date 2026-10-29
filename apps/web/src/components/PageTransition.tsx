@@ -5,15 +5,15 @@ import { cn } from '@/lib/cn';
 const LOGO_SRC =
   import.meta.env.VITE_LOGO_URL?.trim() || '/energy-horizon-logo.svg';
 
-const COVER_MS = 420;
-const HOLD_MS = 280;
-const REVEAL_MS = 560; // slightly longer than curtain-rise so it finishes upward before unmount
+const COVER_MS = 380;
+const HOLD_MS = 220;
+const REVEAL_MS = 480;
 
 type Phase = 'idle' | 'covering' | 'holding' | 'revealing';
 
 /**
- * Curtain only on pathname changes (all surfaces: store, site, admin).
- * Drop from top → swap page → rise back up the same way.
+ * Curtain on pathname changes (store, site, admin).
+ * Drop from top → swap page → rise back up.
  */
 export function RouteTransition({ children }: { children: (loc: Location) => ReactNode }) {
   const location = useLocation();
@@ -22,13 +22,29 @@ export function RouteTransition({ children }: { children: (loc: Location) => Rea
   const pending = useRef<Location | null>(null);
   const timers = useRef<number[]>([]);
   const runId = useRef(0);
+  const displayKey = useRef(location.key);
 
   useEffect(() => {
-    if (location.key === displayLocation.key) return;
+    displayKey.current = displayLocation.key;
+  }, [displayLocation.key]);
 
-    // Same page, only query/hash — no curtain
+  useEffect(() => {
+    if (location.key === displayKey.current) return;
+
+    // Same page, only query/hash — soft update, no curtain
     if (location.pathname === displayLocation.pathname) {
       setDisplayLocation(location);
+      return;
+    }
+
+    const reduce =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (reduce) {
+      setDisplayLocation(location);
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      setPhase('idle');
       return;
     }
 
@@ -60,12 +76,7 @@ export function RouteTransition({ children }: { children: (loc: Location) => Rea
     }, COVER_MS + HOLD_MS + REVEAL_MS);
 
     timers.current = [tCover, tReveal, tIdle];
-
-    return () => {
-      // Don't clear on displayLocation sync — only when effect re-runs for a new nav
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- driven by location
-  }, [location]);
+  }, [location, displayLocation.pathname]);
 
   useEffect(() => {
     return () => {
@@ -81,6 +92,7 @@ export function RouteTransition({ children }: { children: (loc: Location) => Rea
       {phase !== 'idle' ? (
         <div className="fixed inset-0 z-[200] overflow-hidden" aria-hidden aria-busy>
           <div
+            key={phase}
             className={cn(
               'page-curtain absolute inset-0 flex items-center justify-center bg-card',
               phase === 'covering' && 'is-covering',

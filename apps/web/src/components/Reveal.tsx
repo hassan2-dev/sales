@@ -17,7 +17,7 @@ export function Reveal({
   as: Tag = 'div',
   variant = 'up',
 }: RevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const el = ref.current;
@@ -49,7 +49,7 @@ export function Reveal({
 
   return (
     <Tag
-      ref={ref}
+      ref={ref as never}
       className={cn('reveal-on-scroll', `reveal-${variant}`, className)}
       style={style}
     >
