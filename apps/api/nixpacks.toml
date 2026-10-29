@@ -6,7 +6,6 @@
 [variables]
 NIXPACKS_NODE_VERSION = "22"
 PORT = "3000"
-# Avoid hard-fail on engine warnings from Nest tooling
 NPM_CONFIG_ENGINE_STRICT = "false"
 
 # "..." keeps Nixpacks defaults (nodejs + npm). Do NOT list only openssl.
@@ -14,7 +13,7 @@ NPM_CONFIG_ENGINE_STRICT = "false"
 nixPkgs = ["...", "openssl"]
 
 [phases.install]
-cmds = ["npm ci --ignore-engines"]
+cmds = ["npm ci"]
 
 [phases.build]
 cmds = [
