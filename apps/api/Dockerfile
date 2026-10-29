@@ -4,7 +4,7 @@
 FROM node:22-alpine AS deps
 WORKDIR /app
 COPY apps/api/package.json apps/api/package-lock.json ./
-RUN npm ci
+RUN npm install --include=dev --no-audit --no-fund
 
 FROM node:22-alpine AS build
 WORKDIR /app
