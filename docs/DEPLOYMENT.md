@@ -74,15 +74,16 @@ Config file: `apps/api/nixpacks.toml`
 | Custom Docker options | *(empty)* |
 | Publish directory | *(empty / ignore for Node API)* |
 
-### 2b) Prefer Dockerfile (recommended if available)
+### 2b) Prefer Dockerfile (recommended)
 
 | Field | Value |
 |-------|--------|
 | Build Pack | **Dockerfile** |
-| Base directory | `/` (repo root) |
-| Dockerfile location | `apps/api/Dockerfile` |
+| Base directory | `/apps/api` |
+| Dockerfile location | `/Dockerfile` |
 | Port | `3000` |
 | Start / Pre / Post | *(empty)* |
+| Custom Docker options | *(empty)* |
 
 Public URL example: `https://api.your-domain.com` or the Coolify `*.sslip.io` URL.
 
