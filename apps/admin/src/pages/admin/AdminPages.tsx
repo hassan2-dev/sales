@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -126,7 +126,7 @@ export function AdminLoginPage() {
           onClick={toggleLocale}
           className="inline-flex h-9 min-w-9 items-center justify-center border border-white/20 px-2.5 text-[11px] font-bold tracking-wider text-white/80 transition hover:border-accent hover:text-white"
         >
-          {locale === 'en' ? 'Ø¹' : 'EN'}
+          {locale === 'en' ? 'ع' : 'EN'}
         </button>
         <button
           type="button"
@@ -145,7 +145,7 @@ export function AdminLoginPage() {
           <Logo to="/" className="mb-4" imgClassName="h-12 max-w-[220px] sm:h-14" />
           <h1 className="text-xl font-bold text-fg">{t.admin.brand}</h1>
           <p className="text-sm text-muted">
-            {locale === 'ar' ? 'Ø§ÙØ§Ù‚ Ø§Ù„Ø·Ø§Ù‚Ø© Â· Energy Horizon' : 'Energy Horizon Â· Ø§ÙØ§Ù‚ Ø§Ù„Ø·Ø§Ù‚Ø©'}
+            {locale === 'ar' ? 'افاق الطاقة · Energy Horizon' : 'Energy Horizon · افاق الطاقة'}
           </p>
         </div>
         <Input
@@ -661,7 +661,7 @@ export function AdminDashboardPage() {
               {(activity.data ?? []).slice(0, 3).map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3 text-sm">
                   <span className="text-muted-foreground">
-                    {a.action} Â· {a.entity}
+                    {a.action} · {a.entity}
                   </span>
                   <span className="text-muted-foreground">
                     {new Date(a.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
@@ -789,7 +789,7 @@ export function AdminProductsPage() {
                       {p.name}
                     </Link>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {p.sku} Â· {p.category?.name || t.admin.noCategory}
+                      {p.sku} · {p.category?.name || t.admin.noCategory}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <span className="font-kpi text-sm font-bold">
@@ -1052,7 +1052,7 @@ export function AdminCategoriesPage() {
               <div>
                 <p className="font-medium">{row.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {row.slug} Â· {row.description || 'â€”'}
+                  {row.slug} · {row.description || '—'}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -1101,7 +1101,7 @@ export function AdminOrdersPage() {
                       {o.customer?.firstName} {o.customer?.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {o.customer?.phone || o.customer?.email || 'â€”'}
+                      {o.customer?.phone || o.customer?.email || '—'}
                     </p>
                   </div>
                   <StatusBadge status={o.status} />
@@ -1154,7 +1154,7 @@ export function AdminOrdersPage() {
                       </div>
                     </td>
                     <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
-                      {o.customer?.phone || 'â€”'}
+                      {o.customer?.phone || '—'}
                     </td>
                     <td className="px-4 py-3 font-kpi font-semibold whitespace-nowrap">
                       {formatMoney(o.total, o.currency, moneyLocale)}
@@ -1257,7 +1257,7 @@ export function AdminOrderDetailPage() {
               >
                 <p className="font-medium">{item.productName}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {item.sku} Â· Ã—{item.quantity}
+                  {item.sku} · ×{item.quantity}
                 </p>
                 <div className="mt-2 flex justify-between gap-2">
                   <span className="text-muted-foreground">
@@ -1417,7 +1417,7 @@ export function AdminOrderDetailPage() {
                     {h.fromStatus ? <StatusBadge status={h.fromStatus} /> : null}
                     <span className="text-muted-foreground">â†’</span>
                     <StatusBadge status={h.toStatus} />
-                    {h.note ? <span className="text-muted-foreground">Â· {h.note}</span> : null}
+                    {h.note ? <span className="text-muted-foreground">· {h.note}</span> : null}
                   </div>
                   <span className="text-xs text-muted-foreground">
                     {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
@@ -1492,7 +1492,7 @@ export function AdminCustomersPage() {
       fetcher={() => customersApi.list()}
       columns={(row) => (
         <Link to={adminPath(`customers/${row.id}`)} className="font-medium text-accent">
-          {String(row.firstName)} {String(row.lastName)} Â· {String(row.email)}
+          {String(row.firstName)} {String(row.lastName)} · {String(row.email)}
         </Link>
       )}
     />
@@ -1619,7 +1619,7 @@ export function AdminQuoteDetailPage() {
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">{item.product?.name || item.productId}</p>
                     <p className="text-xs text-muted-foreground">
-                      {item.product?.sku || 'â€”'} Â· Ã—{item.quantity}
+                      {item.product?.sku || '—'} · ×{item.quantity}
                     </p>
                   </div>
                   {item.product?.price != null ? (
@@ -1746,7 +1746,7 @@ export function AdminSupportPage() {
       columns={(row) => (
         <Link to={adminPath(`support/${row.id}`)} className="flex justify-between gap-3">
           <span className="font-medium text-accent">
-            {String(row.ticketNumber)} â€” {String(row.subject)}
+            {String(row.ticketNumber)} — {String(row.subject)}
           </span>
           <StatusBadge status={String(row.status)} />
         </Link>
@@ -1796,7 +1796,7 @@ export function AdminSupportDetailPage() {
         {(ticket.data.messages ?? []).map((m) => (
           <div key={m.id} className="surface p-3 text-sm">
             <p className="text-xs text-muted">
-              {m.sender?.firstName} Â·{' '}
+              {m.sender?.firstName} ·{' '}
               {new Date(m.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
             </p>
             <p className="mt-1">{m.message}</p>
@@ -1872,7 +1872,7 @@ function CmsCrudPage({
       <div className="space-y-2">
         {(list.data as Record<string, unknown>[] | undefined)?.map((row) => (
           <div key={String(row.id)} className="surface p-3 text-sm">
-            {String(row.name || row.title)} Â· {String(row.slug || '')} Â·{' '}
+            {String(row.name || row.title)} · {String(row.slug || '')} ·{' '}
             <StatusBadge status={String(row.status || 'DRAFT')} />
           </div>
         ))}
@@ -2003,7 +2003,7 @@ export function AdminServicesPage() {
           >
             <span>
               {row.name}
-              {row.nameAr ? ` Â· ${row.nameAr}` : ''} Â· {row.slug} Â·{' '}
+              {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
               <StatusBadge status={String(row.status || 'DRAFT')} />
             </span>
             <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
@@ -2142,7 +2142,7 @@ export function AdminUsersPage() {
       fetcher={() => usersApi.list()}
       columns={(row) => (
         <span>
-          {String(row.email)} Â· {String((row.role as { code?: string })?.code || row.role || '')}
+          {String(row.email)} · {String((row.role as { code?: string })?.code || row.role || '')}
         </span>
       )}
     />
@@ -2158,7 +2158,7 @@ export function AdminAuditPage() {
       fetcher={() => auditApi.list()}
       columns={(row) => (
         <span className="text-sm">
-          {String(row.action)} Â· {String(row.entity)} Â·{' '}
+          {String(row.action)} · {String(row.entity)} ·{' '}
           {new Date(String(row.createdAt)).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
         </span>
       )}
@@ -2172,7 +2172,7 @@ function parseExchangeRate(raw: string) {
     .replace(/[Ù¬ï¼Œ]/g, '')
     .replace(/[Ù«]/g, '.')
     .replace(/,/g, '')
-    .replace(/[Ù -Ù©]/g, (d) => String('Ù Ù¡Ù¢Ù£Ù¤Ù¥Ù¦Ù§Ù¨Ù©'.indexOf(d)))
+    .replace(/[Ù -Ù©]/g, (d) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
     .replace(/[Û°-Û¹]/g, (d) => String('Û°Û±Û²Û³Û´ÛµÛ¶Û·Û¸Û¹'.indexOf(d)));
   const value = Number(normalized);
   return value;
@@ -2245,7 +2245,7 @@ export function AdminSettingsPage() {
             autoComplete="off"
             dir="ltr"
             className="font-kpi tabular-nums"
-            placeholder={locale === 'ar' ? 'Ù…Ø«Ø§Ù„: 1480' : 'e.g. 1480'}
+            placeholder={locale === 'ar' ? 'مثال: 1480' : 'e.g. 1480'}
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             required
@@ -2262,7 +2262,7 @@ export function AdminSettingsPage() {
           {t.admin.enableIqdDisplay}
         </label>
         <Button type="submit" disabled={settings.isLoading || saving}>
-          {saving ? (locale === 'ar' ? 'Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø­ÙØ¸â€¦' : 'Savingâ€¦') : t.common.save}
+          {saving ? (locale === 'ar' ? 'جاري الحفظ…' : 'Saving…') : t.common.save}
         </Button>
       </form>
 
