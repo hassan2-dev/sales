@@ -35,17 +35,25 @@ Do **not** deploy the monorepo root — that causes `404 NOT_FOUND`.
 
 Each app already has `vercel.json` (install from repo root, build that app, SPA rewrite → `index.html`).
 
-### Env vars (per project, Production)
+### Domains (one domain per Vercel project)
+
+| App | Root Directory | Domain |
+|-----|----------------|--------|
+| Website | `apps/website` | `www.energy-horizon.net` |
+| Store | `apps/store` | `store.energy-horizon.net` |
+| Admin | `apps/admin` | `admin.energy-horizon.net` |
+
+### Env vars (same on all three projects, Production)
 
 ```
-VITE_API_URL=https://api.your-domain.com/api
-VITE_SITE_URL=https://www.your-domain.com
-VITE_STORE_URL=https://store.your-domain.com
-VITE_ADMIN_URL=https://admin.your-domain.com
+VITE_API_URL=https://api.energy-horizon.net/api
+VITE_SITE_URL=https://www.energy-horizon.net
+VITE_STORE_URL=https://store.energy-horizon.net
+VITE_ADMIN_URL=https://admin.energy-horizon.net
 ```
 
 Optional: `VITE_LOGO_URL=https://…`
 
 Redeploy after changing `VITE_*` (they are baked in at build time).
 
-API stays off Vercel (VPS / Railway / Fly / Docker) — only the three static frontends go to Vercel.
+API stays on Coolify — only the three static frontends go to Vercel.

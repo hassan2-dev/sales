@@ -98,8 +98,8 @@ JWT_ACCESS_SECRET=<random ≥32 chars>
 JWT_REFRESH_SECRET=<random ≥32 chars>
 JWT_ACCESS_EXPIRES=15m
 JWT_REFRESH_EXPIRES=7d
-APP_URL=https://yks3frl77xhsonnej0za7yt3.62.84.181.5.sslip.io
-CORS_ORIGIN=https://www.your-domain.com,https://store.your-domain.com,https://admin.your-domain.com
+APP_URL=https://api.energy-horizon.net
+CORS_ORIGIN=https://www.energy-horizon.net,https://energy-horizon.net,https://store.energy-horizon.net,https://admin.energy-horizon.net
 UPLOAD_MAX_SIZE_MB=10
 ```
 
@@ -117,7 +117,26 @@ npx tsx prisma/seed.ts
 (or run seed from a machine that can reach the same `DATABASE_URL`).  
 Admin: `admin@energy-horizon.net` / `Admin@12345` — change after first login.
 
-Frontends (Vercel): set `VITE_API_URL=https://YOUR-API-HOST/api` and redeploy.
+### 5) Vercel frontends (3 projects)
+
+| Project root | Domain |
+|--------------|--------|
+| `apps/website` | `www.energy-horizon.net` (+ apex `energy-horizon.net` if needed) |
+| `apps/store` | `store.energy-horizon.net` |
+| `apps/admin` | `admin.energy-horizon.net` |
+
+Each project gets **its own** domain — do not attach all three to one Vercel project.
+
+Shared build-time env for all three:
+
+```env
+VITE_API_URL=https://api.energy-horizon.net/api
+VITE_SITE_URL=https://www.energy-horizon.net
+VITE_STORE_URL=https://store.energy-horizon.net
+VITE_ADMIN_URL=https://admin.energy-horizon.net
+```
+
+Redeploy after changing `VITE_*`.
 
 ## Docker Compose
 
