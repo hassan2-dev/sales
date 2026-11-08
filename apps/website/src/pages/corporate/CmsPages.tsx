@@ -410,7 +410,7 @@ export function ServicesPage() {
                       {loc.shortDescription || loc.description}
                     </p>
                     <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
-                      {p.learnMore}
+                      {locale === 'ar' ? `عرض ${loc.name}` : `View ${loc.name}`}
                       <ArrowUpRight className="h-3.5 w-3.5" />
                     </span>
                   </div>
