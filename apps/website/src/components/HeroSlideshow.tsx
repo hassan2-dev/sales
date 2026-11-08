@@ -1,33 +1,94 @@
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/cn';
 
+/** Optimized hero frames (1600×900). First slide uses dedicated LCP assets. */
 const HERO_SLIDES = [
-  '/company/p01-1.jpg',
-  '/company/p05-1.jpg',
-  '/company/p06-1.jpg',
-  '/company/p12-1.jpg',
-  '/company/p14-1.jpg',
-  '/company/p10-1.jpg',
-];
+  {
+    webp: '/company/hero-lcp.webp',
+    jpg: '/company/hero-lcp.jpg',
+    w: 960,
+    h: 1200,
+  },
+  {
+    webp: '/company/p12-1-hero.webp',
+    jpg: '/company/p12-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
+  {
+    webp: '/company/p06-1-hero.webp',
+    jpg: '/company/p06-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
+  {
+    webp: '/company/p14-1-hero.webp',
+    jpg: '/company/p14-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
+  {
+    webp: '/company/p05-1-hero.webp',
+    jpg: '/company/p05-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
+  {
+    webp: '/company/p10-1-hero.webp',
+    jpg: '/company/p10-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
+] as const;
 
 const INTERVAL_MS = 6000;
 
+type Slide = (typeof HERO_SLIDES)[number];
+
 export function HeroSlideshow({
-  images = HERO_SLIDES,
+  images,
   intervalMs = INTERVAL_MS,
   className,
   showDots = true,
 }: {
+  /** Optional override — jpg paths only; converted to single-source slides. */
   images?: string[];
   intervalMs?: number;
   className?: string;
   showDots?: boolean;
 }) {
   const [active, setActive] = useState(0);
-  const slides = images.length ? images : HERO_SLIDES;
+  const [extrasReady, setExtrasReady] = useState(false);
 
+  const slides: Slide[] = images?.length
+    ? images.map((jpg) => ({ webp: jpg, jpg, w: 1600, h: 900 }))
+    : [...HERO_SLIDES];
+
+  // Defer non-LCP frames until after first paint / idle.
   useEffect(() => {
     if (slides.length < 2) return;
+    let cancelled = false;
+    const enable = () => {
+      if (!cancelled) setExtrasReady(true);
+    };
+
+    if ('requestIdleCallback' in window) {
+      const id = window.requestIdleCallback(enable, { timeout: 1800 });
+      return () => {
+        cancelled = true;
+        window.cancelIdleCallback(id);
+      };
+    }
+
+    const t = window.setTimeout(enable, 900);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [slides.length]);
+
+  useEffect(() => {
+    if (!extrasReady || slides.length < 2) return;
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce) return;
 
@@ -35,22 +96,39 @@ export function HeroSlideshow({
       setActive((i) => (i + 1) % slides.length);
     }, intervalMs);
     return () => window.clearInterval(id);
-  }, [slides.length, intervalMs, active]);
+  }, [extrasReady, slides.length, intervalMs]);
 
   return (
     <div className={cn('absolute inset-0 overflow-hidden', className)}>
-      {slides.map((src, i) => (
-        <img
-          key={src}
-          src={src}
-          alt=""
-          aria-hidden
-          className={cn(
-            'hero-slide absolute inset-0 h-full w-full object-cover object-center',
-            i === active && 'is-active',
-          )}
-        />
-      ))}
+      {slides.map((slide, i) => {
+        const isLcp = i === 0;
+        if (!isLcp && !extrasReady && i !== active) return null;
+
+        return (
+          <picture
+            key={slide.jpg}
+            className="pointer-events-none absolute inset-0 block h-full w-full"
+          >
+            {slide.webp !== slide.jpg ? (
+              <source type="image/webp" srcSet={slide.webp} />
+            ) : null}
+            <img
+              src={slide.jpg}
+              alt=""
+              aria-hidden
+              width={slide.w}
+              height={slide.h}
+              fetchPriority={isLcp ? 'high' : 'low'}
+              decoding={isLcp ? 'sync' : 'async'}
+              loading={isLcp ? 'eager' : 'lazy'}
+              className={cn(
+                'hero-slide absolute inset-0 h-full w-full object-cover object-center',
+                i === active && 'is-active',
+              )}
+            />
+          </picture>
+        );
+      })}
 
       <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-t from-black via-black/55 to-black/20" />
       <div className="pointer-events-none absolute inset-0 z-[2] bg-gradient-to-r from-black/75 via-black/35 to-transparent rtl:bg-gradient-to-l" />
@@ -64,7 +142,10 @@ export function HeroSlideshow({
               type="button"
               aria-label={`Slide ${i + 1}`}
               aria-current={i === active || undefined}
-              onClick={() => setActive(i)}
+              onClick={() => {
+                setExtrasReady(true);
+                setActive(i);
+              }}
               className="flex h-9 w-9 items-center justify-center"
             >
               <span
