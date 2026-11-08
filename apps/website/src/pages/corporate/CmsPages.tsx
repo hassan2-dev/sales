@@ -1520,12 +1520,40 @@ const CONTACT_TEAM = [
   },
 ] as const;
 
-function telHref(phone: string) {
-  return `tel:${phone.replace(/[^\d+]/g, '')}`;
+function toDialNumber(phone: string) {
+  const cleaned = phone.replace(/[^\d+]/g, '');
+  return cleaned.startsWith('+') ? cleaned : cleaned.replace(/\D/g, '');
 }
 
-function waHref(phone: string) {
-  return `https://wa.me/${phone.replace(/\D/g, '')}`;
+function toWhatsAppNumber(phone: string) {
+  let digits = phone.replace(/\D/g, '');
+  if (!digits) return '';
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  // Local Iraq mobiles often start with 0 — expand to +964
+  if (digits.startsWith('0') && digits.length >= 10) {
+    digits = `964${digits.slice(1)}`;
+  }
+  return digits;
+}
+
+function telHref(phone: string) {
+  const n = toDialNumber(phone);
+  return n ? `tel:${n}` : undefined;
+}
+
+function waHref(phone: string, name: string, locale: 'en' | 'ar') {
+  const n = toWhatsAppNumber(phone);
+  if (!n) return undefined;
+  const text =
+    locale === 'ar'
+      ? `مرحباً ${name}، أود التواصل بخصوص خدمات افاق الطاقة.`
+      : `Hello ${name}, I'd like to get in touch regarding Energy Horizon.`;
+  return `https://wa.me/${n}?text=${encodeURIComponent(text)}`;
+}
+
+function mailHref(email: string) {
+  const trimmed = email.trim();
+  return trimmed ? `mailto:${trimmed}` : undefined;
 }
 
 export function ContactPage() {
@@ -1629,25 +1657,30 @@ export function ContactPage() {
                 <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:items-stretch">
                   <a
                     href={telHref(owner.phone)}
+                    dir="ltr"
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
+                    aria-label={`${locale === 'ar' ? 'اتصال' : 'Call'} ${owner.phone}`}
                   >
                     <Phone className="h-3.5 w-3.5" aria-hidden />
                     {owner.phone}
                   </a>
                   <a
-                    href={waHref(owner.phone)}
+                    href={waHref(owner.phone, owner.name[locale], locale)}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-accent hover:text-white"
+                    aria-label={`${p.contactWhatsApp} — ${owner.name[locale]}`}
                   >
                     {p.contactWhatsApp}
                   </a>
                   <a
-                    href={`mailto:${owner.email}`}
+                    href={mailHref(owner.email)}
+                    dir="ltr"
                     className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-accent hover:text-white"
+                    aria-label={`${p.contactMail} ${owner.email}`}
                   >
-                    <Mail className="h-3.5 w-3.5" aria-hidden />
-                    {p.contactMail}
+                    <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span className="truncate">{owner.email}</span>
                   </a>
                 </div>
               </div>
@@ -1680,26 +1713,31 @@ export function ContactPage() {
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:min-w-[11rem] sm:items-end">
+                  <div className="flex flex-col gap-1 sm:min-w-[12rem] sm:items-end">
                     <a
                       href={telHref(person.phone)}
+                      dir="ltr"
                       className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-fg transition hover:text-accent"
+                      aria-label={`${locale === 'ar' ? 'اتصال' : 'Call'} ${person.phone}`}
                     >
                       <Phone className="h-3.5 w-3.5 text-accent" aria-hidden />
                       {person.phone}
                     </a>
                     <a
-                      href={`mailto:${person.email}`}
-                      className="inline-flex min-h-10 items-center gap-2 break-all text-sm text-muted transition hover:text-accent"
+                      href={mailHref(person.email)}
+                      dir="ltr"
+                      className="inline-flex min-h-10 max-w-full items-center gap-2 break-all text-sm text-muted transition hover:text-accent"
+                      aria-label={`${p.contactMail} ${person.email}`}
                     >
                       <Mail className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
                       {person.email}
                     </a>
                     <a
-                      href={waHref(person.phone)}
+                      href={waHref(person.phone, person.name[locale], locale)}
                       target="_blank"
-                      rel="noreferrer"
+                      rel="noopener noreferrer"
                       className="inline-flex min-h-10 items-center text-xs font-bold uppercase tracking-[0.14em] text-accent transition hover:underline"
+                      aria-label={`${p.contactWhatsApp} — ${person.name[locale]}`}
                     >
                       {p.contactWhatsApp}
                     </a>
