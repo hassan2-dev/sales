@@ -304,7 +304,7 @@ export function HomePage() {
                         {loc.shortDescription || loc.description}
                       </p>
                       <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-bold text-accent transition group-hover:gap-2.5 group-hover:text-white">
-                        {t.home.learnMore}
+                        {locale === 'ar' ? `عرض ${loc.name}` : `View ${loc.name}`}
                         <ArrowUpRight className="h-3.5 w-3.5 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
                       </span>
                     </div>
