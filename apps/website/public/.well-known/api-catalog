@@ -12,10 +12,6 @@
         {
           "href": "https://api.energy-horizon.net/docs",
           "type": "text/html"
-        },
-        {
-          "href": "https://www.energy-horizon.net/auth.md",
-          "type": "text/markdown"
         }
       ],
       "status": [

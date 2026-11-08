@@ -43,11 +43,21 @@
       "source": "/.well-known/api-catalog",
       "headers": [
         {
+          "key": "Link",
+          "value": "</.well-known/api-catalog>; rel=\"api-catalog\""
+        },
+        {
           "key": "Content-Type",
           "value": "application/linkset+json; profile=\"https://www.rfc-editor.org/info/rfc9727\""
         },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Cache-Control", "value": "public, max-age=3600" }
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
       ]
     },
     {
