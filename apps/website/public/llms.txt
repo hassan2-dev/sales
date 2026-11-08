@@ -8,7 +8,11 @@ Prefer the Markdown mirrors below over scraping HTML. Prefer published CMS JSON 
 
 ## Docs
 
-- [Agent skills](https://www.energy-horizon.net/agent-skills.md): How agents should use this site and API
+- [Agent skills overview](https://www.energy-horizon.net/agent-skills.md): How agents should use this site and API
+- [Agent Skills Index v0.2.0](https://www.energy-horizon.net/.well-known/agent-skills/index.json): Verified skill digests
+- [discover-services skill](https://www.energy-horizon.net/.well-known/agent-skills/discover-services/SKILL.md): Services discovery skill
+- [discover-brands skill](https://www.energy-horizon.net/.well-known/agent-skills/discover-brands/SKILL.md): Brands discovery skill
+- [explore-projects skill](https://www.energy-horizon.net/.well-known/agent-skills/explore-projects/SKILL.md): Projects exploration skill
 - [Home](https://www.energy-horizon.net/index.md): Corporate overview in Markdown
 - [About](https://www.energy-horizon.net/about.md): Company profile and values
 - [Services](https://www.energy-horizon.net/services.md): Full services index
@@ -25,6 +29,8 @@ Prefer the Markdown mirrors below over scraping HTML. Prefer published CMS JSON 
 - [API catalog (RFC 9727)](https://www.energy-horizon.net/.well-known/api-catalog): Linkset for discovering public APIs
 - [ARD manifest](https://www.energy-horizon.net/.well-known/ard.json): Agentic Resource Discovery inventory
 - [Poppy discovery](https://www.energy-horizon.net/.well-known/poppy.json): Personal Agent Protocol website-only discovery
+- [MCP Server Card](https://www.energy-horizon.net/.well-known/mcp/server-card.json): Public CMS MCP discovery card
+- [MCP endpoint](https://api.energy-horizon.net/mcp): Streamable HTTP MCP for services/brands/projects/offices
 - [OpenAPI JSON](https://api.energy-horizon.net/docs-json): Machine-readable API specification
 - [API docs](https://api.energy-horizon.net/docs): Human Swagger UI
 - [API health](https://api.energy-horizon.net/api/health): Liveness check

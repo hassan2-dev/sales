@@ -15,6 +15,8 @@ AI agents may freely use public discovery and catalog resources:
 
 - Website HTML and Markdown mirrors (`Accept: text/markdown` or `*.md`)
 - `llms.txt`, `auth.md`, API Catalog, ARD (`/.well-known/ard.json`), Poppy (`/.well-known/poppy.json`)
+- Agent Skills Index: `/.well-known/agent-skills/index.json`
+- MCP Server Card: `/.well-known/mcp/server-card.json` (transport `https://api.energy-horizon.net/mcp`)
 - Public CMS JSON: services, brands, projects, offices
 - OpenAPI: https://api.energy-horizon.net/docs-json
 

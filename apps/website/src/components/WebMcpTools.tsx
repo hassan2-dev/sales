@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useWebMCP } from 'use-webmcp-tool';
-import { catalogApi } from '@/services/endpoints';
+import { cmsApi } from '@/services/endpoints';
 import { SITE_URL, STORE_URL } from '@/lib/urls';
+import type { Brand, CmsProject, CmsService } from '@/types';
 
 type ListItem = {
   name?: string;
@@ -41,12 +42,12 @@ export function WebMcpTools() {
     },
     annotations: { readOnlyHint: true },
     execute: async ({ query }: { query?: string }) => {
-      const { data } = await catalogApi.services();
+      const { data } = await cmsApi.services();
       const q = String(query || '')
         .trim()
         .toLowerCase();
       const filtered = q
-        ? data.filter((s) =>
+        ? data.filter((s: CmsService) =>
             [s.name, s.shortDescription, s.description]
               .filter(Boolean)
               .join(' ')
@@ -76,12 +77,12 @@ export function WebMcpTools() {
     },
     annotations: { readOnlyHint: true },
     execute: async ({ query }: { query?: string }) => {
-      const { data } = await catalogApi.brands();
+      const { data } = await cmsApi.brands();
       const q = String(query || '')
         .trim()
         .toLowerCase();
       const filtered = q
-        ? data.filter((b) =>
+        ? data.filter((b: Brand) =>
             [b.name, b.description]
               .filter(Boolean)
               .join(' ')
@@ -112,12 +113,12 @@ export function WebMcpTools() {
     },
     annotations: { readOnlyHint: true },
     execute: async ({ query }: { query?: string }) => {
-      const { data } = await catalogApi.projects();
+      const { data } = await cmsApi.projects();
       const q = String(query || '')
         .trim()
         .toLowerCase();
       const filtered = q
-        ? data.filter((p) =>
+        ? data.filter((p: CmsProject) =>
             [p.title, p.shortDescription, p.description]
               .filter(Boolean)
               .join(' ')
@@ -128,7 +129,7 @@ export function WebMcpTools() {
       return {
         count: filtered.length,
         projects: summarize(
-          filtered.map((p) => ({
+          filtered.map((p: CmsProject) => ({
             name: p.title,
             slug: p.slug,
             shortDescription: p.shortDescription,

@@ -49,7 +49,7 @@ const HERO_SLIDES = [
 
 const INTERVAL_MS = 6000;
 
-type Slide = (typeof HERO_SLIDES)[number];
+type Slide = { webp: string; jpg: string; w: number; h: number };
 
 export function HeroSlideshow({
   images,
@@ -78,7 +78,7 @@ export function HeroSlideshow({
       if (!cancelled) setExtrasReady(true);
     };
 
-    if ('requestIdleCallback' in window) {
+    if (typeof window.requestIdleCallback === 'function') {
       const id = window.requestIdleCallback(enable, { timeout: 1800 });
       return () => {
         cancelled = true;

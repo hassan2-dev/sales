@@ -50,7 +50,15 @@ async function main() {
 
   const out = path.join(skillsRoot, 'index.json');
   await fs.writeFile(out, `${JSON.stringify(index, null, 2)}\n`, 'utf8');
+
+  // Keep Poppy skill_index embedded and in sync with the well-known index.
+  const poppyPath = path.join(root, 'public', '.well-known', 'poppy.json');
+  const poppy = JSON.parse(await fs.readFile(poppyPath, 'utf8'));
+  poppy.skill_index = index;
+  await fs.writeFile(poppyPath, `${JSON.stringify(poppy, null, 2)}\n`, 'utf8');
+
   console.log(`Wrote ${out}`);
+  console.log(`Updated ${poppyPath} skill_index`);
   for (const e of entries) console.log(`  ${e.name} ${e.digest}`);
 }
 

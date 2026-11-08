@@ -43,20 +43,28 @@ export class McpService {
           .trim()
           .toLowerCase();
         const filtered = q
-          ? rows.filter((s) =>
-              [s.name, s.shortDescription, s.description]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase()
-                .includes(q),
+          ? rows.filter(
+              (s: { name: string; shortDescription?: string | null; description?: string | null }) =>
+                [s.name, s.shortDescription, s.description]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase()
+                  .includes(q),
             )
           : rows;
-        const payload = filtered.map((s) => ({
-          name: s.name,
-          slug: s.slug,
-          summary: s.shortDescription || s.description,
-          url: `${SITE}/services/${s.slug}`,
-        }));
+        const payload = filtered.map(
+          (s: {
+            name: string;
+            slug: string;
+            shortDescription?: string | null;
+            description?: string | null;
+          }) => ({
+            name: s.name,
+            slug: s.slug,
+            summary: s.shortDescription || s.description,
+            url: `${SITE}/services/${s.slug}`,
+          }),
+        );
         return {
           content: [{ type: 'text' as const, text: JSON.stringify({ count: payload.length, services: payload }, null, 2) }],
         };
@@ -82,7 +90,7 @@ export class McpService {
           .trim()
           .toLowerCase();
         const filtered = q
-          ? rows.filter((b) =>
+          ? rows.filter((b: { name: string; description?: string | null }) =>
               [b.name, b.description]
                 .filter(Boolean)
                 .join(' ')
@@ -90,12 +98,14 @@ export class McpService {
                 .includes(q),
             )
           : rows;
-        const payload = filtered.map((b) => ({
-          name: b.name,
-          slug: b.slug,
-          summary: b.description,
-          url: `${SITE}/brands/${b.slug}`,
-        }));
+        const payload = filtered.map(
+          (b: { name: string; slug: string; description?: string | null }) => ({
+            name: b.name,
+            slug: b.slug,
+            summary: b.description,
+            url: `${SITE}/brands/${b.slug}`,
+          }),
+        );
         return {
           content: [{ type: 'text' as const, text: JSON.stringify({ count: payload.length, brands: payload }, null, 2) }],
         };
@@ -121,20 +131,32 @@ export class McpService {
           .trim()
           .toLowerCase();
         const filtered = q
-          ? rows.filter((p) =>
-              [p.title, p.shortDescription, p.description]
-                .filter(Boolean)
-                .join(' ')
-                .toLowerCase()
-                .includes(q),
+          ? rows.filter(
+              (p: {
+                title: string;
+                shortDescription?: string | null;
+                description?: string | null;
+              }) =>
+                [p.title, p.shortDescription, p.description]
+                  .filter(Boolean)
+                  .join(' ')
+                  .toLowerCase()
+                  .includes(q),
             )
           : rows;
-        const payload = filtered.map((p) => ({
-          name: p.title,
-          slug: p.slug,
-          summary: p.shortDescription || p.description,
-          url: `${SITE}/projects/${p.slug}`,
-        }));
+        const payload = filtered.map(
+          (p: {
+            title: string;
+            slug: string;
+            shortDescription?: string | null;
+            description?: string | null;
+          }) => ({
+            name: p.title,
+            slug: p.slug,
+            summary: p.shortDescription || p.description,
+            url: `${SITE}/projects/${p.slug}`,
+          }),
+        );
         return {
           content: [{ type: 'text' as const, text: JSON.stringify({ count: payload.length, projects: payload }, null, 2) }],
         };
@@ -151,13 +173,21 @@ export class McpService {
       },
       async () => {
         const rows = await this.offices.findAllPublic();
-        const payload = rows.map((o) => ({
-          name: o.name,
-          city: o.city,
-          country: o.country,
-          phone: o.phone,
-          email: o.email,
-        }));
+        const payload = rows.map(
+          (o: {
+            name: string;
+            city?: string | null;
+            country?: string | null;
+            phone?: string | null;
+            email?: string | null;
+          }) => ({
+            name: o.name,
+            city: o.city,
+            country: o.country,
+            phone: o.phone,
+            email: o.email,
+          }),
+        );
         return {
           content: [
             {
