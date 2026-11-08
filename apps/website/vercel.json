@@ -19,7 +19,7 @@
       "headers": [
         {
           "key": "Link",
-          "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </.well-known/ai-catalog.json>; rel=\"describedby\"; type=\"application/json\", <https://api.energy-horizon.net/docs-json>; rel=\"service-desc\"; type=\"application/json\", <https://api.energy-horizon.net/docs>; rel=\"service-doc\"; type=\"text/html\", </llms.txt>; rel=\"describedby\"; type=\"text/plain\", </auth.md>; rel=\"describedby\"; type=\"text/markdown\""
+          "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </.well-known/ai-catalog.json>; rel=\"describedby\"; type=\"application/json\", <https://api.energy-horizon.net/docs-json>; rel=\"service-desc\"; type=\"application/json\", <https://api.energy-horizon.net/docs>; rel=\"service-doc\"; type=\"text/html\", </llms.txt>; rel=\"describedby\"; type=\"text/plain\", </auth.md>; rel=\"describedby\"; type=\"text/markdown\", </index.md>; rel=\"alternate\"; type=\"text/markdown\""
         }
       ]
     },
@@ -36,8 +36,12 @@
       "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
     },
     {
-      "source": "/auth.md",
-      "headers": [{ "key": "Content-Type", "value": "text/markdown; charset=utf-8" }]
+      "source": "/(.*)\\.md",
+      "headers": [
+        { "key": "Content-Type", "value": "text/markdown; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
     },
     {
       "source": "/.well-known/api-catalog",

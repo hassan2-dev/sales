@@ -60,6 +60,17 @@
         "are Energy Horizon CMS endpoints public",
         "JWT and OTP auth for Energy Horizon store"
       ]
+    },
+    {
+      "identifier": "urn:air:energy-horizon.net:content:markdown-mirrors",
+      "displayName": "Markdown page mirrors",
+      "type": "text/markdown",
+      "url": "https://www.energy-horizon.net/index.md",
+      "representativeQueries": [
+        "Energy Horizon site summary in markdown",
+        "list Energy Horizon services as markdown",
+        "read brand and project pages without HTML"
+      ]
     }
   ]
 }

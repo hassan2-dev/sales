@@ -25,3 +25,15 @@ dist-ssr
 
 # Local responsive audit screenshots
 responsive-audit
+
+# Build-generated Markdown mirrors (see scripts/generate-markdown.mjs)
+# Keep auth.md tracked — it is hand-authored.
+/public/index.md
+/public/about.md
+/public/contact.md
+/public/services.md
+/public/brands.md
+/public/projects.md
+/public/services/*.md
+/public/brands/*.md
+/public/projects/*.md

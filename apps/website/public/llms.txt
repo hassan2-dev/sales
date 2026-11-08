@@ -4,7 +4,7 @@
 
 Energy Horizon (آفاق الطاقة) supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors in Iraq.
 
-## Primary site
+## Primary site (HTML)
 
 - Home: https://www.energy-horizon.net/
 - About: https://www.energy-horizon.net/about
@@ -13,6 +13,20 @@ Energy Horizon (آفاق الطاقة) supplies drilling, hydraulic, electrical,
 - Projects: https://www.energy-horizon.net/projects
 - Contact: https://www.energy-horizon.net/contact
 - Sitemap: https://www.energy-horizon.net/sitemap.xml
+
+## Markdown mirrors (preferred for agents)
+
+Built at deploy time from published CMS data. HTML routes stay unchanged for visitors.
+
+- Home: https://www.energy-horizon.net/index.md
+- About: https://www.energy-horizon.net/about.md
+- Services index: https://www.energy-horizon.net/services.md
+- Brands index: https://www.energy-horizon.net/brands.md
+- Projects index: https://www.energy-horizon.net/projects.md
+- Contact: https://www.energy-horizon.net/contact.md
+- Example service: https://www.energy-horizon.net/services/drilling.md
+- Example brand: https://www.energy-horizon.net/brands/alfagomma.md
+- Example project: https://www.energy-horizon.net/projects/sc-pmc2-wq1-manpower.md
 
 ## Related surfaces
 
