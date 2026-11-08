@@ -39,6 +39,12 @@ const HERO_SLIDES = [
     w: 1600,
     h: 900,
   },
+  {
+    webp: '/company/p01-1-hero.webp',
+    jpg: '/company/p01-1-hero.jpg',
+    w: 1600,
+    h: 900,
+  },
 ] as const;
 
 const INTERVAL_MS = 6000;
