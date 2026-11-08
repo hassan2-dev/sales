@@ -31,6 +31,7 @@ import { AuditModule } from './modules/audit/audit.module.js';
 import { DashboardModule } from './modules/dashboard/dashboard.module.js';
 import { SettingsModule } from './modules/settings/settings.module.js';
 import { AnalyticsModule } from './modules/analytics/analytics.module.js';
+import { McpModule } from './modules/mcp/mcp.module.js';
 
 @Module({
   imports: [
@@ -69,6 +70,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module.js';
     DashboardModule,
     SettingsModule,
     AnalyticsModule,
+    McpModule,
   ],
   controllers: [AppController],
   providers: [

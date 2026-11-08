@@ -8,17 +8,9 @@
     {
       "identifier": "urn:air:energy-horizon.net:api:openapi",
       "displayName": "Energy Horizon Public API",
-      "description": "OpenAPI description for public CMS and store catalog endpoints (services, brands, projects, offices, products).",
+      "description": "OpenAPI description for public CMS and store catalog endpoints.",
       "type": "application/vnd.oai.openapi+json",
       "url": "https://api.energy-horizon.net/docs-json",
-      "capabilities": [
-        "listServices",
-        "listBrands",
-        "listProjects",
-        "listOffices",
-        "listProducts",
-        "healthCheck"
-      ],
       "representativeQueries": [
         "What APIs does Energy Horizon provide?",
         "How can I discover Energy Horizon services?",
@@ -38,20 +30,28 @@
       ]
     },
     {
-      "identifier": "urn:air:energy-horizon.net:skills:site",
-      "displayName": "Energy Horizon agent skills",
-      "description": "Guidance for AI agents using Energy Horizon Markdown mirrors and public CMS APIs.",
-      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
-      "url": "https://www.energy-horizon.net/agent-skills.md",
-      "capabilities": [
-        "discoverSiteContent",
-        "queryPublicCms",
-        "useOpenApi"
-      ],
+      "identifier": "urn:air:energy-horizon.net:mcp:public-cms",
+      "displayName": "Energy Horizon Public CMS MCP",
+      "description": "Streamable HTTP MCP server for listing published services, brands, projects, and offices.",
+      "type": "application/mcp-server-card+json",
+      "url": "https://www.energy-horizon.net/.well-known/mcp/server-card.json",
+      "capabilities": ["list_services", "list_brands", "list_projects", "list_offices"],
       "representativeQueries": [
-        "how should an AI agent use Energy Horizon content",
-        "which Energy Horizon APIs are public without auth",
-        "summarize Energy Horizon services brands and projects from CMS"
+        "list Energy Horizon services through MCP",
+        "which brands does Energy Horizon represent via MCP",
+        "Energy Horizon project references MCP tools"
+      ]
+    },
+    {
+      "identifier": "urn:air:energy-horizon.net:skills:index",
+      "displayName": "Energy Horizon Agent Skills Index",
+      "description": "Agent Skills discovery index v0.2.0 with SHA-256 digests for discover-services, discover-brands, and explore-projects.",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://www.energy-horizon.net/.well-known/agent-skills/index.json",
+      "representativeQueries": [
+        "Energy Horizon agent skills index",
+        "how should an agent discover Energy Horizon services",
+        "verified skill digests for Energy Horizon"
       ]
     }
   ]

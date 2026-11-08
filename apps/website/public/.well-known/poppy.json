@@ -11,6 +11,14 @@
       "type": "openapi",
       "url": "https://api.energy-horizon.net/docs-json",
       "description": "Public CMS and catalog API for services, brands, projects, offices, and products (no OAuth; JWT only on protected admin/store routes)"
+    },
+    {
+      "type": "mcp",
+      "url": "https://api.energy-horizon.net/mcp",
+      "description": "Public CMS MCP tools for services, brands, projects, and offices"
     }
-  ]
+  ],
+  "skill_index": {
+    "url": "https://www.energy-horizon.net/.well-known/agent-skills/index.json"
+  }
 }

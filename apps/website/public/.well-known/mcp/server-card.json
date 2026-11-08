@@ -1,0 +1,15 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/v1/server-card.schema.json",
+  "name": "energy-horizon.net/public-cms",
+  "version": "1.0.0",
+  "description": "Public CMS tools for Energy Horizon services, brands, and projects.",
+  "title": "Energy Horizon Public CMS",
+  "websiteUrl": "https://www.energy-horizon.net",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.energy-horizon.net/mcp",
+      "supportedProtocolVersions": ["2025-06-18", "2025-03-26"]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { RequestMethod, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -14,7 +14,13 @@ async function bootstrap() {
   const config = app.get(ConfigService);
 
   const prefix = config.get<string>('API_PREFIX', 'api');
-  app.setGlobalPrefix(prefix);
+  // MCP Streamable HTTP lives at /mcp (not under /api) for Server Card remotes.
+  app.setGlobalPrefix(prefix, {
+    exclude: [
+      { path: 'mcp', method: RequestMethod.ALL },
+      { path: 'mcp/(.*)', method: RequestMethod.ALL },
+    ],
+  });
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   app.use(cookieParser());
@@ -23,7 +29,13 @@ async function bootstrap() {
     origin: config.get<string>('CORS_ORIGIN', 'http://localhost:5173').split(','),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Session-Id'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Session-Id',
+      'Mcp-Session-Id',
+      'MCP-Protocol-Version',
+    ],
   });
 
   app.useGlobalPipes(

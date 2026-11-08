@@ -1,0 +1,26 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "discover-services",
+      "type": "skill-md",
+      "description": "Discover Energy Horizon industrial services in Iraq (drilling, hydraulic, electrical, PPE, manpower, procurement). Use when a user asks what Energy Horizon supplies or which service lines are available.",
+      "url": "https://www.energy-horizon.net/.well-known/agent-skills/discover-services/SKILL.md",
+      "digest": "sha256:4f6940fc0816e4b28dc22d58999b0e46223a6624c43432aacf833964e60d17e8"
+    },
+    {
+      "name": "discover-brands",
+      "type": "skill-md",
+      "description": "Discover brands and manufacturers represented by Energy Horizon. Use when a user asks which brands, OEM lines, or product partners Energy Horizon carries in Iraq.",
+      "url": "https://www.energy-horizon.net/.well-known/agent-skills/discover-brands/SKILL.md",
+      "digest": "sha256:a20d690ebd069c49f735acc00b578def4e824863a1c662272b46789b825ea4bf"
+    },
+    {
+      "name": "explore-projects",
+      "type": "skill-md",
+      "description": "Explore Energy Horizon project references and field work in Iraq. Use when a user asks for experience, case studies, manpower deployments, or completed project evidence.",
+      "url": "https://www.energy-horizon.net/.well-known/agent-skills/explore-projects/SKILL.md",
+      "digest": "sha256:5872a4d3f986f2508ad79fbea316fef1497b1f6270f36aab101778a6b4b2c97c"
+    }
+  ]
+}

@@ -8,7 +8,8 @@
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
     "generate:markdown": "node scripts/generate-markdown.mjs",
     "test:markdown": "node scripts/test-markdown-negotiation.mjs",
-    "prebuild": "npm run generate:sitemap && npm run generate:markdown",
+    "generate:skills": "node scripts/generate-agent-skills-index.mjs",
+    "prebuild": "npm run generate:sitemap && npm run generate:markdown && npm run generate:skills",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview"

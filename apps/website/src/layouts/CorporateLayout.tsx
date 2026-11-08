@@ -13,6 +13,7 @@ import {
   useSiteScrollChrome,
 } from '@/components/SiteScrollChrome';
 import { trackSiteVisit } from '@/lib/visitor';
+import { WebMcpTools } from '@/components/WebMcpTools';
 
 export function CorporateLayout() {
   const [open, setOpen] = useState(false);
@@ -34,6 +35,7 @@ export function CorporateLayout() {
 
   return (
     <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-page text-fg" dir={dir}>
+      <WebMcpTools />
       <header className="sticky top-0 z-50 border-b border-line bg-card/95 text-fg shadow-sm shadow-black/5 backdrop-blur-md supports-[backdrop-filter]:bg-card/90 dark:shadow-black/25">
         <div className="mx-auto flex h-14 min-w-0 max-w-[90rem] items-center justify-between gap-2 px-3 sm:h-[4.25rem] sm:gap-4 sm:px-6 lg:px-10">
           <Logo
