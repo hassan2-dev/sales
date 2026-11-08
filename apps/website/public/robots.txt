@@ -1,6 +1,8 @@
 User-agent: *
 Allow: /
+
 Disallow: /admin/
+Disallow: /store/
 Disallow: /store/account/
 
-Sitemap: https://energy-horizon.net/sitemap.xml
+Sitemap: https://www.energy-horizon.net/sitemap.xml

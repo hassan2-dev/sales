@@ -1,7 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 
 const SITE = 'Energy Horizon';
-const BASE = 'https://energy-horizon.net';
+const BASE = 'https://www.energy-horizon.net';
 
 export function Seo({
   title,
