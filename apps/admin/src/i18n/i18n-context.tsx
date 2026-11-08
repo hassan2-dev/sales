@@ -25,6 +25,12 @@ function readLocale(): Locale {
   return navigator.language.toLowerCase().startsWith('ar') ? 'ar' : 'en';
 }
 
+function applyDocumentLocale(locale: Locale) {
+  const dir = locale === 'ar' ? 'rtl' : 'ltr';
+  document.documentElement.lang = locale;
+  document.documentElement.dir = dir;
+}
+
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => readLocale());
 
@@ -37,12 +43,10 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     setLocale(locale === 'en' ? 'ar' : 'en');
   }, [locale, setLocale]);
 
-  const dir: 'ltr' | 'rtl' = 'rtl';
+  const dir: 'ltr' | 'rtl' = locale === 'ar' ? 'rtl' : 'ltr';
 
   useEffect(() => {
-    document.documentElement.lang = locale;
-    // Keep layout RTL always so language toggle only changes text (no left/right jump).
-    document.documentElement.dir = 'rtl';
+    applyDocumentLocale(locale);
   }, [locale]);
 
   const value = useMemo(
