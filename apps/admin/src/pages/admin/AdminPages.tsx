@@ -1100,7 +1100,7 @@ export function AdminOrdersPage() {
                     <p className="mt-1 truncate text-sm">
                       {o.customer?.firstName} {o.customer?.lastName}
                     </p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="ltr-isolate text-xs text-muted-foreground" dir="ltr">
                       {o.customer?.phone || o.customer?.email || '—'}
                     </p>
                   </div>
@@ -1150,10 +1150,12 @@ export function AdminOrdersPage() {
                         <p>
                           {o.customer?.firstName} {o.customer?.lastName}
                         </p>
-                        <p className="text-xs text-muted-foreground">{o.customer?.email}</p>
+                        <p className="ltr-isolate text-xs text-muted-foreground" dir="ltr">
+                          {o.customer?.email}
+                        </p>
                       </div>
                     </td>
-                    <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
+                    <td className="ltr-isolate hidden px-4 py-3 text-muted-foreground lg:table-cell" dir="ltr">
                       {o.customer?.phone || '—'}
                     </td>
                     <td className="px-4 py-3 font-kpi font-semibold whitespace-nowrap">
@@ -1350,8 +1352,16 @@ export function AdminOrderDetailPage() {
                 {t.admin.company}: {o.customer.company}
               </p>
             ) : null}
-            {o.customer?.email ? <p>{o.customer.email}</p> : null}
-            {o.customer?.phone ? <p>{o.customer.phone}</p> : null}
+            {o.customer?.email ? (
+              <p className="ltr-isolate" dir="ltr">
+                {o.customer.email}
+              </p>
+            ) : null}
+            {o.customer?.phone ? (
+              <p className="ltr-isolate" dir="ltr">
+                {o.customer.phone}
+              </p>
+            ) : null}
             {o.shippingAddress ? (
               <div className="pt-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
@@ -1492,7 +1502,15 @@ export function AdminCustomersPage() {
       fetcher={() => customersApi.list()}
       columns={(row) => (
         <Link to={adminPath(`customers/${row.id}`)} className="font-medium text-accent">
-          {String(row.firstName)} {String(row.lastName)} · {String(row.email)}
+          {String(row.firstName)} {String(row.lastName)}
+          {row.email ? (
+            <>
+              {' · '}
+              <span dir="ltr" className="ltr-isolate">
+                {String(row.email)}
+              </span>
+            </>
+          ) : null}
         </Link>
       )}
     />
@@ -1513,7 +1531,16 @@ export function AdminCustomerDetailPage() {
       <h1 className="text-2xl font-bold text-fg">
         {customer.data.firstName} {customer.data.lastName}
       </h1>
-      <p className="text-sm text-muted">{customer.data.email}</p>
+      {customer.data.email ? (
+        <p className="ltr-isolate text-sm text-muted" dir="ltr">
+          {customer.data.email}
+        </p>
+      ) : null}
+      {customer.data.phone ? (
+        <p className="ltr-isolate text-sm text-muted" dir="ltr">
+          {customer.data.phone}
+        </p>
+      ) : null}
       <p className="text-sm">{customer.data.company || ''}</p>
     </div>
   );
@@ -1676,8 +1703,16 @@ export function AdminQuoteDetailPage() {
                   {t.admin.company}: {q.customer?.company || q.company}
                 </p>
               ) : null}
-              {(q.customer?.email || q.email) ? <p>{q.customer?.email || q.email}</p> : null}
-              {(q.customer?.phone || q.phone) ? <p>{q.customer?.phone || q.phone}</p> : null}
+              {q.customer?.email || q.email ? (
+                <p className="ltr-isolate" dir="ltr">
+                  {q.customer?.email || q.email}
+                </p>
+              ) : null}
+              {q.customer?.phone || q.phone ? (
+                <p className="ltr-isolate" dir="ltr">
+                  {q.customer?.phone || q.phone}
+                </p>
+              ) : null}
               {(q.customer?.city || q.city) ? <p>{q.customer?.city || q.city}</p> : null}
               {(q.customer?.address || q.address) ? (
                 <p className="whitespace-pre-wrap">{q.customer?.address || q.address}</p>

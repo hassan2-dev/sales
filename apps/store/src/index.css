@@ -312,6 +312,13 @@
     text-decoration: none;
   }
 
+  /* Isolate phone/email *text* in RTL so +964 stays correct without flipping icon order */
+  .ltr-isolate {
+    direction: ltr;
+    unicode-bidi: isolate;
+    text-align: left;
+  }
+
   ::selection {
     background: rgb(0 112 192 / 0.35);
     color: #fff;

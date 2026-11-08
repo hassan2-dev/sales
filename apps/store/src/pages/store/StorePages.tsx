@@ -1448,7 +1448,7 @@ export function CartPage() {
                       <strong>
                         {user?.firstName} {user?.lastName}
                       </strong>{' '}
-                      · {user?.phone}
+                      · <span className="ltr-isolate" dir="ltr">{user?.phone}</span>
                     </div>
                     <p className="text-xs text-muted">
                       {locale === 'ar'
@@ -1658,7 +1658,14 @@ export function StoreLoginPage() {
                   ? 'الاسم ورقم الهاتف مطلوبان'
                   : 'Name and phone are required'
                 : locale === 'ar'
-                  ? `رمز أُرسل إلى ${phone}`
+                  ? (
+                      <>
+                        رمز أُرسل إلى{' '}
+                        <span className="ltr-isolate" dir="ltr">
+                          {phone}
+                        </span>
+                      </>
+                    )
                   : `Code sent to ${phone}`}
             </CardDescription>
           </CardHeader>
@@ -1698,6 +1705,8 @@ export function StoreLoginPage() {
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     placeholder="07XXXXXXXXX"
+                    dir="ltr"
+                    className="ltr-isolate"
                     required
                   />
                 </div>
@@ -1826,7 +1835,10 @@ export function MyOrdersPage() {
               {locale === 'ar' ? 'طلباتي' : 'My orders'}
             </h1>
             <p className="mt-2 text-sm text-muted">
-              {user?.firstName} {user?.lastName} · {user?.phone || user?.email}
+              {user?.firstName} {user?.lastName} ·{' '}
+              <span className="ltr-isolate" dir="ltr">
+                {user?.phone || user?.email}
+              </span>
             </p>
           </div>
           <Button variant="outline" className="rounded-xl" onClick={() => void logout()}>
@@ -1951,7 +1963,11 @@ export function MyOrderDetailPage() {
           {o.customer?.company ? (
             <p className="text-sm text-muted">{o.customer.company}</p>
           ) : null}
-          {o.customer?.phone ? <p className="text-sm text-muted">{o.customer.phone}</p> : null}
+          {o.customer?.phone ? (
+            <p className="ltr-isolate text-sm text-muted" dir="ltr">
+              {o.customer.phone}
+            </p>
+          ) : null}
           {o.customer?.email && !o.customer.email.endsWith('@customers.local') ? (
             <p className="text-sm text-muted">{o.customer.email}</p>
           ) : null}

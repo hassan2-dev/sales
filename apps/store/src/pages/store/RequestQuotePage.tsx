@@ -444,7 +444,7 @@ export function RequestQuotePage() {
                   <strong>
                     {user?.firstName} {user?.lastName}
                   </strong>{' '}
-                  · {user?.phone}
+                  · <span className="ltr-isolate" dir="ltr">{user?.phone}</span>
                 </div>
 
                 <div>
@@ -473,7 +473,7 @@ export function RequestQuotePage() {
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label>{locale === 'ar' ? 'الهاتف *' : 'Phone *'}</Label>
-                      <Input value={phone} readOnly className="opacity-80" />
+                      <Input value={phone} readOnly dir="ltr" className="ltr-isolate opacity-80" />
                     </div>
                     <div className="space-y-1.5 sm:col-span-2">
                       <Label>{locale === 'ar' ? 'البريد' : 'Email'}</Label>

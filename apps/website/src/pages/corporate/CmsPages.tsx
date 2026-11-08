@@ -1520,6 +1520,14 @@ const CONTACT_TEAM = [
   },
 ] as const;
 
+function WhatsAppIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+    </svg>
+  );
+}
+
 function toDialNumber(phone: string) {
   const cleaned = phone.replace(/[^\d+]/g, '');
   return cleaned.startsWith('+') ? cleaned : cleaned.replace(/\D/g, '');
@@ -1657,89 +1665,104 @@ export function ContactPage() {
                 <div className="flex flex-col gap-2 sm:flex-row lg:flex-col lg:items-stretch">
                   <a
                     href={telHref(owner.phone)}
-                    dir="ltr"
                     className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-sm font-bold text-white transition hover:brightness-110"
                     aria-label={`${locale === 'ar' ? 'اتصال' : 'Call'} ${owner.phone}`}
                   >
                     <Phone className="h-3.5 w-3.5" aria-hidden />
-                    {owner.phone}
+                    <span dir="ltr" className="ltr-isolate">
+                      {owner.phone}
+                    </span>
                   </a>
                   <a
                     href={waHref(owner.phone, owner.name[locale], locale)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-accent hover:text-white"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-[#25D366] hover:text-white"
                     aria-label={`${p.contactWhatsApp} — ${owner.name[locale]}`}
                   >
+                    <WhatsAppIcon className="h-4 w-4 shrink-0 text-[#25D366]" />
                     {p.contactWhatsApp}
                   </a>
                   <a
                     href={mailHref(owner.email)}
-                    dir="ltr"
                     className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2.5 text-sm font-bold text-white/85 transition hover:border-accent hover:text-white"
                     aria-label={`${p.contactMail} ${owner.email}`}
                   >
                     <Mail className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                    <span className="truncate">{owner.email}</span>
+                    <span dir="ltr" className="ltr-isolate truncate">
+                      {owner.email}
+                    </span>
                   </a>
                 </div>
               </div>
             </div>
           </Reveal>
 
-          <div className="mt-4 divide-y divide-line border-y border-line">
+          <div className="mt-6 grid gap-4 sm:mt-8 lg:grid-cols-2 lg:gap-5">
             {managers.map((person, i) => (
               <Reveal key={person.id} delay={i}>
-                <article className="group grid gap-5 py-8 sm:grid-cols-[4rem_1fr_auto] sm:items-start sm:gap-8 lg:gap-12">
-                  <span className="font-kpi text-3xl leading-none text-accent/35 transition group-hover:text-accent/70 sm:text-4xl">
-                    {String(i + 2).padStart(2, '0')}
-                  </span>
-
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                      <h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">
-                        {person.name[locale]}
-                      </h3>
-                      <span className="text-xs font-bold uppercase tracking-[0.14em] text-accent">
-                        {person.role[locale]}
+                <article className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-line bg-white transition duration-300 hover:border-accent/40 dark:bg-[#0f1722]">
+                  <div
+                    className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-0 transition group-hover:opacity-100"
+                    aria-hidden
+                  />
+                  <div className="flex flex-1 flex-col gap-5 p-5 sm:p-6">
+                    <div className="flex items-start gap-4">
+                      <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-sm font-extrabold tracking-wide text-accent ring-1 ring-accent/15 transition group-hover:bg-accent group-hover:text-white group-hover:ring-accent sm:h-16 sm:w-16 sm:text-base">
+                        {person.initials}
                       </span>
+                      <div className="min-w-0 pt-0.5">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-accent">
+                          {person.role[locale]}
+                        </p>
+                        <h3 className="mt-1.5 text-lg font-extrabold tracking-tight sm:text-xl">
+                          {person.name[locale]}
+                        </h3>
+                        <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-muted">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+                          {person.office[locale]}
+                        </p>
+                      </div>
                     </div>
-                    <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+
+                    <p className="text-sm leading-relaxed text-muted sm:text-[0.95rem]">
                       {person.bio[locale]}
-                    </p>
-                    <p className="mt-3 inline-flex items-center gap-1.5 text-xs font-medium text-muted">
-                      <MapPin className="h-3.5 w-3.5 text-accent" aria-hidden />
-                      {person.office[locale]}
                     </p>
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:min-w-[12rem] sm:items-end">
+                  <div className="mt-auto grid grid-cols-3 border-t border-line divide-x divide-line dark:divide-white/10">
                     <a
                       href={telHref(person.phone)}
-                      dir="ltr"
-                      className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-fg transition hover:text-accent"
+                      className="flex flex-col items-center justify-center gap-1.5 px-2 py-3.5 text-center transition hover:bg-accent/5"
                       aria-label={`${locale === 'ar' ? 'اتصال' : 'Call'} ${person.phone}`}
                     >
-                      <Phone className="h-3.5 w-3.5 text-accent" aria-hidden />
-                      {person.phone}
-                    </a>
-                    <a
-                      href={mailHref(person.email)}
-                      dir="ltr"
-                      className="inline-flex min-h-10 max-w-full items-center gap-2 break-all text-sm text-muted transition hover:text-accent"
-                      aria-label={`${p.contactMail} ${person.email}`}
-                    >
-                      <Mail className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-                      {person.email}
+                      <Phone className="h-4 w-4 text-accent" aria-hidden />
+                      <span dir="ltr" className="ltr-isolate text-[11px] font-bold leading-tight text-fg">
+                        {person.phone}
+                      </span>
                     </a>
                     <a
                       href={waHref(person.phone, person.name[locale], locale)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex min-h-10 items-center text-xs font-bold uppercase tracking-[0.14em] text-accent transition hover:underline"
+                      className="flex flex-col items-center justify-center gap-1.5 px-2 py-3.5 text-center transition hover:bg-[#25D366]/8"
                       aria-label={`${p.contactWhatsApp} — ${person.name[locale]}`}
                     >
-                      {p.contactWhatsApp}
+                      <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />
+                      <span className="text-[11px] font-bold leading-tight text-fg">
+                        {p.contactWhatsApp}
+                      </span>
+                    </a>
+                    <a
+                      href={mailHref(person.email)}
+                      className="flex flex-col items-center justify-center gap-1.5 px-2 py-3.5 text-center transition hover:bg-accent/5"
+                      aria-label={`${p.contactMail} ${person.email}`}
+                      title={person.email}
+                    >
+                      <Mail className="h-4 w-4 text-accent" aria-hidden />
+                      <span className="text-[11px] font-bold leading-tight text-fg">
+                        {p.contactMail}
+                      </span>
                     </a>
                   </div>
                 </article>

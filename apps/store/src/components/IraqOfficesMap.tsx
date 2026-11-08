@@ -250,7 +250,9 @@ export function IraqOfficesMap({
                   className="flex items-start gap-3 text-base font-bold text-accent transition hover:text-fg dark:hover:text-white"
                 >
                   <Phone className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                  <span className="min-w-0 break-all">{selectedOffice.phone}</span>
+                  <span dir="ltr" className="ltr-isolate min-w-0 break-all">
+                    {selectedOffice.phone}
+                  </span>
                 </a>
               ) : null}
               {selectedOffice.email ? (
@@ -259,7 +261,9 @@ export function IraqOfficesMap({
                   className="flex items-start gap-3 text-sm font-medium text-muted transition hover:text-fg dark:text-white/60 dark:hover:text-white"
                 >
                   <Mail className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-                  <span className="min-w-0 break-all">{selectedOffice.email}</span>
+                  <span dir="ltr" className="ltr-isolate min-w-0 break-all">
+                    {selectedOffice.email}
+                  </span>
                 </a>
               ) : null}
               {selectedOffice.contactPerson ? (
@@ -292,7 +296,8 @@ export function IraqOfficesMap({
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="h-11 w-full rounded-lg border border-border bg-page px-3 text-sm font-medium text-fg outline-none transition focus:border-accent dark:border-white/15 dark:bg-white/5 dark:text-white"
+                  dir="ltr"
+                  className="ltr-isolate h-11 w-full rounded-lg border border-border bg-page px-3 text-sm font-medium text-fg outline-none transition focus:border-accent dark:border-white/15 dark:bg-white/5 dark:text-white"
                   autoComplete="tel"
                   inputMode="tel"
                 />

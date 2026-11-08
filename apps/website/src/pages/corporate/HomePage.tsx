@@ -465,7 +465,9 @@ export function HomePage() {
                         href={`tel:${o.phone.replace(/\s/g, '')}`}
                         className="mt-3 inline-block text-sm font-bold text-accent"
                       >
-                        {o.phone}
+                        <span dir="ltr" className="ltr-isolate">
+                          {o.phone}
+                        </span>
                       </a>
                     ) : null}
                   </div>

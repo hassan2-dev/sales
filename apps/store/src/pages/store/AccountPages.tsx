@@ -214,7 +214,7 @@ export function AccountShell() {
           <h1 className="mt-0.5 truncate text-lg font-extrabold tracking-tight text-fg sm:text-2xl">
             {displayName}
           </h1>
-          <p className="mt-0.5 truncate text-xs text-muted sm:text-sm" dir="ltr">
+          <p className="ltr-isolate mt-0.5 truncate text-xs text-muted sm:text-sm" dir="ltr">
             {user?.phone || user?.email}
           </p>
         </div>
@@ -413,7 +413,7 @@ export function AccountProfilePage() {
                     value={user?.phone || profile.data?.phone || ''}
                     readOnly
                     dir="ltr"
-                    className="opacity-80"
+                    className="ltr-isolate opacity-80"
                   />
                 </div>
                 <div className="space-y-1.5">
