@@ -1,56 +1,57 @@
-# Energy Horizon — Authentication for Agents
+# Auth.md
 
-This document describes how authentication works on the Energy Horizon platform.
-There is **no OAuth 2.0 / OpenID Connect authorization server** published today.
-Do not expect `/.well-known/openid-configuration` or `/.well-known/oauth-authorization-server` on this origin.
+## Energy Horizon API Authentication
 
-## Public resources (no authentication)
+The Energy Horizon API uses JWT Bearer Token
+authentication for protected endpoints.
 
-These endpoints are intended for crawlers, SEO tooling, and AI agents:
+## API Base URL
 
-| Resource | URL |
-| --- | --- |
-| Corporate site | `https://www.energy-horizon.net/` |
-| API catalog | `https://www.energy-horizon.net/.well-known/api-catalog` |
-| AI catalog | `https://www.energy-horizon.net/.well-known/ai-catalog.json` |
-| OpenAPI JSON | `https://api.energy-horizon.net/docs-json` |
-| Swagger UI | `https://api.energy-horizon.net/docs` |
-| Health | `https://api.energy-horizon.net/api/health` |
-| Services / brands / projects / offices | `https://api.energy-horizon.net/api/{services\|brands\|projects\|offices}` |
+https://api.energy-horizon.net/api
 
-## Protected APIs
+## Public API
 
-Admin and authenticated store/customer actions require a **JWT Bearer** access token.
+Public endpoints do not require authentication.
 
-```http
-Authorization: Bearer <access_token>
-```
+Examples:
 
-### Customer / store login (OTP)
+- GET /services
+- GET /brands
+- GET /projects
+- GET /offices
+- GET /health
 
-1. `POST /api/auth/otp/request` with `{ "phone": "..." }`
-2. `POST /api/auth/otp/verify` with phone + code (+ optional profile fields)
-3. Use returned `accessToken` as Bearer auth; refresh via `POST /api/auth/refresh`
+## Protected API
 
-### Staff / admin login (email + password)
+Protected endpoints require:
 
-1. `POST /api/auth/login` with `{ "email": "...", "password": "..." }`
-2. Use returned `accessToken` as Bearer auth
+Authorization: Bearer YOUR_ACCESS_TOKEN
 
-### Current user
+Staff login: POST /auth/login  
+Customer OTP: POST /auth/otp/request then POST /auth/otp/verify  
+Refresh: POST /auth/refresh
 
-`GET /api/auth/me` with Bearer token.
+## Token Acquisition
 
-## Agent registration
+Access tokens must be obtained through the
+official Energy Horizon authentication process.
 
-There is **no public agent self-registration** flow and no Auth.md OAuth `register_uri` at this time.
-Agents should:
+Do not assume OAuth 2.0 or OpenID Connect support.
+There is no public agent self-registration endpoint.
 
-1. Use public CMS and catalog endpoints without credentials.
-2. Only request authenticated access if Energy Horizon has issued credentials for a specific integration.
+## Security
 
-## Related discovery files
+Never expose credentials or access tokens
+to unauthorized agents.
 
-- `/.well-known/api-catalog` — RFC 9727 linkset
-- `/.well-known/ai-catalog.json` — ARD / AI capability catalog
-- `/llms.txt` — site summary for language models
+Never put tokens in URLs or public logs.
+Do not attempt to access admin or customer data
+without explicit authorization.
+
+## Documentation
+
+https://api.energy-horizon.net/docs
+
+## Contact
+
+https://www.energy-horizon.net/contact
