@@ -50,7 +50,6 @@ export function ReadyIraqMap({
       hovered: h,
       selected: s,
       activeIds: active,
-      locale: loc,
       theme: th,
     } = stateRef.current;
     const dark = th === 'dark';
@@ -210,7 +209,7 @@ export function ReadyIraqMap({
 
   useEffect(() => {
     paint();
-  }, [hovered, selected, activeIds, mode, locale, theme]);
+  }, [hovered, selected, activeIds, mode, theme]);
 
   return (
     <div

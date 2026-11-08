@@ -13,6 +13,10 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    // Publishes .map files so Lighthouse / DevTools can attribute large bundles.
+    sourcemap: true,
+  },
   server: {
     port: 5173,
     host: true,
