@@ -5,4 +5,8 @@ Disallow: /admin/
 Disallow: /store/
 Disallow: /store/account/
 
+# Content-Signal policy intentionally omitted until company decision
+# (ai-train / search / ai-input). Add after approval.
+
 Sitemap: https://www.energy-horizon.net/sitemap.xml
+Agentmap: https://www.energy-horizon.net/.well-known/ai-catalog.json

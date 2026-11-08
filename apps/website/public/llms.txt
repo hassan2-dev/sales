@@ -1,0 +1,51 @@
+# Energy Horizon
+
+> Oil & Gas industrial supply, engineering support, and procurement from Iraq — Baghdad HQ, Basra desk, and America commercial follow-up.
+
+Energy Horizon (آفاق الطاقة) supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors in Iraq.
+
+## Primary site
+
+- Home: https://www.energy-horizon.net/
+- About: https://www.energy-horizon.net/about
+- Services: https://www.energy-horizon.net/services
+- Brands: https://www.energy-horizon.net/brands
+- Projects: https://www.energy-horizon.net/projects
+- Contact: https://www.energy-horizon.net/contact
+- Sitemap: https://www.energy-horizon.net/sitemap.xml
+
+## Related surfaces
+
+- Online store: https://store.energy-horizon.net/
+- Public API base: https://api.energy-horizon.net/api
+- OpenAPI (machine): https://api.energy-horizon.net/docs-json
+- API docs (human): https://api.energy-horizon.net/docs
+- API health: https://api.energy-horizon.net/api/health
+
+## Agent discovery
+
+- API catalog: https://www.energy-horizon.net/.well-known/api-catalog
+- ARD / AI catalog: https://www.energy-horizon.net/.well-known/ai-catalog.json
+- Auth notes: https://www.energy-horizon.net/auth.md
+
+## Public CMS endpoints (no auth)
+
+- GET https://api.energy-horizon.net/api/services
+- GET https://api.energy-horizon.net/api/services/slug/{slug}
+- GET https://api.energy-horizon.net/api/brands
+- GET https://api.energy-horizon.net/api/brands/slug/{slug}
+- GET https://api.energy-horizon.net/api/projects
+- GET https://api.energy-horizon.net/api/projects/slug/{slug}
+- GET https://api.energy-horizon.net/api/offices
+- GET https://api.energy-horizon.net/api/products (store catalog; paginated)
+
+## Languages
+
+Site UI supports Arabic and English client-side. Prefer English field names from the API (`name`, `description`, `shortDescription`) and use `nameAr` / `descriptionAr` / `shortDescriptionAr` when answering in Arabic.
+
+## Guidance for agents
+
+1. Prefer published CMS JSON over scraping HTML when summarizing services, brands, or projects.
+2. For human-facing answers about contact, use the Contact page managers and offices data.
+3. Do not invent OAuth discovery; protected admin/store routes use JWT Bearer tokens (see auth.md).
+4. Products live primarily on the store subdomain; the corporate site focuses on services, brands, and projects.

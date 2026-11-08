@@ -1,0 +1,29 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://api.energy-horizon.net/api",
+      "service-desc": [
+        {
+          "href": "https://api.energy-horizon.net/docs-json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://api.energy-horizon.net/docs",
+          "type": "text/html"
+        },
+        {
+          "href": "https://www.energy-horizon.net/auth.md",
+          "type": "text/markdown"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://api.energy-horizon.net/api/health",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}
