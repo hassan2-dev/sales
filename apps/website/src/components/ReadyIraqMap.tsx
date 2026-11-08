@@ -103,7 +103,10 @@ export function ReadyIraqMap({
         path.style.filter = 'none';
       }
 
+      path.setAttribute('role', 'button');
+      path.setAttribute('tabindex', '0');
       path.setAttribute('aria-label', loc === 'ar' ? g.nameAr : g.nameEn);
+      path.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
     }
 
     let markers = svg.querySelector('#eh-markers') as SVGGElement | null;
@@ -179,10 +182,18 @@ export function ReadyIraqMap({
         path.style.strokeWidth = '1.25';
         path.style.strokeLinejoin = 'round';
 
+        path.setAttribute('role', 'button');
+        path.setAttribute('tabindex', '0');
         path.addEventListener('pointerenter', () => onHoverRef.current(g.id));
         path.addEventListener('pointerleave', () => onHoverRef.current(null));
         path.addEventListener('click', () => onSelectRef.current?.(g.id));
         path.addEventListener('touchstart', () => onHoverRef.current(g.id), { passive: true });
+        path.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            onSelectRef.current?.(g.id);
+          }
+        });
       }
 
       paint();
@@ -205,7 +216,7 @@ export function ReadyIraqMap({
     <div
       ref={hostRef}
       className={cn('iraq-ready-map w-full [&_svg]:mx-auto', className)}
-      role="img"
+      role="group"
       aria-label={ariaLabel}
     />
   );

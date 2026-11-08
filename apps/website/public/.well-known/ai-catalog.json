@@ -1,75 +1,20 @@
 {
-  "specVersion": "1.0",
-  "host": {
-    "displayName": "Energy Horizon",
-    "identifier": "did:web:www.energy-horizon.net"
-  },
   "entries": [
     {
-      "identifier": "urn:air:energy-horizon.net:site:corporate",
-      "displayName": "Energy Horizon Corporate Website",
-      "type": "text/html",
-      "url": "https://www.energy-horizon.net/",
+      "identifier": "urn:air:energy-horizon.net:skills:site",
+      "displayName": "Energy Horizon agent skills",
+      "description": "Guidance for AI agents using Energy Horizon public Markdown mirrors and CMS APIs.",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://www.energy-horizon.net/agent-skills.md",
+      "capabilities": [
+        "discoverSiteContent",
+        "queryPublicCms",
+        "useOpenApi"
+      ],
       "representativeQueries": [
-        "oil and gas equipment supplier in Iraq",
-        "Energy Horizon Baghdad Basra offices",
-        "industrial PPE and drilling supply Iraq",
-        "contact Energy Horizon branch managers"
-      ]
-    },
-    {
-      "identifier": "urn:air:energy-horizon.net:api:platform",
-      "displayName": "Energy Horizon Public API",
-      "type": "application/vnd.oai.openapi+json",
-      "url": "https://api.energy-horizon.net/docs-json",
-      "representativeQueries": [
-        "Energy Horizon API OpenAPI specification",
-        "list published services brands and projects",
-        "API health status for Energy Horizon"
-      ]
-    },
-    {
-      "identifier": "urn:air:energy-horizon.net:catalog:api",
-      "displayName": "API Catalog (RFC 9727)",
-      "type": "application/linkset+json",
-      "url": "https://www.energy-horizon.net/.well-known/api-catalog",
-      "representativeQueries": [
-        "discover Energy Horizon APIs",
-        "where is the Energy Horizon OpenAPI document",
-        "Energy Horizon API documentation and health"
-      ]
-    },
-    {
-      "identifier": "urn:air:energy-horizon.net:content:llms",
-      "displayName": "LLM / agent site summary",
-      "type": "text/plain",
-      "url": "https://www.energy-horizon.net/llms.txt",
-      "representativeQueries": [
-        "what does Energy Horizon sell and supply",
-        "Energy Horizon services brands and projects overview",
-        "how should an AI agent use Energy Horizon content"
-      ]
-    },
-    {
-      "identifier": "urn:air:energy-horizon.net:auth:notes",
-      "displayName": "Authentication notes for agents",
-      "type": "text/markdown",
-      "url": "https://www.energy-horizon.net/auth.md",
-      "representativeQueries": [
-        "how to authenticate to Energy Horizon API",
-        "are Energy Horizon CMS endpoints public",
-        "JWT and OTP auth for Energy Horizon store"
-      ]
-    },
-    {
-      "identifier": "urn:air:energy-horizon.net:content:markdown-mirrors",
-      "displayName": "Markdown page mirrors",
-      "type": "text/markdown",
-      "url": "https://www.energy-horizon.net/index.md",
-      "representativeQueries": [
-        "Energy Horizon site summary in markdown",
-        "list Energy Horizon services as markdown",
-        "read brand and project pages without HTML"
+        "how should an AI agent use Energy Horizon content",
+        "which Energy Horizon APIs are public without auth",
+        "summarize Energy Horizon services brands and projects from CMS"
       ]
     }
   ]

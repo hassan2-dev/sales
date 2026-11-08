@@ -1,6 +1,5 @@
 # Content-Signal is declared via HTTP response headers (vercel.json),
 # not here — unknown robots directives fail Lighthouse/Google validators.
-# Agent catalog: https://www.energy-horizon.net/.well-known/ai-catalog.json
 
 User-agent: *
 Allow: /
@@ -10,3 +9,4 @@ Disallow: /store/
 Disallow: /store/account/
 
 Sitemap: https://www.energy-horizon.net/sitemap.xml
+Agentmap: https://www.energy-horizon.net/.well-known/ard.json

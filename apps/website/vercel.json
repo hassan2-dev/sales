@@ -23,7 +23,7 @@
       "headers": [
         {
           "key": "Link",
-          "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </.well-known/ai-catalog.json>; rel=\"describedby\"; type=\"application/json\", <https://api.energy-horizon.net/docs-json>; rel=\"service-desc\"; type=\"application/json\", <https://api.energy-horizon.net/docs>; rel=\"service-doc\"; type=\"text/html\", </llms.txt>; rel=\"describedby\"; type=\"text/plain\", </auth.md>; rel=\"describedby\"; type=\"text/markdown\", </index.md>; rel=\"alternate\"; type=\"text/markdown\""
+          "value": "</.well-known/api-catalog>; rel=\"api-catalog\", </.well-known/ard.json>; rel=\"ard\"; type=\"application/json\", </.well-known/ai-catalog.json>; rel=\"ai-catalog\"; type=\"application/json\", <https://api.energy-horizon.net/docs-json>; rel=\"service-desc\"; type=\"application/json\", <https://api.energy-horizon.net/docs>; rel=\"service-doc\"; type=\"text/html\", </llms.txt>; rel=\"describedby\"; type=\"text/plain\", </auth.md>; rel=\"describedby\"; type=\"text/markdown\", </index.md>; rel=\"alternate\"; type=\"text/markdown\""
         }
       ]
     },
@@ -59,13 +59,19 @@
           "value": "application/linkset+json; profile=\"https://www.rfc-editor.org/info/rfc9727\""
         },
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "Access-Control-Allow-Origin", "value": "*"
         },
         {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
+          "key": "Cache-Control", "value": "public, max-age=3600"
         }
+      ]
+    },
+    {
+      "source": "/.well-known/ard.json",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json; charset=utf-8" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
       ]
     },
     {
@@ -77,5 +83,5 @@
       ]
     }
   ],
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [{ "source": "/((?!\\.well-known/).*)", "destination": "/index.html" }]
 }

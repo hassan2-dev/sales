@@ -175,7 +175,7 @@ export function HomePage() {
             <Reveal key={v.title} delay={i} className="value-cell flex gap-3 px-4 py-6 sm:gap-4 sm:px-8 sm:py-8">
               <v.icon className="value-icon mt-0.5 h-5 w-5 shrink-0 text-accent sm:h-6 sm:w-6" aria-hidden />
               <div className="min-w-0">
-                <h3 className="text-xs font-bold uppercase tracking-[0.12em] sm:text-sm">{v.title}</h3>
+                <p className="text-xs font-bold uppercase tracking-[0.12em] sm:text-sm">{v.title}</p>
                 <p className="mt-1.5 text-xs leading-relaxed text-white/55 sm:mt-2 sm:text-sm">{v.sub}</p>
               </div>
             </Reveal>

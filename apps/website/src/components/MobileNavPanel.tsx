@@ -113,6 +113,7 @@ export function MobileNavPanel({
               type="button"
               onClick={toggleLocale}
               className="inline-flex h-10 items-center rounded-xl px-3 text-sm font-bold text-muted hover:bg-secondary"
+              aria-label={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
             >
               {locale === 'en' ? 'العربية' : 'English'}
             </button>

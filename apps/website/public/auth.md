@@ -14,7 +14,7 @@ https://api.energy-horizon.net/api
 AI agents may freely use public discovery and catalog resources:
 
 - Website HTML and Markdown mirrors (`Accept: text/markdown` or `*.md`)
-- `llms.txt`, `auth.md`, API Catalog, AI Catalog
+- `llms.txt`, `auth.md`, API Catalog, ARD (`/.well-known/ard.json`)
 - Public CMS JSON: services, brands, projects, offices
 - OpenAPI: https://api.energy-horizon.net/docs-json
 

@@ -65,6 +65,7 @@ export function CorporateLayout() {
               type="button"
               onClick={toggleLocale}
               className="hidden h-9 min-w-9 items-center justify-center rounded-md text-[11px] font-semibold tracking-wider text-muted transition hover:bg-secondary hover:text-fg sm:inline-flex"
+              aria-label={locale === 'en' ? 'Switch to Arabic' : 'Switch to English'}
             >
               {locale === 'en' ? 'ع' : 'EN'}
             </button>

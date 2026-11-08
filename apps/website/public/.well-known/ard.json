@@ -1,0 +1,21 @@
+{
+  "entries": [
+    {
+      "identifier": "urn:air:energy-horizon.net:skills:site",
+      "displayName": "Energy Horizon agent skills",
+      "description": "Guidance for AI agents using Energy Horizon public Markdown mirrors and CMS APIs.",
+      "type": "text/markdown; profile=\"urn:air:agent-skills\"",
+      "url": "https://www.energy-horizon.net/agent-skills.md",
+      "capabilities": [
+        "discoverSiteContent",
+        "queryPublicCms",
+        "useOpenApi"
+      ],
+      "representativeQueries": [
+        "how should an AI agent use Energy Horizon content",
+        "which Energy Horizon APIs are public without auth",
+        "summarize Energy Horizon services brands and projects from CMS"
+      ]
+    }
+  ]
+}

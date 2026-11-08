@@ -4,62 +4,42 @@
 
 Energy Horizon (آفاق الطاقة) supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors in Iraq.
 
-## Primary site (HTML)
+Prefer the Markdown mirrors below over scraping HTML. Prefer published CMS JSON from the public API when summarizing services, brands, or projects. Site UI supports Arabic and English; prefer English API fields (`name`, `description`, `shortDescription`) and use `nameAr` / `descriptionAr` / `shortDescriptionAr` when answering in Arabic.
 
-- Home: https://www.energy-horizon.net/
-- About: https://www.energy-horizon.net/about
-- Services: https://www.energy-horizon.net/services
-- Brands: https://www.energy-horizon.net/brands
-- Projects: https://www.energy-horizon.net/projects
-- Contact: https://www.energy-horizon.net/contact
-- Sitemap: https://www.energy-horizon.net/sitemap.xml
+## Docs
 
-## Markdown mirrors (preferred for agents)
+- [Agent skills](https://www.energy-horizon.net/agent-skills.md): How agents should use this site and API
+- [Home](https://www.energy-horizon.net/index.md): Corporate overview in Markdown
+- [About](https://www.energy-horizon.net/about.md): Company profile and values
+- [Services](https://www.energy-horizon.net/services.md): Full services index
+- [Brands](https://www.energy-horizon.net/brands.md): Represented brands index
+- [Projects](https://www.energy-horizon.net/projects.md): Project references index
+- [Contact](https://www.energy-horizon.net/contact.md): Offices, managers, and contact guidance
+- [Auth notes](https://www.energy-horizon.net/auth.md): What is public vs JWT-protected
+- [Example service — Drilling](https://www.energy-horizon.net/services/drilling.md): Sample service detail page
+- [Example brand — Alfagomma](https://www.energy-horizon.net/brands/alfagomma.md): Sample brand detail page
+- [Example project — SC-PMC2 WQ1 manpower](https://www.energy-horizon.net/projects/sc-pmc2-wq1-manpower.md): Sample project detail page
 
-Built at deploy time from published CMS data. HTML routes stay unchanged for visitors.
+## APIs
 
-- Home: https://www.energy-horizon.net/index.md
-- About: https://www.energy-horizon.net/about.md
-- Services index: https://www.energy-horizon.net/services.md
-- Brands index: https://www.energy-horizon.net/brands.md
-- Projects index: https://www.energy-horizon.net/projects.md
-- Contact: https://www.energy-horizon.net/contact.md
-- Example service: https://www.energy-horizon.net/services/drilling.md
-- Example brand: https://www.energy-horizon.net/brands/alfagomma.md
-- Example project: https://www.energy-horizon.net/projects/sc-pmc2-wq1-manpower.md
+- [API catalog (RFC 9727)](https://www.energy-horizon.net/.well-known/api-catalog): Linkset for discovering public APIs
+- [ARD manifest](https://www.energy-horizon.net/.well-known/ard.json): Agentic Resource Discovery inventory
+- [OpenAPI JSON](https://api.energy-horizon.net/docs-json): Machine-readable API specification
+- [API docs](https://api.energy-horizon.net/docs): Human Swagger UI
+- [API health](https://api.energy-horizon.net/api/health): Liveness check
+- [Services CMS](https://api.energy-horizon.net/api/services): Published services (no auth)
+- [Brands CMS](https://api.energy-horizon.net/api/brands): Published brands (no auth)
+- [Projects CMS](https://api.energy-horizon.net/api/projects): Published projects (no auth)
+- [Offices CMS](https://api.energy-horizon.net/api/offices): Branch offices (no auth)
+- [Products catalog](https://api.energy-horizon.net/api/products): Store catalog (paginated, no auth)
 
-## Related surfaces
+## Optional
 
-- Online store: https://store.energy-horizon.net/
-- Public API base: https://api.energy-horizon.net/api
-- OpenAPI (machine): https://api.energy-horizon.net/docs-json
-- API docs (human): https://api.energy-horizon.net/docs
-- API health: https://api.energy-horizon.net/api/health
-
-## Agent discovery
-
-- API catalog: https://www.energy-horizon.net/.well-known/api-catalog
-- ARD / AI catalog: https://www.energy-horizon.net/.well-known/ai-catalog.json
-- Auth notes: https://www.energy-horizon.net/auth.md
-
-## Public CMS endpoints (no auth)
-
-- GET https://api.energy-horizon.net/api/services
-- GET https://api.energy-horizon.net/api/services/slug/{slug}
-- GET https://api.energy-horizon.net/api/brands
-- GET https://api.energy-horizon.net/api/brands/slug/{slug}
-- GET https://api.energy-horizon.net/api/projects
-- GET https://api.energy-horizon.net/api/projects/slug/{slug}
-- GET https://api.energy-horizon.net/api/offices
-- GET https://api.energy-horizon.net/api/products (store catalog; paginated)
-
-## Languages
-
-Site UI supports Arabic and English client-side. Prefer English field names from the API (`name`, `description`, `shortDescription`) and use `nameAr` / `descriptionAr` / `shortDescriptionAr` when answering in Arabic.
-
-## Guidance for agents
-
-1. Prefer published CMS JSON over scraping HTML when summarizing services, brands, or projects.
-2. For human-facing answers about contact, use the Contact page managers and offices data.
-3. Do not invent OAuth discovery; protected admin/store routes use JWT Bearer tokens (see auth.md).
-4. Products live primarily on the store subdomain; the corporate site focuses on services, brands, and projects.
+- [HTML home](https://www.energy-horizon.net/): Human-facing corporate site
+- [About (HTML)](https://www.energy-horizon.net/about): About page
+- [Services (HTML)](https://www.energy-horizon.net/services): Services listing
+- [Brands (HTML)](https://www.energy-horizon.net/brands): Brands listing
+- [Projects (HTML)](https://www.energy-horizon.net/projects): Projects listing
+- [Contact (HTML)](https://www.energy-horizon.net/contact): Contact page
+- [Sitemap](https://www.energy-horizon.net/sitemap.xml): Full URL inventory for crawlers
+- [Online store](https://store.energy-horizon.net/): Product commerce on the store subdomain
