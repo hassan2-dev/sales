@@ -24,6 +24,7 @@ Prefer the Markdown mirrors below over scraping HTML. Prefer published CMS JSON 
 
 - [API catalog (RFC 9727)](https://www.energy-horizon.net/.well-known/api-catalog): Linkset for discovering public APIs
 - [ARD manifest](https://www.energy-horizon.net/.well-known/ard.json): Agentic Resource Discovery inventory
+- [Poppy discovery](https://www.energy-horizon.net/.well-known/poppy.json): Personal Agent Protocol website-only discovery
 - [OpenAPI JSON](https://api.energy-horizon.net/docs-json): Machine-readable API specification
 - [API docs](https://api.energy-horizon.net/docs): Human Swagger UI
 - [API health](https://api.energy-horizon.net/api/health): Liveness check

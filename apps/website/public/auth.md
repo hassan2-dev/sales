@@ -14,14 +14,14 @@ https://api.energy-horizon.net/api
 AI agents may freely use public discovery and catalog resources:
 
 - Website HTML and Markdown mirrors (`Accept: text/markdown` or `*.md`)
-- `llms.txt`, `auth.md`, API Catalog, ARD (`/.well-known/ard.json`)
+- `llms.txt`, `auth.md`, API Catalog, ARD (`/.well-known/ard.json`), Poppy (`/.well-known/poppy.json`)
 - Public CMS JSON: services, brands, projects, offices
 - OpenAPI: https://api.energy-horizon.net/docs-json
 
 AI agents must not:
 
 - Access admin dashboards or customer/order data
-- Invent OAuth/OIDC flows (not supported)
+- Invent OAuth/OIDC discovery or protected-resource metadata (not published; auth is JWT Bearer)
 - Self-register for credentials
 - Share or embed access tokens in public prompts
 

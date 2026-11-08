@@ -1,9 +1,46 @@
 {
+  "specVersion": "1.0",
+  "host": {
+    "displayName": "Energy Horizon",
+    "identifier": "did:web:www.energy-horizon.net"
+  },
   "entries": [
+    {
+      "identifier": "urn:air:energy-horizon.net:api:openapi",
+      "displayName": "Energy Horizon Public API",
+      "description": "OpenAPI description for public CMS and store catalog endpoints (services, brands, projects, offices, products).",
+      "type": "application/vnd.oai.openapi+json",
+      "url": "https://api.energy-horizon.net/docs-json",
+      "capabilities": [
+        "listServices",
+        "listBrands",
+        "listProjects",
+        "listOffices",
+        "listProducts",
+        "healthCheck"
+      ],
+      "representativeQueries": [
+        "What APIs does Energy Horizon provide?",
+        "How can I discover Energy Horizon services?",
+        "Where is the Energy Horizon OpenAPI document?"
+      ]
+    },
+    {
+      "identifier": "urn:air:energy-horizon.net:catalog:api",
+      "displayName": "API Catalog (RFC 9727)",
+      "description": "RFC 9727 linkset pointing at OpenAPI, human API docs, and health.",
+      "type": "application/linkset+json",
+      "url": "https://www.energy-horizon.net/.well-known/api-catalog",
+      "representativeQueries": [
+        "discover Energy Horizon APIs",
+        "where is the Energy Horizon OpenAPI document",
+        "Energy Horizon API documentation and health"
+      ]
+    },
     {
       "identifier": "urn:air:energy-horizon.net:skills:site",
       "displayName": "Energy Horizon agent skills",
-      "description": "Guidance for AI agents using Energy Horizon public Markdown mirrors and CMS APIs.",
+      "description": "Guidance for AI agents using Energy Horizon Markdown mirrors and public CMS APIs.",
       "type": "text/markdown; profile=\"urn:air:agent-skills\"",
       "url": "https://www.energy-horizon.net/agent-skills.md",
       "capabilities": [

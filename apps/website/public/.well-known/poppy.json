@@ -1,0 +1,16 @@
+{
+  "protocol_version": "0.3",
+  "organization": {
+    "name": "Energy Horizon",
+    "domain": "www.energy-horizon.net",
+    "logo_uri": "https://www.energy-horizon.net/energy-horizon-logo.svg"
+  },
+  "web": {},
+  "apis": [
+    {
+      "type": "openapi",
+      "url": "https://api.energy-horizon.net/docs-json",
+      "description": "Public CMS and catalog API for services, brands, projects, offices, and products (no OAuth; JWT only on protected admin/store routes)"
+    }
+  ]
+}
