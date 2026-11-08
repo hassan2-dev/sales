@@ -9,6 +9,26 @@ authentication for protected endpoints.
 
 https://api.energy-horizon.net/api
 
+## AI Agents — access policy
+
+AI agents may freely use public discovery and catalog resources:
+
+- Website HTML and Markdown mirrors (`Accept: text/markdown` or `*.md`)
+- `llms.txt`, `auth.md`, API Catalog, AI Catalog
+- Public CMS JSON: services, brands, projects, offices
+- OpenAPI: https://api.energy-horizon.net/docs-json
+
+AI agents must not:
+
+- Access admin dashboards or customer/order data
+- Invent OAuth/OIDC flows (not supported)
+- Self-register for credentials
+- Share or embed access tokens in public prompts
+
+Authorized commercial integrations that need write access
+(quotes / inquiry) must contact Energy Horizon for approval.
+There is no public agent OAuth registration endpoint.
+
 ## Public API
 
 Public endpoints do not require authentication.
@@ -34,10 +54,10 @@ Refresh: POST /auth/refresh
 ## Token Acquisition
 
 Access tokens must be obtained through the
-official Energy Horizon authentication process.
+official Energy Horizon authentication process
+(email/password for staff, phone OTP for store customers).
 
 Do not assume OAuth 2.0 or OpenID Connect support.
-There is no public agent self-registration endpoint.
 
 ## Security
 

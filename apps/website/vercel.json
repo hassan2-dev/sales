@@ -11,6 +11,10 @@
         {
           "key": "Content-Signal",
           "value": "ai-train=yes, search=yes, ai-input=yes"
+        },
+        {
+          "key": "Vary",
+          "value": "Accept"
         }
       ]
     },
