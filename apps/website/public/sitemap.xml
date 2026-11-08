@@ -1,168 +1,168 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
   <url>
     <loc>https://www.energy-horizon.net/</loc>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
+    
   </url>
+
   <url>
     <loc>https://www.energy-horizon.net/about</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    
   </url>
+
   <url>
     <loc>https://www.energy-horizon.net/services</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    
   </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/drilling</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/hydraulic</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/electrical</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/safety-ppe</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/it-power</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/isolation-refineries</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/technical-team</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/services/procurement-supply</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+
   <url>
     <loc>https://www.energy-horizon.net/brands</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    
   </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/energy-horizon</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/alfagomma</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/den-con</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/bridon-bekaert</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/oilgear</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/emmegi</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/lapp</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/pepperl-fuchs</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/hohner</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/nuova-fima</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/euromotori</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/antenucci</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/imperial-safety</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/elit-ups</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/unika-group</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/brands/epoll</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
+
   <url>
     <loc>https://www.energy-horizon.net/projects</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.85</priority>
+    
   </url>
-  <url>
-    <loc>https://www.energy-horizon.net/projects/sc-pmc2-wq1-manpower</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/projects/drilling-workover-rig-supply</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
-  <url>
-    <loc>https://www.energy-horizon.net/projects/plant-electrical-ex-packages</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
-  </url>
+
   <url>
     <loc>https://www.energy-horizon.net/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/drilling</loc>
+    <lastmod>2026-10-05T18:08:32.449Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/hydraulic</loc>
+    <lastmod>2026-10-05T18:08:32.821Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/electrical</loc>
+    <lastmod>2026-10-05T18:08:33.006Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/safety-ppe</loc>
+    <lastmod>2026-10-05T18:08:33.214Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/it-power</loc>
+    <lastmod>2026-10-05T18:08:33.416Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/isolation-refineries</loc>
+    <lastmod>2026-10-05T18:08:33.628Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/technical-team</loc>
+    <lastmod>2026-10-05T18:08:33.778Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/services/procurement-supply</loc>
+    <lastmod>2026-10-05T18:08:33.930Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/energy-horizon</loc>
+    <lastmod>2026-10-05T18:08:39.394Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/alfagomma</loc>
+    <lastmod>2026-10-05T18:08:39.663Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/den-con</loc>
+    <lastmod>2026-10-05T18:08:39.829Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/bridon-bekaert</loc>
+    <lastmod>2026-10-05T18:08:39.970Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/oilgear</loc>
+    <lastmod>2026-10-05T18:08:40.278Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/emmegi</loc>
+    <lastmod>2026-10-05T18:08:40.482Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/lapp</loc>
+    <lastmod>2026-10-05T18:08:40.652Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/pepperl-fuchs</loc>
+    <lastmod>2026-10-05T18:08:40.995Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/hohner</loc>
+    <lastmod>2026-10-05T18:08:41.189Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/nuova-fima</loc>
+    <lastmod>2026-10-05T18:08:41.310Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/euromotori</loc>
+    <lastmod>2026-10-05T18:08:41.458Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/antenucci</loc>
+    <lastmod>2026-10-05T18:08:41.586Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/imperial-safety</loc>
+    <lastmod>2026-10-05T18:08:41.729Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/elit-ups</loc>
+    <lastmod>2026-10-05T18:08:41.868Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/unika-group</loc>
+    <lastmod>2026-10-05T18:08:42.004Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/brands/epoll</loc>
+    <lastmod>2026-10-05T18:08:42.154Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/projects/sc-pmc2-wq1-manpower</loc>
+    <lastmod>2026-10-05T18:08:59.293Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/projects/drilling-workover-rig-supply</loc>
+    <lastmod>2026-10-05T18:08:59.730Z</lastmod>
+  </url>
+
+  <url>
+    <loc>https://www.energy-horizon.net/projects/plant-electrical-ex-packages</loc>
+    <lastmod>2026-10-05T18:08:59.943Z</lastmod>
   </url>
 </urlset>
