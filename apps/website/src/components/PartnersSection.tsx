@@ -27,7 +27,7 @@ function LogoGrid({
               <span className="flex h-14 w-full items-center justify-center rounded-lg bg-white px-3 dark:bg-[#e8eef5]">
                 <img
                   src={item.logo}
-                  alt={item.name}
+                  alt=""
                   className="max-h-10 w-auto max-w-full object-contain transition duration-300 group-hover:scale-[1.04]"
                   loading="lazy"
                 />

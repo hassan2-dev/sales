@@ -57,7 +57,7 @@ function FeaturedCard({
         {img ? (
           <img
             src={img}
-            alt={product.name}
+            alt=""
             className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.06]"
             loading="lazy"
             draggable={false}

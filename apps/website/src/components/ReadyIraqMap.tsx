@@ -103,10 +103,12 @@ export function ReadyIraqMap({
         path.style.filter = 'none';
       }
 
-      path.setAttribute('role', 'button');
-      path.setAttribute('tabindex', '0');
-      path.setAttribute('aria-label', loc === 'ar' ? g.nameAr : g.nameEn);
-      path.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
+      // Named via nearby text controls; avoid aria-label on <path> (prohibited without a role).
+      path.removeAttribute('aria-label');
+      path.removeAttribute('aria-pressed');
+      path.removeAttribute('role');
+      path.removeAttribute('tabindex');
+      path.setAttribute('focusable', 'false');
     }
 
     let markers = svg.querySelector('#eh-markers') as SVGGElement | null;
@@ -159,6 +161,8 @@ export function ReadyIraqMap({
 
       svg.removeAttribute('width');
       svg.removeAttribute('height');
+      svg.setAttribute('aria-hidden', 'true');
+      svg.setAttribute('focusable', 'false');
       svg.style.display = 'block';
       svg.style.width = '100%';
       svg.style.height = 'auto';
@@ -181,19 +185,15 @@ export function ReadyIraqMap({
         path.style.transition = 'fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease';
         path.style.strokeWidth = '1.25';
         path.style.strokeLinejoin = 'round';
+        path.setAttribute('focusable', 'false');
+        path.removeAttribute('aria-label');
+        path.removeAttribute('role');
+        path.removeAttribute('tabindex');
 
-        path.setAttribute('role', 'button');
-        path.setAttribute('tabindex', '0');
         path.addEventListener('pointerenter', () => onHoverRef.current(g.id));
         path.addEventListener('pointerleave', () => onHoverRef.current(null));
         path.addEventListener('click', () => onSelectRef.current?.(g.id));
         path.addEventListener('touchstart', () => onHoverRef.current(g.id), { passive: true });
-        path.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            onSelectRef.current?.(g.id);
-          }
-        });
       }
 
       paint();
