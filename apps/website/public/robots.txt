@@ -1,7 +1,5 @@
-# Content-Signal is declared via HTTP response headers (vercel.json),
-# not here — unknown robots directives fail Lighthouse/Google validators.
-
 User-agent: *
+Content-Signal: ai-train=yes, search=yes, ai-input=yes
 Allow: /
 
 Disallow: /admin/
