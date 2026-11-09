@@ -184,11 +184,11 @@ async function main() {
       nameAr: 'الحفر',
       slug: 'drilling',
       shortDescription: 'Materials and equipment for drilling and workover rigs',
-      shortDescriptionAr: 'مواد ومعدات لمنصات الحفر وصيانة الآبار',
+      shortDescriptionAr: 'مواد ومعدات لمنصات الحفر وصيانة الابار',
       description:
         'From reliable international manufacturers we support drilling and workover rigs with power systems, pneumatic systems, mud pumps and tanks, rig-floor equipment, and mechanical and hydraulic systems — focused on efficiency, safety, and quality.',
       descriptionAr:
-        'من مصنعين دوليين موثوقين ندعم منصات الحفر وصيانة الآبار بأنظمة الطاقة والأنظمة الهوائية ومضخات الطين والخزانات ومعدات رأس البئر والأنظمة الميكانيكية والهيدروليكية — مع التركيز على الكفاءة والسلامة والجودة.',
+        'من مصنعين دوليين موثوقين ندعم منصات الحفر وصيانة الابار بأنظمة الطاقة والأنظمة الهوائية ومضخات الطين والخزانات ومعدات رأس البئر والأنظمة الميكانيكية والهيدروليكية — مع التركيز على الكفاءة والسلامة والجودة.',
       image: '/company/p05-1.jpg',
       sortOrder: 1,
     },
@@ -253,7 +253,7 @@ async function main() {
       description:
         'Materials and equipment for degassing and isolation stations, midstream facilities, and refinery turnarounds — staged from Baghdad and Basra with documentation and field support for plant and process environments.',
       descriptionAr:
-        'مواد ومعدات لمحطات التفريغ والعزل ومنشآت منتصف الخط وصيانة المصافي — من بغداد والبصرة مع توثيق ودعم ميداني لبيئات المصانع والعمليات.',
+        'مواد ومعدات لمحطات التفريغ والعزل ومنشات منتصف الخط وصيانة المصافي — من بغداد والبصرة مع توثيق ودعم ميداني لبيئات المصانع والعمليات.',
       image: '/company/p12-1.jpg',
       sortOrder: 6,
     },

@@ -43,9 +43,11 @@ async function main() {
     });
   }
 
+  // Put `skills` first so Chrome/JSON viewers show the first skill immediately
+  // ($schema after — still valid for Agent Skills discovery 0.2.0).
   const index = {
-    $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
     skills: entries,
+    $schema: 'https://schemas.agentskills.io/discovery/0.2.0/schema.json',
   };
 
   const out = path.join(skillsRoot, 'index.json');

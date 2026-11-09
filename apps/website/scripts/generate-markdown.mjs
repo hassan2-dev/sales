@@ -51,8 +51,10 @@ async function fetchCollection(endpoint) {
   if (!items) throw new Error(`Unexpected response format from /${endpoint}`);
 
   return items.filter((item) => {
-    if (!item || typeof item.slug !== "string" || !item.slug.trim()) return false;
-    if (item.status && String(item.status).toUpperCase() !== "PUBLISHED") return false;
+    if (!item || typeof item.slug !== "string" || !item.slug.trim())
+      return false;
+    if (item.status && String(item.status).toUpperCase() !== "PUBLISHED")
+      return false;
     return true;
   });
 }
@@ -123,7 +125,15 @@ function itemPage({ collection, item, htmlBase }) {
   return `${parts.join("\n\n")}\n`;
 }
 
-function indexList({ title, summaryEn, summaryAr, htmlPath, items, htmlBase, heading }) {
+function indexList({
+  title,
+  summaryEn,
+  summaryAr,
+  htmlPath,
+  items,
+  htmlBase,
+  heading,
+}) {
   const links = items
     .map((item) => {
       const label = item.name || item.title || item.slug;
@@ -167,8 +177,10 @@ async function main() {
     staticPage({
       title: "Energy Horizon",
       htmlPath: "/",
-      summaryEn: "Advanced Oil & Gas solutions for the industry — supply, engineering, and field support from Iraq.",
-      summaryAr: "حلول متقدمة للنفط والغاز — توريد وهندسة ودعم ميداني من العراق.",
+      summaryEn:
+        "Advanced Oil & Gas solutions for the industry — supply, engineering, and field support from Iraq.",
+      summaryAr:
+        "حلول متقدمة للنفط والغاز — توريد وهندسة ودعم ميداني من العراق.",
       body: `## Site maps for agents
 
 - [About](${SITE_URL}/about.md)
@@ -195,8 +207,9 @@ async function main() {
     staticPage({
       title: "About Energy Horizon",
       htmlPath: "/about",
-      summaryEn: "Afaq Al-Taqa International — advanced Oil & Gas solutions for the industry.",
-      summaryAr: "آفاق الطاقة الدولية — حلول متقدمة للنفط والغاز للصناعة.",
+      summaryEn:
+        "Afaq Al-Taqa International — advanced Oil & Gas solutions for the industry.",
+      summaryAr: "افاق الطاقة الدولية — حلول متقدمة للنفط والغاز للصناعة.",
       body: `Energy Horizon supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors across Iraq (Baghdad HQ, Basra desk) with America-side commercial follow-up.
 
 Prefer live CMS JSON when summarizing catalogs:
@@ -241,7 +254,8 @@ Prefer live CMS JSON when summarizing catalogs:
     "brands.md",
     indexList({
       title: "Brands",
-      summaryEn: "Manufacturer and private-label brands represented by Energy Horizon.",
+      summaryEn:
+        "Manufacturer and private-label brands represented by Energy Horizon.",
       summaryAr: "العلامات والمصنعون الذين تمثلهم افاق الطاقة.",
       htmlPath: "/brands",
       items: brands,

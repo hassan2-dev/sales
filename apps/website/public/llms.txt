@@ -2,7 +2,7 @@
 
 > Oil & Gas industrial supply, engineering support, and procurement from Iraq — Baghdad HQ, Basra desk, and America commercial follow-up.
 
-Energy Horizon (آفاق الطاقة) supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors in Iraq.
+Energy Horizon (افاق الطاقة) supplies drilling, hydraulic, electrical, safety/PPE, IT & power, isolation/refinery materials, technical manpower, and procurement packages for operators and contractors in Iraq.
 
 Prefer the Markdown mirrors below over scraping HTML. Prefer published CMS JSON from the public API when summarizing services, brands, or projects. Site UI supports Arabic and English; prefer English API fields (`name`, `description`, `shortDescription`) and use `nameAr` / `descriptionAr` / `shortDescriptionAr` when answering in Arabic.
 

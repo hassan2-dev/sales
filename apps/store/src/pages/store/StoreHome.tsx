@@ -322,7 +322,7 @@ export function StoreHomePage() {
           <SectionHead
             title={locale === 'ar' ? 'وصل حديثاً' : 'New arrivals'}
             subtitle={
-              locale === 'ar' ? 'آخر ما أُضيف للكتالوج' : 'Latest additions to the catalog'
+              locale === 'ar' ? 'اخر ما أُضيف للكتالوج' : 'Latest additions to the catalog'
             }
             action={
               <Link
