@@ -62,7 +62,6 @@ import {
   usersApi,
   auditApi,
 } from '@/services/endpoints';
-import type { Brand, CmsService } from '@/types';
 import { cn, formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
 import { usdToIqd, useCommerceSettings } from '@/stores/commerce-settings-context';
@@ -783,7 +782,7 @@ export function AdminProductsPage() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <Link
-                      to={adminPath(`products/${p.id}`)}
+                      to={adminPath(`products/${p.id}/edit`)}
                       className="line-clamp-2 font-semibold text-primary"
                     >
                       {p.name}
@@ -803,7 +802,7 @@ export function AdminProductsPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-1.5">
-                  <Link to={adminPath(`products/${p.id}`)}>
+                  <Link to={adminPath(`products/${p.id}/edit`)}>
                     <Button variant="outline" size="sm" className="w-full gap-1 px-2">
                       <Pencil className="h-3.5 w-3.5" />
                       {t.admin.edit}
@@ -859,7 +858,7 @@ export function AdminProductsPage() {
                     <tr key={p.id} className="border-b border-border hover:bg-muted/40">
                       <td className="px-4 py-3">
                         <Link
-                          to={adminPath(`products/${p.id}`)}
+                          to={adminPath(`products/${p.id}/edit`)}
                           className="flex items-center gap-3 font-medium text-primary hover:underline"
                         >
                           <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted">
@@ -885,7 +884,7 @@ export function AdminProductsPage() {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-nowrap gap-1.5">
-                          <Link to={adminPath(`products/${p.id}`)}>
+                          <Link to={adminPath(`products/${p.id}/edit`)}>
                             <Button variant="outline" size="sm" className="gap-1.5" title={t.admin.edit}>
                               <Pencil className="h-3.5 w-3.5" />
                               <span className="hidden xl:inline">{t.admin.edit}</span>
@@ -942,49 +941,18 @@ export function AdminProductsPage() {
 }
 
 
-export { AdminProductFormPage } from './AdminProductFormPage';
-
 export function AdminCategoriesPage() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const qc = useQueryClient();
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const list = useQuery({
     queryKey: ['admin-categories'],
     queryFn: async () => (await catalogApi.categoriesAdmin()).data,
   });
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      if (editingId) {
-        await catalogApi.updateCategory(editingId, {
-          name,
-          description,
-          status: 'PUBLISHED',
-        });
-        toast.success(t.admin.categoryUpdated);
-      } else {
-        await catalogApi.createCategory({
-          name,
-          description,
-          status: 'PUBLISHED',
-          slug: name.toLowerCase().replace(/\s+/g, '-'),
-        });
-        toast.success(t.admin.categoryCreated);
-      }
-      setName('');
-      setDescription('');
-      setEditingId(null);
-      await qc.invalidateQueries({ queryKey: ['admin-categories'] });
-    } catch {
-      toast.error(t.admin.saveFailed);
-    }
-  }
-
   async function onDelete(id: string) {
+    if (!window.confirm(t.admin.confirmDeleteCategory)) return;
     try {
       await catalogApi.deleteCategory(id);
       toast.success(t.admin.categoryDeleted);
@@ -994,73 +962,48 @@ export function AdminCategoriesPage() {
     }
   }
 
-  function startEdit(row: { id: string; name: string; description?: string | null }) {
-    setEditingId(row.id);
-    setName(row.name);
-    setDescription(row.description || '');
-  }
+  const rows = list.data ?? [];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-fg">{t.admin.categories}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t.admin.quickActions}</p>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.categories}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t.admin.categoriesListHint}</p>
+        </div>
+        <Link to={adminPath('categories/new')}>
+          <Button className="w-full gap-2 sm:w-auto">
+            <Plus className="h-4 w-4" />
+            {t.admin.addCategory}
+          </Button>
+        </Link>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{editingId ? t.admin.editCategory : t.admin.newCategory}</CardTitle>
-        </CardHeader>
-        <form onSubmit={onSubmit}>
-          <CardContent className="space-y-3">
-            <Input
-              required
-              placeholder={t.common.name}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-            <Textarea
-              placeholder={t.admin.description}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </CardContent>
-          <CardFooter className="gap-2">
-            <Button type="submit">{editingId ? t.common.save : t.common.create}</Button>
-            {editingId ? (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setEditingId(null);
-                  setName('');
-                  setDescription('');
-                }}
-              >
-                {t.admin.back}
-              </Button>
-            ) : null}
-          </CardFooter>
-        </form>
-      </Card>
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
-        {(list.data ?? []).map((row) => (
+        {rows.map((row) => (
           <Card key={row.id} size="sm">
             <CardContent className="flex flex-wrap items-center justify-between gap-3 py-0">
-              <div>
-                <p className="font-medium">{row.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {row.slug} · {row.description || '—'}
+              <div className="min-w-0">
+                <p className="font-medium text-fg">
+                  {row.parent ? (
+                    <span className="text-muted-foreground">{row.parent.name} / </span>
+                  ) : null}
+                  {row.name}
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {row.slug}
+                  {row.description ? ` · ${row.description}` : ''}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <StatusBadge status={String(row.status || 'PUBLISHED')} />
-                <Button variant="outline" size="sm" className="gap-1.5" onClick={() => startEdit(row)}>
-                  <Pencil className="h-3.5 w-3.5" />
-                  {t.admin.edit}
-                </Button>
+                <Link to={adminPath(`categories/${row.id}/edit`)}>
+                  <Button variant="outline" size="sm" className="gap-1.5">
+                    <Pencil className="h-3.5 w-3.5" />
+                    {t.admin.edit}
+                  </Button>
+                </Link>
                 <Button variant="danger" size="sm" onClick={() => void onDelete(row.id)}>
                   {t.admin.delete}
                 </Button>
@@ -1069,7 +1012,15 @@ export function AdminCategoriesPage() {
           </Card>
         ))}
       </div>
-      {!list.isLoading && !(list.data ?? []).length ? <EmptyState title={t.admin.emptyList} /> : null}
+      {!list.isLoading && !rows.length ? (
+        <EmptyState
+          title={t.admin.emptyList}
+          action={{
+            label: t.admin.addCategory,
+            onClick: () => navigate(adminPath('categories/new')),
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -1916,122 +1867,33 @@ function CmsCrudPage({
   );
 }
 
-const emptyServiceForm = {
-  name: '',
-  nameAr: '',
-  shortDescription: '',
-  shortDescriptionAr: '',
-  description: '',
-  descriptionAr: '',
-};
-
 export function AdminServicesPage() {
   const { t } = useI18n();
-  const qc = useQueryClient();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyServiceForm);
-
+  const navigate = useNavigate();
   const list = useQuery({
     queryKey: ['admin-services'],
     queryFn: async () => (await adminCmsApi.services()).data,
   });
-
-  function startEdit(row: CmsService) {
-    setEditingId(row.id);
-    setForm({
-      name: row.name ?? '',
-      nameAr: row.nameAr ?? '',
-      shortDescription: row.shortDescription ?? '',
-      shortDescriptionAr: row.shortDescriptionAr ?? '',
-      description: row.description ?? '',
-      descriptionAr: row.descriptionAr ?? '',
-    });
-  }
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingId) return;
-    try {
-      await adminCmsApi.updateService(editingId, form);
-      toast.success(t.admin.serviceUpdated);
-      setEditingId(null);
-      setForm(emptyServiceForm);
-      await qc.invalidateQueries({ queryKey: ['admin-services'] });
-      await qc.invalidateQueries({ queryKey: ['services'] });
-    } catch {
-      toast.error(t.admin.saveFailed);
-    }
-  }
+  const rows = list.data ?? [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-fg">{t.admin.services}</h1>
-      <p className="text-sm text-muted">{t.admin.servicesBilingualHint}</p>
-
-      {editingId ? (
-        <form onSubmit={save} className="surface grid gap-3 p-4 md:grid-cols-2">
-          <p className="md:col-span-2 text-sm font-bold text-fg">{t.admin.editService}</p>
-          <Input
-            placeholder={t.admin.nameEn}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <Input
-            placeholder={t.admin.nameAr}
-            value={form.nameAr}
-            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
-            dir="rtl"
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.shortDescriptionEn}
-            value={form.shortDescription}
-            onChange={(e) => setForm({ ...form, shortDescription: e.target.value })}
-            rows={3}
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.shortDescriptionAr}
-            value={form.shortDescriptionAr}
-            onChange={(e) => setForm({ ...form, shortDescriptionAr: e.target.value })}
-            rows={3}
-            dir="rtl"
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionEn}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={5}
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionAr}
-            value={form.descriptionAr}
-            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
-            rows={5}
-            dir="rtl"
-          />
-          <div className="flex gap-2 md:col-span-2">
-            <Button type="submit">{t.common.save}</Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setEditingId(null);
-                setForm(emptyServiceForm);
-              }}
-            >
-              {t.admin.back}
-            </Button>
-          </div>
-        </form>
-      ) : null}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.services}</h1>
+          <p className="mt-1 text-sm text-muted">{t.admin.servicesBilingualHint}</p>
+        </div>
+        <Link to={adminPath('services/new')}>
+          <Button className="w-full gap-2 sm:w-auto">
+            <Plus className="h-4 w-4" />
+            {t.admin.addService}
+          </Button>
+        </Link>
+      </div>
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
-        {(list.data ?? []).map((row) => (
+        {rows.map((row) => (
           <div
             key={row.id}
             className="surface flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
@@ -2041,13 +1903,24 @@ export function AdminServicesPage() {
               {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
               <StatusBadge status={String(row.status || 'DRAFT')} />
             </span>
-            <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
-              <Pencil className="me-1.5 h-3.5 w-3.5" />
-              {t.admin.edit}
-            </Button>
+            <Link to={adminPath(`services/${row.id}/edit`)}>
+              <Button type="button" size="sm" variant="secondary">
+                <Pencil className="me-1.5 h-3.5 w-3.5" />
+                {t.admin.edit}
+              </Button>
+            </Link>
           </div>
         ))}
       </div>
+      {!list.isLoading && !rows.length ? (
+        <EmptyState
+          title={t.admin.emptyList}
+          action={{
+            label: t.admin.addService,
+            onClick: () => navigate(adminPath('services/new')),
+          }}
+        />
+      ) : null}
     </div>
   );
 }
@@ -2102,153 +1975,33 @@ export function AdminNewsPage() {
   );
 }
 
-const emptyBrandForm = {
-  name: '',
-  nameAr: '',
-  description: '',
-  descriptionAr: '',
-};
-
 export function AdminBrandsPage() {
   const { t } = useI18n();
-  const qc = useQueryClient();
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyBrandForm);
-
+  const navigate = useNavigate();
   const list = useQuery({
     queryKey: ['admin-brands'],
     queryFn: async () => (await adminCmsApi.brands()).data,
   });
-
-  function startEdit(row: Brand) {
-    setEditingId(row.id);
-    setForm({
-      name: row.name ?? '',
-      nameAr: row.nameAr ?? '',
-      description: row.description ?? '',
-      descriptionAr: row.descriptionAr ?? '',
-    });
-  }
-
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingId) return;
-    try {
-      await adminCmsApi.updateBrand(editingId, form);
-      toast.success(t.admin.brandUpdated);
-      setEditingId(null);
-      setForm(emptyBrandForm);
-      await qc.invalidateQueries({ queryKey: ['admin-brands'] });
-      await qc.invalidateQueries({ queryKey: ['brands'] });
-    } catch {
-      toast.error(t.admin.saveFailed);
-    }
-  }
-
-  async function create(e: React.FormEvent) {
-    e.preventDefault();
-    try {
-      await adminCmsApi.createBrand({
-        ...form,
-        status: 'PUBLISHED',
-        slug: form.name.toLowerCase().replace(/\s+/g, '-'),
-      });
-      toast.success(t.admin.created);
-      setForm(emptyBrandForm);
-      await qc.invalidateQueries({ queryKey: ['admin-brands'] });
-    } catch {
-      toast.error(t.admin.createFailed);
-    }
-  }
+  const rows = list.data ?? [];
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-fg">{t.admin.brands}</h1>
-      <p className="text-sm text-muted">{t.admin.brandsBilingualHint}</p>
-
-      {editingId ? (
-        <form onSubmit={save} className="surface grid gap-3 p-4 md:grid-cols-2">
-          <p className="md:col-span-2 text-sm font-bold text-fg">{t.admin.editBrand}</p>
-          <Input
-            placeholder={t.admin.nameEn}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <Input
-            placeholder={t.admin.nameAr}
-            value={form.nameAr}
-            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
-            dir="rtl"
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionEn}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={5}
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionAr}
-            value={form.descriptionAr}
-            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
-            rows={5}
-            dir="rtl"
-          />
-          <div className="flex gap-2 md:col-span-2">
-            <Button type="submit">{t.common.save}</Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setEditingId(null);
-                setForm(emptyBrandForm);
-              }}
-            >
-              {t.admin.back}
-            </Button>
-          </div>
-        </form>
-      ) : (
-        <form onSubmit={create} className="surface grid gap-3 p-4 md:grid-cols-2">
-          <p className="md:col-span-2 text-sm font-bold text-fg">{t.common.create}</p>
-          <Input
-            placeholder={t.admin.nameEn}
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <Input
-            placeholder={t.admin.nameAr}
-            value={form.nameAr}
-            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
-            dir="rtl"
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionEn}
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={4}
-          />
-          <Textarea
-            className="md:col-span-1"
-            placeholder={t.admin.descriptionAr}
-            value={form.descriptionAr}
-            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
-            rows={4}
-            dir="rtl"
-          />
-          <Button type="submit" className="md:col-span-2">
-            {t.common.create}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.brands}</h1>
+          <p className="mt-1 text-sm text-muted">{t.admin.brandsBilingualHint}</p>
+        </div>
+        <Link to={adminPath('brands/new')}>
+          <Button className="w-full gap-2 sm:w-auto">
+            <Plus className="h-4 w-4" />
+            {t.admin.addBrand}
           </Button>
-        </form>
-      )}
+        </Link>
+      </div>
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
-        {(list.data ?? []).map((row) => (
+        {rows.map((row) => (
           <div
             key={row.id}
             className="surface flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
@@ -2258,13 +2011,24 @@ export function AdminBrandsPage() {
               {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
               <StatusBadge status={String(row.status || 'DRAFT')} />
             </span>
-            <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
-              <Pencil className="me-1.5 h-3.5 w-3.5" />
-              {t.admin.edit}
-            </Button>
+            <Link to={adminPath(`brands/${row.id}/edit`)}>
+              <Button type="button" size="sm" variant="secondary">
+                <Pencil className="me-1.5 h-3.5 w-3.5" />
+                {t.admin.edit}
+              </Button>
+            </Link>
           </div>
         ))}
       </div>
+      {!list.isLoading && !rows.length ? (
+        <EmptyState
+          title={t.admin.emptyList}
+          action={{
+            label: t.admin.addBrand,
+            onClick: () => navigate(adminPath('brands/new')),
+          }}
+        />
+      ) : null}
     </div>
   );
 }

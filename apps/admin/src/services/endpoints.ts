@@ -79,6 +79,7 @@ export const catalogApi = {
   categories: () => api.get<Category[]>('/categories'),
   categoriesAdmin: () => api.get<Category[]>('/categories/admin/all'),
   categoryBySlug: (slug: string) => api.get<Category>(`/categories/slug/${slug}`),
+  categoryById: (id: string) => api.get<Category>(`/categories/${id}`),
   createCategory: (data: Record<string, unknown>) => api.post<Category>('/categories', data),
   updateCategory: (id: string, data: Record<string, unknown>) =>
     api.patch<Category>(`/categories/${id}`, data),
@@ -202,13 +203,15 @@ export const cmsApi = {
 
 export const adminCmsApi = {
   services: () => api.get<CmsService[]>('/services/admin/all'),
+  serviceById: (id: string) => api.get<CmsService>(`/services/${id}`),
   updateService: (id: string, data: Record<string, unknown>) => api.patch(`/services/${id}`, data),
-  createService: (data: Record<string, unknown>) => api.post('/services', data),
+  createService: (data: Record<string, unknown>) => api.post<CmsService>('/services', data),
   createProject: (data: Record<string, unknown>) => api.post('/projects', data),
   createNews: (data: Record<string, unknown>) => api.post('/news', data),
   brands: () => api.get<Brand[]>('/brands/admin/all'),
+  brandById: (id: string) => api.get<Brand>(`/brands/${id}`),
   updateBrand: (id: string, data: Record<string, unknown>) => api.patch(`/brands/${id}`, data),
-  createBrand: (data: Record<string, unknown>) => api.post('/brands', data),
+  createBrand: (data: Record<string, unknown>) => api.post<Brand>('/brands', data),
   createPage: (data: Record<string, unknown>) => api.post('/pages', data),
   createOffice: (data: Record<string, unknown>) => api.post('/offices', data),
   createCategory: (data: Record<string, unknown>) => api.post('/categories', data),

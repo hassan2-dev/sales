@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type DragEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -22,15 +22,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { LoadingState } from '@/components/ui/States';
+import { Field, FormSection } from '@/components/admin/Field';
 import { useI18n } from '@/i18n/i18n-context';
 import { statusLabel } from '@/i18n/dictionaries';
 import { catalogApi, mediaApi } from '@/services/endpoints';
@@ -82,21 +75,30 @@ function buildSpecifications(variantLabel: string, rows: SpecRow[]) {
   return out;
 }
 
-export function AdminProductFormPage() {
+const EDIT_SECTIONS = [
+  { id: 'basics', key: 'productBasics' as const },
+  { id: 'pricing', key: 'productPricing' as const },
+  { id: 'specs', key: 'productVariants' as const },
+  { id: 'media', key: 'productMedia' as const },
+];
+
+export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const { t, locale, dir } = useI18n();
   const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const { id } = useParams();
-  const isNew = !id || id === 'new';
+  const isNew = mode === 'create';
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [dragOver, setDragOver] = useState<'images' | 'sheets' | null>(null);
   const [variantLabel, setVariantLabel] = useState('');
   const [specRows, setSpecRows] = useState<SpecRow[]>([]);
+  const [activeSection, setActiveSection] = useState('basics');
 
   const existing = useQuery({
     queryKey: ['admin-product', id],
-    enabled: !isNew,
+    enabled: !isNew && Boolean(id),
     queryFn: async () => (await catalogApi.productById(id!)).data,
   });
   const categories = useQuery({
@@ -166,12 +168,33 @@ export function AdminProductFormPage() {
     setSpecRows(parsed.rows);
   }, [existing.data?.id]);
 
+  useEffect(() => {
+    if (isNew) return;
+    const nodes = EDIT_SECTIONS.map((s) => document.getElementById(s.id)).filter(
+      Boolean,
+    ) as HTMLElement[];
+    if (!nodes.length) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible?.target?.id) setActiveSection(visible.target.id);
+      },
+      { rootMargin: '-20% 0px -55% 0px', threshold: [0.2, 0.5, 0.8] },
+    );
+    nodes.forEach((n) => observer.observe(n));
+    return () => observer.disconnect();
+  }, [isNew, existing.data?.id]);
+
   const images = existing.data?.images ?? [];
   const documents = existing.data?.documents ?? [];
   const siblingList = useMemo(
     () => (siblings.data?.data ?? []).filter((p) => p.id !== id),
     [siblings.data, id],
   );
+
+  if (!isNew && !id) return <Navigate to={adminPath('products')} replace />;
 
   async function refreshProduct() {
     await qc.invalidateQueries({ queryKey: ['admin-product', id] });
@@ -186,12 +209,13 @@ export function AdminProductFormPage() {
       brandId: values.brandId || null,
       specifications: buildSpecifications(variantLabel, specRows),
     };
+    setSaving(true);
     try {
       if (isNew) {
         const { data } = await catalogApi.createProduct(payload);
         toast.success(t.admin.productCreated);
         await qc.invalidateQueries({ queryKey: ['admin-products'] });
-        navigate(adminPath(`products/${data.id}`));
+        navigate(adminPath(`products/${data.id}/edit`));
       } else {
         await catalogApi.updateProduct(id!, payload);
         toast.success(t.admin.productUpdated);
@@ -199,6 +223,8 @@ export function AdminProductFormPage() {
       }
     } catch {
       toast.error(t.admin.saveFailed);
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -335,7 +361,7 @@ export function AdminProductFormPage() {
       });
       toast.success(t.admin.productCreated);
       await qc.invalidateQueries({ queryKey: ['admin-products'] });
-      navigate(adminPath(`products/${data.id}`));
+      navigate(adminPath(`products/${data.id}/edit`));
     } catch {
       toast.error(t.admin.saveFailed);
     }
@@ -350,9 +376,180 @@ export function AdminProductFormPage() {
   }
 
   if (!isNew && existing.isLoading) return <LoadingState variant="form" />;
+  if (!isNew && (existing.isError || !existing.data)) {
+    return (
+      <div className="space-y-4">
+        <p className="text-sm text-muted-foreground">{t.admin.emptyList}</p>
+        <Link to={adminPath('products')}>
+          <Button variant="outline">{t.admin.back}</Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const basicsFields = (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label={t.common.name} required className="sm:col-span-2">
+        <Input {...form.register('name')} />
+      </Field>
+      <Field label={t.common.sku} required>
+        <Input {...form.register('sku')} />
+      </Field>
+      <Field label={t.admin.featuredProduct}>
+        <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-input bg-card px-3 text-sm">
+          <input type="checkbox" className="h-4 w-4 accent-accent" {...form.register('featured')} />
+          {t.admin.featuredOnHome}
+        </label>
+      </Field>
+      <Field label={t.admin.category}>
+        <Select {...form.register('categoryId')}>
+          <option value="">{t.admin.noCategory}</option>
+          {(categories.data ?? []).map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.parent ? `${c.parent.name} / ` : ''}
+              {c.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label={t.admin.productBrand}>
+        <Select {...form.register('brandId')}>
+          <option value="">{t.admin.noBrand}</option>
+          {(brands.data ?? []).map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </Select>
+      </Field>
+      <Field label={t.admin.shortDescription} className="sm:col-span-2">
+        <Textarea rows={2} {...form.register('shortDescription')} />
+      </Field>
+      <Field label={t.admin.description} className="sm:col-span-2">
+        <Textarea rows={isNew ? 4 : 6} {...form.register('description')} />
+      </Field>
+    </div>
+  );
+
+  const pricingFields = (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label={t.common.price} required>
+        <Input type="number" step="0.01" {...form.register('price', { valueAsNumber: true })} />
+      </Field>
+      <Field label={t.common.stock} required>
+        <Input type="number" {...form.register('stock', { valueAsNumber: true })} />
+      </Field>
+      <Field label={t.admin.currency}>
+        <Input {...form.register('currency')} />
+      </Field>
+      <Field label={t.admin.availability}>
+        <Select {...form.register('availability')}>
+          <option value="IN_STOCK">{statusLabel(locale, 'IN_STOCK')}</option>
+          <option value="LOW_STOCK">{statusLabel(locale, 'LOW_STOCK')}</option>
+          <option value="OUT_OF_STOCK">{statusLabel(locale, 'OUT_OF_STOCK')}</option>
+          <option value="PREORDER">{statusLabel(locale, 'PREORDER')}</option>
+        </Select>
+      </Field>
+      <Field label={t.common.status} className="sm:col-span-2">
+        <Select {...form.register('status')}>
+          <option value="DRAFT">{statusLabel(locale, 'DRAFT')}</option>
+          <option value="ACTIVE">{statusLabel(locale, 'ACTIVE')}</option>
+          <option value="ARCHIVED">{statusLabel(locale, 'ARCHIVED')}</option>
+        </Select>
+      </Field>
+    </div>
+  );
+
+  const specsFields = (
+    <div className="space-y-4">
+      <Field label={t.admin.variantLabel} hint={t.admin.variantLabelHint}>
+        <Input
+          value={variantLabel}
+          onChange={(e) => setVariantLabel(e.target.value)}
+          placeholder='e.g. 1" / DN25'
+        />
+      </Field>
+      <div className="space-y-2">
+        <p className="text-sm font-medium text-fg">{t.admin.specifications}</p>
+        {specRows.map((row) => (
+          <div key={row.id} className="flex flex-wrap gap-2">
+            <Input
+              className="min-w-[8rem] flex-1"
+              placeholder={t.admin.specKey}
+              value={row.key}
+              onChange={(e) =>
+                setSpecRows((prev) =>
+                  prev.map((r) => (r.id === row.id ? { ...r, key: e.target.value } : r)),
+                )
+              }
+            />
+            <Input
+              className="min-w-[8rem] flex-1"
+              placeholder={t.admin.specValue}
+              value={row.value}
+              onChange={(e) =>
+                setSpecRows((prev) =>
+                  prev.map((r) => (r.id === row.id ? { ...r, value: e.target.value } : r)),
+                )
+              }
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="px-2"
+              onClick={() => setSpecRows((prev) => prev.filter((r) => r.id !== row.id))}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          onClick={() =>
+            setSpecRows((prev) => [
+              ...prev,
+              { id: Math.random().toString(36).slice(2), key: '', value: '' },
+            ])
+          }
+        >
+          <Plus className="h-3.5 w-3.5" />
+          {t.admin.addSpec}
+        </Button>
+      </div>
+      {!isNew && siblingList.length ? (
+        <div className="border-t border-border pt-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
+            {t.admin.siblingVariants}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {siblingList.map((p) => {
+              const label =
+                p.specifications && typeof p.specifications === 'object'
+                  ? String((p.specifications as Record<string, unknown>).Variant ?? p.sku)
+                  : p.sku;
+              return (
+                <Link
+                  key={p.id}
+                  to={adminPath(`products/${p.id}/edit`)}
+                  className="rounded-lg border border-border bg-page px-3 py-1.5 text-xs font-semibold text-fg transition hover:border-accent hover:text-accent"
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </div>
+          <p className="mt-2 text-xs text-muted">{t.admin.createVariantHint}</p>
+        </div>
+      ) : null}
+    </div>
+  );
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 sm:space-y-6">
+    <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link to={adminPath('products')} className="shrink-0">
@@ -362,12 +559,17 @@ export function AdminProductFormPage() {
             </Button>
           </Link>
           <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
+              {isNew ? t.admin.createFlow : t.admin.editFlow}
+            </p>
             <h1 className="truncate text-xl font-bold text-fg sm:text-2xl">
               {isNew ? t.admin.newProduct : t.admin.editProduct}
             </h1>
             {!isNew && existing.data ? (
               <p className="mt-0.5 truncate font-mono text-xs text-muted">{existing.data.sku}</p>
-            ) : null}
+            ) : (
+              <p className="mt-0.5 text-sm text-muted-foreground">{t.admin.createProductHint}</p>
+            )}
           </div>
         </div>
         {!isNew ? (
@@ -390,12 +592,7 @@ export function AdminProductFormPage() {
               <Power className="h-3.5 w-3.5" />
               {existing.data?.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
             </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              className="gap-1.5"
-              onClick={() => void onDelete()}
-            >
+            <Button variant="danger" size="sm" className="gap-1.5" onClick={() => void onDelete()}>
               <Trash2 className="h-3.5 w-3.5" />
               {t.admin.delete}
             </Button>
@@ -403,351 +600,238 @@ export function AdminProductFormPage() {
         ) : null}
       </div>
 
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="grid gap-6 lg:grid-cols-5">
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle>{t.admin.productBasics}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input placeholder={t.common.name} {...form.register('name')} />
-              <Input placeholder={t.common.sku} {...form.register('sku')} />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Select {...form.register('categoryId')}>
-                  <option value="">{t.admin.noCategory}</option>
-                  {(categories.data ?? []).map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </Select>
-                <Select {...form.register('brandId')}>
-                  <option value="">{t.admin.noBrand}</option>
-                  {(brands.data ?? []).map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-              <Textarea
-                placeholder={t.admin.shortDescription}
-                rows={2}
-                {...form.register('shortDescription')}
-              />
-              <Textarea placeholder={t.admin.description} rows={5} {...form.register('description')} />
-              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-fg">
-                <input type="checkbox" className="h-4 w-4 accent-accent" {...form.register('featured')} />
-                {t.admin.featuredProduct}
-              </label>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <CardTitle>{t.admin.productPricing}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Input
-                type="number"
-                step="0.01"
-                placeholder={t.common.price}
-                {...form.register('price', { valueAsNumber: true })}
-              />
-              <Input
-                type="number"
-                placeholder={t.common.stock}
-                {...form.register('stock', { valueAsNumber: true })}
-              />
-              <Input placeholder={t.admin.currency} {...form.register('currency')} />
-              <Select {...form.register('availability')}>
-                <option value="IN_STOCK">{statusLabel(locale, 'IN_STOCK')}</option>
-                <option value="LOW_STOCK">{statusLabel(locale, 'LOW_STOCK')}</option>
-                <option value="OUT_OF_STOCK">{statusLabel(locale, 'OUT_OF_STOCK')}</option>
-                <option value="PREORDER">{statusLabel(locale, 'PREORDER')}</option>
-              </Select>
-              <Select {...form.register('status')}>
-                <option value="DRAFT">{statusLabel(locale, 'DRAFT')}</option>
-                <option value="ACTIVE">{statusLabel(locale, 'ACTIVE')}</option>
-                <option value="ARCHIVED">{statusLabel(locale, 'ARCHIVED')}</option>
-              </Select>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.admin.productVariants}</CardTitle>
-            <CardDescription>{t.admin.variantLabelHint}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-muted">
-                {t.admin.variantLabel}
-              </label>
-              <Input
-                value={variantLabel}
-                onChange={(e) => setVariantLabel(e.target.value)}
-                placeholder='e.g. 1" / DN25'
-              />
-            </div>
-
-            <div className="space-y-2">
-              {specRows.map((row) => (
-                <div key={row.id} className="flex flex-wrap gap-2">
-                  <Input
-                    className="min-w-[8rem] flex-1"
-                    placeholder={t.admin.specKey}
-                    value={row.key}
-                    onChange={(e) =>
-                      setSpecRows((prev) =>
-                        prev.map((r) => (r.id === row.id ? { ...r, key: e.target.value } : r)),
-                      )
-                    }
-                  />
-                  <Input
-                    className="min-w-[8rem] flex-1"
-                    placeholder={t.admin.specValue}
-                    value={row.value}
-                    onChange={(e) =>
-                      setSpecRows((prev) =>
-                        prev.map((r) => (r.id === row.id ? { ...r, value: e.target.value } : r)),
-                      )
-                    }
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="px-2"
-                    onClick={() => setSpecRows((prev) => prev.filter((r) => r.id !== row.id))}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={cn(!isNew && 'lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6')}
+      >
+        {!isNew ? (
+          <aside className="mb-4 hidden lg:mb-0 lg:block">
+            <nav className="sticky top-24 space-y-1 rounded-2xl border border-border bg-card p-3">
+              {EDIT_SECTIONS.map((s) => (
+                <a
+                  key={s.id}
+                  href={`#${s.id}`}
+                  className={cn(
+                    'block rounded-lg px-3 py-2 text-sm font-semibold transition',
+                    activeSection === s.id
+                      ? 'bg-accent/10 text-accent'
+                      : 'text-muted-foreground hover:bg-muted hover:text-fg',
+                  )}
+                >
+                  {t.admin[s.key]}
+                </a>
               ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="gap-1.5"
-                onClick={() =>
-                  setSpecRows((prev) => [
-                    ...prev,
-                    { id: Math.random().toString(36).slice(2), key: '', value: '' },
-                  ])
-                }
-              >
-                <Plus className="h-3.5 w-3.5" />
-                {t.admin.addSpec}
-              </Button>
-            </div>
+            </nav>
+          </aside>
+        ) : null}
 
-            {!isNew && siblingList.length ? (
-              <div className="border-t border-border pt-4">
-                <p className="mb-2 text-xs font-bold uppercase tracking-wide text-muted">
-                  {t.admin.siblingVariants}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {siblingList.map((p) => {
-                    const label =
-                      p.specifications && typeof p.specifications === 'object'
-                        ? String(
-                            (p.specifications as Record<string, unknown>).Variant ?? p.sku,
-                          )
-                        : p.sku;
-                    return (
-                      <Link
-                        key={p.id}
-                        to={adminPath(`products/${p.id}`)}
-                        className="rounded-lg border border-border bg-page px-3 py-1.5 text-xs font-semibold text-fg transition hover:border-accent hover:text-accent"
-                      >
-                        {label}
-                      </Link>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-xs text-muted">{t.admin.createVariantHint}</p>
+        <div className="space-y-5">
+          {isNew ? (
+            <>
+              <FormSection title={t.admin.productBasics} description={t.admin.createBasicsHint}>
+                {basicsFields}
+              </FormSection>
+              <FormSection title={t.admin.productPricing}>{pricingFields}</FormSection>
+              <FormSection title={t.admin.productVariants} description={t.admin.variantLabelHint}>
+                {specsFields}
+              </FormSection>
+              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                {t.admin.mediaAfterSave}
               </div>
-            ) : null}
-          </CardContent>
-          <CardFooter className="gap-2">
-            <Button type="submit">{t.common.save}</Button>
+            </>
+          ) : (
+            <>
+              <FormSection id="basics" title={t.admin.productBasics}>
+                {basicsFields}
+              </FormSection>
+              <FormSection id="pricing" title={t.admin.productPricing}>
+                {pricingFields}
+              </FormSection>
+              <FormSection
+                id="specs"
+                title={t.admin.productVariants}
+                description={t.admin.variantLabelHint}
+              >
+                {specsFields}
+              </FormSection>
+              <FormSection
+                id="media"
+                title={t.admin.productMedia}
+                description={t.admin.productMediaHint}
+              >
+                <div className="grid gap-6 lg:grid-cols-2">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-fg">
+                      <ImageIcon className="h-4 w-4" />
+                      {t.admin.productImages}
+                    </div>
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOver('images');
+                      }}
+                      onDragLeave={() => setDragOver(null)}
+                      onDrop={(e) => onDrop('images', e)}
+                      className={cn(
+                        'flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition',
+                        dragOver === 'images'
+                          ? 'border-accent bg-accent/5 text-accent'
+                          : 'border-border text-muted hover:border-accent/50 hover:text-fg',
+                        uploading && 'pointer-events-none opacity-50',
+                      )}
+                    >
+                      <Upload className="h-5 w-5" />
+                      <span className="font-semibold">
+                        {uploading ? t.admin.uploading : t.admin.dropImages}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="sr-only"
+                        disabled={uploading}
+                        onChange={(e) => {
+                          void uploadImages(e.target.files);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                    {images.length ? (
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {images.map((img) => (
+                          <div
+                            key={img.id}
+                            className={cn(
+                              'group relative overflow-hidden rounded-xl border bg-card',
+                              img.isPrimary
+                                ? 'border-accent ring-2 ring-accent/30'
+                                : 'border-border',
+                            )}
+                          >
+                            <img
+                              src={img.url}
+                              alt=""
+                              className="aspect-square w-full object-cover"
+                            />
+                            <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-2">
+                              <button
+                                type="button"
+                                className={cn(
+                                  'inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[11px] font-bold text-white transition',
+                                  img.isPrimary ? 'bg-accent' : 'bg-white/15 hover:bg-accent',
+                                )}
+                                onClick={() => void setPrimary(img.id)}
+                              >
+                                <Star
+                                  className={cn('h-3.5 w-3.5', img.isPrimary && 'fill-current')}
+                                />
+                                {img.isPrimary ? t.admin.setPrimary : t.admin.makePrimary}
+                              </button>
+                              <button
+                                type="button"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/90 text-white"
+                                onClick={() => void removeImage(img.id)}
+                                aria-label={t.admin.removeImage}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted">{t.admin.noImagesYet}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 text-sm font-bold text-fg">
+                      <FileText className="h-4 w-4" />
+                      {t.admin.datasheets}
+                    </div>
+                    <label
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOver('sheets');
+                      }}
+                      onDragLeave={() => setDragOver(null)}
+                      onDrop={(e) => onDrop('sheets', e)}
+                      className={cn(
+                        'flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition',
+                        dragOver === 'sheets'
+                          ? 'border-accent bg-accent/5 text-accent'
+                          : 'border-border text-muted hover:border-accent/50 hover:text-fg',
+                        uploading && 'pointer-events-none opacity-50',
+                      )}
+                    >
+                      <Upload className="h-5 w-5" />
+                      <span className="font-semibold">
+                        {uploading ? t.admin.uploading : t.admin.dropSheets}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                        multiple
+                        className="sr-only"
+                        disabled={uploading}
+                        onChange={(e) => {
+                          void uploadSheets(e.target.files);
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+                    {documents.length ? (
+                      <ul className="space-y-2">
+                        {documents.map((doc) => (
+                          <li
+                            key={doc.id}
+                            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-page px-3 py-2.5 text-sm"
+                          >
+                            <a
+                              href={doc.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex min-w-0 items-center gap-2 font-semibold text-accent hover:underline"
+                            >
+                              <FileText className="h-4 w-4 shrink-0" />
+                              <span className="truncate">{doc.name}</span>
+                            </a>
+                            <Button
+                              type="button"
+                              variant="danger"
+                              size="sm"
+                              onClick={() => void removeDocument(doc.id)}
+                            >
+                              {t.admin.removeDocument}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted">{t.admin.noSheetsYet}</p>
+                    )}
+                  </div>
+                </div>
+              </FormSection>
+            </>
+          )}
+
+          <div className="sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
+            <Button type="submit" disabled={saving} className="min-w-[9rem]">
+              {saving
+                ? t.common.loading
+                : isNew
+                  ? t.admin.createAndContinue
+                  : t.common.save}
+            </Button>
             <Link to={adminPath('products')}>
               <Button type="button" variant="outline">
-                {t.admin.back}
+                {t.admin.cancel}
               </Button>
             </Link>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </form>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ImageIcon className="h-4 w-4" />
-              {t.admin.productImages}
-            </CardTitle>
-            <CardDescription>
-              {isNew ? t.admin.mediaAfterSave : t.admin.productImagesHint}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!isNew ? (
-              <label
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver('images');
-                }}
-                onDragLeave={() => setDragOver(null)}
-                onDrop={(e) => onDrop('images', e)}
-                className={cn(
-                  'flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition',
-                  dragOver === 'images'
-                    ? 'border-accent bg-accent/5 text-accent'
-                    : 'border-border text-muted hover:border-accent/50 hover:text-fg',
-                  uploading && 'pointer-events-none opacity-50',
-                )}
-              >
-                <Upload className="h-5 w-5" />
-                <span className="font-semibold">
-                  {uploading ? t.admin.uploading : t.admin.dropImages}
-                </span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="sr-only"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    void uploadImages(e.target.files);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            ) : null}
-
-            {images.length ? (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {images.map((img) => (
-                  <div
-                    key={img.id}
-                    className={cn(
-                      'group relative overflow-hidden rounded-xl border bg-card',
-                      img.isPrimary ? 'border-accent ring-2 ring-accent/30' : 'border-border',
-                    )}
-                  >
-                    <img src={img.url} alt="" className="aspect-square w-full object-cover" />
-                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-2">
-                      <button
-                        type="button"
-                        className={cn(
-                          'inline-flex h-8 items-center gap-1 rounded-lg px-2 text-[11px] font-bold text-white transition',
-                          img.isPrimary ? 'bg-accent' : 'bg-white/15 hover:bg-accent',
-                        )}
-                        onClick={() => void setPrimary(img.id)}
-                        title={t.admin.makePrimary}
-                      >
-                        <Star className={cn('h-3.5 w-3.5', img.isPrimary && 'fill-current')} />
-                        {img.isPrimary ? t.admin.setPrimary : t.admin.makePrimary}
-                      </button>
-                      <button
-                        type="button"
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-600/90 text-white"
-                        onClick={() => void removeImage(img.id)}
-                        aria-label={t.admin.removeImage}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted">{t.admin.noImagesYet}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-4 w-4" />
-              {t.admin.datasheets}
-            </CardTitle>
-            <CardDescription>
-              {isNew ? t.admin.mediaAfterSave : t.admin.datasheetsHint}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {!isNew ? (
-              <label
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver('sheets');
-                }}
-                onDragLeave={() => setDragOver(null)}
-                onDrop={(e) => onDrop('sheets', e)}
-                className={cn(
-                  'flex min-h-[7rem] cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center text-sm transition',
-                  dragOver === 'sheets'
-                    ? 'border-accent bg-accent/5 text-accent'
-                    : 'border-border text-muted hover:border-accent/50 hover:text-fg',
-                  uploading && 'pointer-events-none opacity-50',
-                )}
-              >
-                <Upload className="h-5 w-5" />
-                <span className="font-semibold">
-                  {uploading ? t.admin.uploading : t.admin.dropSheets}
-                </span>
-                <input
-                  type="file"
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                  multiple
-                  className="sr-only"
-                  disabled={uploading}
-                  onChange={(e) => {
-                    void uploadSheets(e.target.files);
-                    e.target.value = '';
-                  }}
-                />
-              </label>
-            ) : null}
-
-            {documents.length ? (
-              <ul className="space-y-2">
-                {documents.map((doc) => (
-                  <li
-                    key={doc.id}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-page px-3 py-2.5 text-sm"
-                  >
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex min-w-0 items-center gap-2 font-semibold text-accent hover:underline"
-                    >
-                      <FileText className="h-4 w-4 shrink-0" />
-                      <span className="truncate">{doc.name}</span>
-                    </a>
-                    <Button
-                      type="button"
-                      variant="danger"
-                      size="sm"
-                      onClick={() => void removeDocument(doc.id)}
-                    >
-                      {t.admin.removeDocument}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted">{t.admin.noSheetsYet}</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 }
