@@ -62,7 +62,7 @@ import {
   usersApi,
   auditApi,
 } from '@/services/endpoints';
-import type { CmsService } from '@/types';
+import type { Brand, CmsService } from '@/types';
 import { cn, formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
 import { usdToIqd, useCommerceSettings } from '@/stores/commerce-settings-context';
@@ -2102,26 +2102,170 @@ export function AdminNewsPage() {
   );
 }
 
+const emptyBrandForm = {
+  name: '',
+  nameAr: '',
+  description: '',
+  descriptionAr: '',
+};
+
 export function AdminBrandsPage() {
   const { t } = useI18n();
+  const qc = useQueryClient();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyBrandForm);
+
+  const list = useQuery({
+    queryKey: ['admin-brands'],
+    queryFn: async () => (await adminCmsApi.brands()).data,
+  });
+
+  function startEdit(row: Brand) {
+    setEditingId(row.id);
+    setForm({
+      name: row.name ?? '',
+      nameAr: row.nameAr ?? '',
+      description: row.description ?? '',
+      descriptionAr: row.descriptionAr ?? '',
+    });
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    if (!editingId) return;
+    try {
+      await adminCmsApi.updateBrand(editingId, form);
+      toast.success(t.admin.brandUpdated);
+      setEditingId(null);
+      setForm(emptyBrandForm);
+      await qc.invalidateQueries({ queryKey: ['admin-brands'] });
+      await qc.invalidateQueries({ queryKey: ['brands'] });
+    } catch {
+      toast.error(t.admin.saveFailed);
+    }
+  }
+
+  async function create(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      await adminCmsApi.createBrand({
+        ...form,
+        status: 'PUBLISHED',
+        slug: form.name.toLowerCase().replace(/\s+/g, '-'),
+      });
+      toast.success(t.admin.created);
+      setForm(emptyBrandForm);
+      await qc.invalidateQueries({ queryKey: ['admin-brands'] });
+    } catch {
+      toast.error(t.admin.createFailed);
+    }
+  }
+
   return (
-    <CmsCrudPage
-      title={t.admin.brands}
-      listKey="admin-brands"
-      listFn={() => cmsApi.brands()}
-      createFn={(d) =>
-        adminCmsApi.createBrand({
-          ...d,
-          status: 'PUBLISHED',
-          slug: d.name.toLowerCase().replace(/\s+/g, '-'),
-        })
-      }
-      fields={[
-        { key: 'name', label: t.common.name },
-        { key: 'description', label: t.admin.description },
-        { key: 'website', label: t.admin.website },
-      ]}
-    />
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-fg">{t.admin.brands}</h1>
+      <p className="text-sm text-muted">{t.admin.brandsBilingualHint}</p>
+
+      {editingId ? (
+        <form onSubmit={save} className="surface grid gap-3 p-4 md:grid-cols-2">
+          <p className="md:col-span-2 text-sm font-bold text-fg">{t.admin.editBrand}</p>
+          <Input
+            placeholder={t.admin.nameEn}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
+          <Input
+            placeholder={t.admin.nameAr}
+            value={form.nameAr}
+            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
+            dir="rtl"
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionEn}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={5}
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionAr}
+            value={form.descriptionAr}
+            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
+            rows={5}
+            dir="rtl"
+          />
+          <div className="flex gap-2 md:col-span-2">
+            <Button type="submit">{t.common.save}</Button>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setEditingId(null);
+                setForm(emptyBrandForm);
+              }}
+            >
+              {t.admin.back}
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <form onSubmit={create} className="surface grid gap-3 p-4 md:grid-cols-2">
+          <p className="md:col-span-2 text-sm font-bold text-fg">{t.common.create}</p>
+          <Input
+            placeholder={t.admin.nameEn}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+          />
+          <Input
+            placeholder={t.admin.nameAr}
+            value={form.nameAr}
+            onChange={(e) => setForm({ ...form, nameAr: e.target.value })}
+            dir="rtl"
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionEn}
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={4}
+          />
+          <Textarea
+            className="md:col-span-1"
+            placeholder={t.admin.descriptionAr}
+            value={form.descriptionAr}
+            onChange={(e) => setForm({ ...form, descriptionAr: e.target.value })}
+            rows={4}
+            dir="rtl"
+          />
+          <Button type="submit" className="md:col-span-2">
+            {t.common.create}
+          </Button>
+        </form>
+      )}
+
+      {list.isLoading ? <LoadingState variant="table" /> : null}
+      <div className="space-y-2">
+        {(list.data ?? []).map((row) => (
+          <div
+            key={row.id}
+            className="surface flex flex-wrap items-center justify-between gap-2 p-3 text-sm"
+          >
+            <span>
+              {row.name}
+              {row.nameAr ? ` · ${row.nameAr}` : ''} · {row.slug} ·{' '}
+              <StatusBadge status={String(row.status || 'DRAFT')} />
+            </span>
+            <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(row)}>
+              <Pencil className="me-1.5 h-3.5 w-3.5" />
+              {t.admin.edit}
+            </Button>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

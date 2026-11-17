@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Brand" ADD COLUMN IF NOT EXISTS "nameAr" TEXT;
+ALTER TABLE "Brand" ADD COLUMN IF NOT EXISTS "descriptionAr" TEXT;

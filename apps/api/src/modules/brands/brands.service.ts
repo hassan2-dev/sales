@@ -17,9 +17,11 @@ export class BrandsService {
     return this.prisma.brand.create({
       data: {
         name: dto.name,
+        nameAr: dto.nameAr,
         slug,
         logo: dto.logo,
         description: dto.description,
+        descriptionAr: dto.descriptionAr,
         website: dto.website,
         status: dto.status ?? ContentStatus.PUBLISHED,
         sortOrder: dto.sortOrder ?? 0,
@@ -39,8 +41,10 @@ export class BrandsService {
               select: {
                 id: true,
                 name: true,
+                nameAr: true,
                 slug: true,
                 shortDescription: true,
+                shortDescriptionAr: true,
                 image: true,
               },
             },
@@ -65,8 +69,10 @@ export class BrandsService {
               select: {
                 id: true,
                 name: true,
+                nameAr: true,
                 slug: true,
                 shortDescription: true,
+                shortDescriptionAr: true,
                 image: true,
               },
             },
@@ -115,8 +121,10 @@ export class BrandsService {
     await this.findOne(id);
     const data: Prisma.BrandUpdateInput = {};
     if (dto.name !== undefined) data.name = dto.name;
+    if (dto.nameAr !== undefined) data.nameAr = dto.nameAr;
     if (dto.logo !== undefined) data.logo = dto.logo;
     if (dto.description !== undefined) data.description = dto.description;
+    if (dto.descriptionAr !== undefined) data.descriptionAr = dto.descriptionAr;
     if (dto.website !== undefined) data.website = dto.website;
     if (dto.status !== undefined) data.status = dto.status;
     if (dto.sortOrder !== undefined) data.sortOrder = dto.sortOrder;

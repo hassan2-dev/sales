@@ -16,6 +16,10 @@ export class CreateBrandDto {
 
   @IsOptional()
   @IsString()
+  nameAr?: string;
+
+  @IsOptional()
+  @IsString()
   slug?: string;
 
   @IsOptional()
@@ -25,6 +29,10 @@ export class CreateBrandDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  descriptionAr?: string;
 
   @IsOptional()
   @IsString()
@@ -49,6 +57,10 @@ export class UpdateBrandDto {
 
   @IsOptional()
   @IsString()
+  nameAr?: string;
+
+  @IsOptional()
+  @IsString()
   slug?: string;
 
   @IsOptional()
@@ -58,6 +70,10 @@ export class UpdateBrandDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsString()
+  descriptionAr?: string;
 
   @IsOptional()
   @IsString()

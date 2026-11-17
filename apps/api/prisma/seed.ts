@@ -538,140 +538,177 @@ async function main() {
   const brands = [
     {
       name: 'Energy Horizon',
+      nameAr: 'افاق الطاقة',
       slug: 'energy-horizon',
       description:
         'Our private-label PPE, tools, and industrial kits — staged in Baghdad and Basra for oilfield and plant crews.',
-      website: 'https://energy-horizon.net',
+      descriptionAr:
+        'منتجاتنا الخاصة من معدات الوقاية والأدوات والعدد الصناعية — متوفرة في بغداد والبصرة لطواقم الحقول والمنشآت.',
       logo: '/logo.png',
       sortOrder: 0,
     },
     {
       name: 'ALFAGOMMA',
+      nameAr: 'ألفاغوما',
       slug: 'alfagomma',
       description:
         'For over 60 years, Alfagomma has been producing and distributing high quality hydraulic and industrial hose systems worldwide — rubber and thermoplastic hose, fittings, adapters, quick-release couplings, assemblies, and stainless corrugated hose.',
-      website: 'https://www.alfagomma.com',
+      descriptionAr:
+        'منذ أكثر من 60 عاماً تنتج ألفاغوما وتوزّع أنظمة خراطيم هيدروليكية وصناعية عالية الجودة حول العالم — خراطيم مطاطية وثرموبلاستيك، وصلات، محولات، اقتران سريع، تجميعات، وخراطيم فولاذ مقاوم للصدأ مموجة.',
       logo: '/brands/alfagomma.png',
       sortOrder: 1,
     },
     {
       name: 'DEN-CON TOOL CO.',
+      nameAr: 'دين-كون تول',
       slug: 'den-con',
       description:
         'Founded in 1975, Den-Con Tool Company provides a complete line of pipe handling tools for drilling and workover rigs — elevators, spiders, slips, bushings, and safety clamps. API 7K and API 8C certified with a quality system aligned to API Q1 / ISO.',
-      website: 'https://www.den-con.com',
+      descriptionAr:
+        'تأسست عام 1975، وتوفّر دين-كون خطّاً كاملاً من أدوات مناولة الأنابيب لأبراج الحفر والصيانة — رافعات، سبايدرز، سلپس، بطانات، ومشابك أمان. معتمدة API 7K و API 8C ونظام جودة متوافق مع API Q1 / ISO.',
       logo: '/brands/den-con.png',
       sortOrder: 2,
     },
     {
       name: 'BRIDON · BEKAERT',
+      nameAr: 'بريدون · بيكارت',
       slug: 'bridon-bekaert',
       description:
         'Bridon·Bekaert The Ropes Group supplies high-performance steel wire ropes and lifting solutions for drilling, cranes, and heavy industrial applications across oil and gas.',
-      website: 'https://www.bridon-bekaert.com',
+      descriptionAr:
+        'بريدون·بيكارت توفّر حبال أسلاك فولاذية عالية الأداء وحلول رفع للحفر والرافعات والتطبيقات الصناعية الثقيلة في النفط والغاز.',
       logo: '/brands/bridon-bekaert.png',
       sortOrder: 3,
     },
     {
       name: 'OILGEAR',
+      nameAr: 'أويلغير',
       slug: 'oilgear',
       description:
         'Oilgear designs and manufactures high-pressure hydraulic pumps, valves, and fluid power systems for demanding industrial and energy applications.',
-      website: 'https://www.oilgear.com',
+      descriptionAr:
+        'أويلغير تصمّم وتصنع مضخات هيدروليكية عالية الضغط وصمامات وأنظمة طاقة سوائل للتطبيقات الصناعية وقطاع الطاقة.',
       logo: '/brands/oilgear.png',
       sortOrder: 4,
     },
     {
       name: 'EMMEGI',
+      nameAr: 'إيميغي',
       slug: 'emmegi',
       description:
         'Emmegi heat exchangers and cooling systems for hydraulic power units, industrial processes, and oilfield equipment packages.',
-      website: 'https://www.emmegi.com',
+      descriptionAr:
+        'مبادلات حرارية وأنظمة تبريد من إيميغي لوحدات القدرة الهيدروليكية والعمليات الصناعية وحزم معدات الحقول.',
       logo: '/brands/emmegi.png',
       sortOrder: 5,
     },
     {
       name: 'LAPP',
+      nameAr: 'لاب',
       slug: 'lapp',
       description:
         'LAPP cable and connectivity systems for industrial automation, power distribution, and harsh-environment electrical installations on rigs and plants.',
-      website: 'https://www.lapp.com',
+      descriptionAr:
+        'كابلات وأنظمة توصيل من لاب للأتمتة الصناعية وتوزيع الطاقة والتركيبات الكهربائية في البيئات القاسية على الأبراج والمنشآت.',
       logo: '/brands/lapp.png',
       sortOrder: 6,
     },
     {
       name: 'PEPPERL+FUCHS',
+      nameAr: 'بيبرل+فوكس',
       slug: 'pepperl-fuchs',
       description:
         'Pepperl+Fuchs explosion protection, intrinsic safety barriers, sensors, and interface technology for hazardous areas in oil, gas, and process industries.',
-      website: 'https://www.pepperl-fuchs.com',
+      descriptionAr:
+        'بيبرل+فوكس للحماية من الانفجار وحواجز السلامة الجوهرية والحساسات وتقنيات الواجهة للمناطق الخطرة في النفط والغاز والصناعات العملية.',
       logo: '/brands/pepperl-fuchs.png',
       sortOrder: 7,
     },
     {
       name: 'hohner',
+      nameAr: 'هونر',
       slug: 'hohner',
       description:
         'Hohner industrial encoders and motion feedback devices for automation, drilling machinery, and process control systems.',
-      website: 'https://www.hohner.es',
+      descriptionAr:
+        'مشفّرات صناعية وأجهزة تغذية راجعة للحركة من هونر للأتمتة وآلات الحفر وأنظمة التحكم بالعمليات.',
       logo: '/brands/hohner.png',
       sortOrder: 8,
     },
     {
       name: 'NUOVA FIMA',
+      nameAr: 'نوفا فيما',
       slug: 'nuova-fima',
       description:
         'Nuova Fima pressure and temperature instrumentation — gauges, transmitters, and process instruments for industrial and oilfield duty.',
-      website: 'https://www.nuovafima.com',
+      descriptionAr:
+        'أجهزة قياس ضغط وحرارة من نوفا فيما — مقاييس ومرسلات وأدوات عمليات للخدمة الصناعية وحقول النفط.',
       logo: '/brands/nuova-fima.png',
       sortOrder: 9,
     },
     {
       name: 'euromotori',
+      nameAr: 'يوروموتوري',
       slug: 'euromotori',
       description:
         'Euromotori electric motors and drive solutions for industrial pumps, compressors, and oilfield auxiliary equipment.',
-      website: 'https://www.euromotori.it',
+      descriptionAr:
+        'محركات كهربائية وحلول قيادة من يوروموتوري للمضخات والضواغط الصناعية والمعدات المساعدة في الحقول.',
       logo: '/brands/euromotori.png',
       sortOrder: 10,
     },
     {
       name: 'ANTENUCCI',
+      nameAr: 'أنتينوتشي',
       slug: 'antenucci',
       description:
         'Antenucci equipment and tooling supporting drilling and workover operations with field-proven mechanical solutions.',
+      descriptionAr:
+        'معدات وأدوات أنتينوتشي لدعم عمليات الحفر والصيانة بحلول ميكانيكية مجرّبة ميدانياً.',
       logo: '/brands/antenucci.png',
       sortOrder: 11,
     },
     {
       name: 'IMPERIAL Safety',
+      nameAr: 'إمبيريال للسلامة',
       slug: 'imperial-safety',
       description:
         'Imperial Safety PPE ranges for oil, gas, and industrial sites — head, eye, hand, and body protection selected for EN certification and field durability.',
+      descriptionAr:
+        'معدات وقاية شخصية من إمبيريال لمواقع النفط والغاز والصناعة — حماية الرأس والعين واليد والجسم معتمدة EN ومتينة ميدانياً.',
       logo: '/brands/imperial-safety.png',
       sortOrder: 12,
     },
     {
       name: 'ELIT UPS',
+      nameAr: 'إيليت يو بي إس',
       slug: 'elit-ups',
       description:
         'ELIT UPS systems for uninterrupted power in control rooms, offices, and critical IT / industrial loads across energy facilities.',
+      descriptionAr:
+        'أنظمة طاقة غير منقطعة من إيليت لغرف التحكم والمكاتب والأحمال الحرجة لتقنية المعلومات والصناعة في منشآت الطاقة.',
       logo: '/brands/elit-ups.png',
       sortOrder: 13,
     },
     {
       name: 'UNIKA GROUP',
+      nameAr: 'يونيكا غروب',
       slug: 'unika-group',
       description:
         'Unika Group industrial solutions supporting plant, refinery, and process facility supply programs.',
+      descriptionAr:
+        'حلول صناعية من يونيكا غروب لدعم برامج التوريد للمصانع والمصافي والمنشآت العملية.',
       logo: '/brands/unika-group.png',
       sortOrder: 14,
     },
     {
       name: 'epoll',
+      nameAr: 'إيبول',
       slug: 'epoll',
       description:
         'epoll products and systems for industrial and energy-sector applications across isolation plants and process sites.',
+      descriptionAr:
+        'منتجات وأنظمة إيبول للتطبيقات الصناعية وقطاع الطاقة في محطات العزل ومواقع العمليات.',
       logo: '/brands/epoll.png',
       sortOrder: 15,
     },
@@ -682,17 +719,21 @@ async function main() {
       where: { slug: brand.slug },
       update: {
         name: brand.name,
+        nameAr: brand.nameAr,
         description: brand.description,
-        website: brand.website ?? null,
+        descriptionAr: brand.descriptionAr,
+        website: null,
         logo: brand.logo,
         sortOrder: brand.sortOrder,
         status: ContentStatus.PUBLISHED,
       },
       create: {
         name: brand.name,
+        nameAr: brand.nameAr,
         slug: brand.slug,
         description: brand.description,
-        website: brand.website ?? null,
+        descriptionAr: brand.descriptionAr,
+        website: null,
         logo: brand.logo,
         sortOrder: brand.sortOrder,
         status: ContentStatus.PUBLISHED,

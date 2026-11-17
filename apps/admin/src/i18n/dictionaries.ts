@@ -297,8 +297,12 @@ const dict = {
       exchangeRateInvalid: 'Enter a valid exchange rate greater than zero',
       servicesBilingualHint:
         'Edit English and Arabic text for each service. The website shows Arabic when the visitor selects العربية.',
+      brandsBilingualHint:
+        'Edit English and Arabic text for each brand. Manufacturer website links are not shown on the public site.',
       editService: 'Edit service',
+      editBrand: 'Edit brand',
       serviceUpdated: 'Service updated',
+      brandUpdated: 'Brand updated',
       nameEn: 'Name (English)',
       nameAr: 'Name (Arabic)',
       shortDescriptionEn: 'Short description (English)',
@@ -856,8 +860,12 @@ const dict = {
       exchangeRateInvalid: 'أدخل سعر صرف صحيحاً أكبر من صفر',
       servicesBilingualHint:
         'عدّل النص الإنجليزي والعربي لكل خدمة. الموقع يعرض العربية عند اختيار العربية.',
+      brandsBilingualHint:
+        'عدّل النص الإنجليزي والعربي لكل علامة. رابط موقع المصنّع ما يظهر على الموقع العام.',
       editService: 'تعديل الخدمة',
+      editBrand: 'تعديل العلامة',
       serviceUpdated: 'تم تحديث الخدمة',
+      brandUpdated: 'تم تحديث العلامة',
       nameEn: 'الاسم (إنجليزي)',
       nameAr: 'الاسم (عربي)',
       shortDescriptionEn: 'وصف مختصر (إنجليزي)',

@@ -26,7 +26,7 @@ import { LoadingState, EmptyState, ErrorState } from '@/components/ui/States';
 import { catalogApi, cmsApi } from '@/services/endpoints';
 import { STORE_URL, storePath } from '@/lib/urls';
 import { useI18n } from '@/i18n/i18n-context';
-import { localizeService } from '@/lib/localize-cms';
+import { localizeBrand, localizeService } from '@/lib/localize-cms';
 import { Reveal } from '@/components/Reveal';
 import { CountUpStat } from '@/components/CountUpStat';
 import { NationwideCoverage } from '@/components/NationwideCoverage';
@@ -655,15 +655,16 @@ export function BrandDetailPage({ slug }: { slug: string }) {
   }
 
   const brand = query.data;
+  const loc = localizeBrand(brand, locale);
   const services = brand.services ?? [];
   const products = brand.products ?? [];
 
   return (
     <>
       <Seo
-        title={brand.name}
+        title={loc.name}
         path={`/brands/${slug}`}
-        description={brand.description || undefined}
+        description={loc.description || undefined}
       />
 
       <section className="border-b border-line bg-page text-fg">
@@ -686,7 +687,7 @@ export function BrandDetailPage({ slug }: { slug: string }) {
                     className="max-h-24 w-auto max-w-full object-contain"
                   />
                 ) : (
-                  <span className="text-2xl font-extrabold tracking-tight">{brand.name}</span>
+                  <span className="text-2xl font-extrabold tracking-tight">{loc.name}</span>
                 )}
               </div>
             </Reveal>
@@ -696,11 +697,11 @@ export function BrandDetailPage({ slug }: { slug: string }) {
                 {p.brandsList}
               </p>
               <h1 className="mt-3 text-3xl font-extrabold tracking-tight sm:text-5xl">
-                {brand.name}
+                {loc.name}
               </h1>
-              {brand.description ? (
+              {loc.description ? (
                 <p className="mt-5 max-w-2xl text-base font-medium leading-relaxed text-muted sm:text-lg">
-                  {brand.description}
+                  {loc.description}
                 </p>
               ) : null}
 
@@ -735,17 +736,6 @@ export function BrandDetailPage({ slug }: { slug: string }) {
                   {p.brandsCtaStore}
                   <ArrowUpRight className="h-4 w-4" />
                 </a>
-                {brand.website ? (
-                  <a
-                    href={brand.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-cta btn-cta-outline"
-                  >
-                    {p.brandsWebsite}
-                    <ArrowUpRight className="h-4 w-4" />
-                  </a>
-                ) : null}
               </div>
             </Reveal>
           </div>

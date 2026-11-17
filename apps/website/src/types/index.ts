@@ -70,8 +70,10 @@ export interface Category {
 export interface Brand {
   id: string;
   name: string;
+  nameAr?: string | null;
   slug: string;
   description?: string | null;
+  descriptionAr?: string | null;
   logo?: string | null;
   website?: string | null;
   status?: string;
@@ -79,8 +81,10 @@ export interface Brand {
   services?: {
     id: string;
     name: string;
+    nameAr?: string | null;
     slug: string;
     shortDescription?: string | null;
+    shortDescriptionAr?: string | null;
     image?: string | null;
   }[];
   products?: {
