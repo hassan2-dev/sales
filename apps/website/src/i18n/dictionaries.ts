@@ -288,7 +288,7 @@ const dict = {
       enableIqdDisplay: 'Show IQD price under USD on the store',
       storageTitle: 'Media storage (R2)',
       storageHint:
-        'Uploads go to Cloudflare R2 when R2_* env vars are set. Folders: products, brands, cms, avatars.',
+        'Uploads go to Cloudflare R2 when R2_* env vars are set. Folders: products, brands, services, projects, news, company, cms, avatars.',
       storageBackend: 'Backend',
       storageBucket: 'Bucket',
       storagePublicUrl: 'Public URL',
@@ -848,7 +848,7 @@ const dict = {
       enableIqdDisplay: 'إظهار السعر بالدينار تحت الدولار في المتجر',
       storageTitle: 'تخزين الوسائط (R2)',
       storageHint:
-        'الرفع يروح Cloudflare R2 عند تعبئة متغيرات R2_* . المجلدات: منتجات، علامات، CMS، أفاتار.',
+        'الرفع يروح Cloudflare R2 عند تعبئة متغيرات R2_* . المجلدات: منتجات، علامات، خدمات، مشاريع، أخبار، شركة، CMS، أفاتار.',
       storageBackend: 'النظام',
       storageBucket: 'الـ Bucket',
       storagePublicUrl: 'الرابط العام',

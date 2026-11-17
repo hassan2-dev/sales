@@ -91,6 +91,11 @@ export type MediaFolder =
   | 'products/images'
   | 'products/documents'
   | 'brands/logos'
+  | 'services/images'
+  | 'projects/images'
+  | 'news/images'
+  | 'company/branding'
+  | 'company/documents'
   | 'cms/media'
   | 'users/avatars'
   | 'misc';

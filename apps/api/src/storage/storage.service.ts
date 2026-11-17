@@ -11,6 +11,7 @@ import { promises as fs } from 'node:fs';
 import * as path from 'node:path';
 import {
   STORAGE_FOLDERS,
+  STORAGE_FOLDER_META,
   resolveStorageFolder,
   type StorageFolder,
 } from './storage.folders.js';
@@ -32,6 +33,7 @@ export interface StorageStatus {
   bucket: string | null;
   publicBaseUrl: string | null;
   folders: StorageFolder[];
+  folderMeta: typeof STORAGE_FOLDER_META;
 }
 
 /**
@@ -127,6 +129,7 @@ export class StorageService implements OnModuleInit {
       bucket: this.bucket,
       publicBaseUrl: this.publicBaseUrl,
       folders: [...STORAGE_FOLDERS],
+      folderMeta: STORAGE_FOLDER_META,
     };
   }
 

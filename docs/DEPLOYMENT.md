@@ -201,19 +201,31 @@ R2_REGION=auto
 
 If R2 keys are empty, the API falls back to `S3_*` (MinIO/AWS) or local `./uploads`.
 
-### Folder layout (professional prefixes)
+### Folder layout (browse-friendly tree)
 
 | Folder | Use |
 |--------|-----|
 | `products/images/` | Product gallery photos |
 | `products/documents/` | Datasheets / PDFs |
 | `brands/logos/` | Brand logos |
-| `cms/media/` | CMS / marketing assets |
+| `services/images/` | Service cover images |
+| `projects/images/` | Project cover images |
+| `news/images/` | News / article images |
+| `company/branding/` | Company logo & brand kit |
+| `company/documents/` | Company profile PDFs |
+| `cms/media/` | General CMS / marketing |
 | `users/avatars/` | User avatars |
-| `misc/` | Everything else |
+| `misc/` | Uncategorized |
 
 Object keys: `{folder}/{yyyy}/{mm}/{uuid}-{filename}`  
-Example: `products/images/2026/10/a1b2-pump.jpg`  
+Example: `products/images/2026/11/a1b2-pump.jpg`
+
+Seed empty folder markers so R2 UI shows the tree immediately:
+
+```bash
+node apps/api/scripts/seed-r2-folders.mjs
+```
+
 Check live status: `GET /api/media/storage` (auth + `media:read`).
 
 ## Database migrations
