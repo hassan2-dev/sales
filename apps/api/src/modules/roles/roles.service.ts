@@ -1,4 +1,5 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { RoleCode } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { UpdateRolePermissionsDto } from './dto/update-role-permissions.dto.js';
 
@@ -72,6 +73,10 @@ export class RolesService {
     const role = await this.prisma.role.findUnique({ where: { id } });
     if (!role) {
       throw new NotFoundException(`Role ${id} not found`);
+    }
+
+    if (role.code !== RoleCode.EMPLOYEE) {
+      throw new BadRequestException('Only the employee role permissions can be changed');
     }
 
     if (dto.permissionIds.length > 0) {

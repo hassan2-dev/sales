@@ -40,7 +40,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -66,6 +65,7 @@ import {
   adminCmsApi,
   settingsApi,
   usersApi,
+  rolesApi,
   auditApi,
 } from '@/services/endpoints';
 import { cn, formatMoney } from '@/lib/cn';
@@ -2397,29 +2397,80 @@ export function AdminOfficesPage() {
   );
 }
 
+const ROLE_TITLE = {
+  ADMIN: 'roleAdmin',
+  EMPLOYEE: 'roleEmployee',
+  CUSTOMER: 'roleCustomer',
+} as const;
+
 export function AdminUsersPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const people = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => (await usersApi.list({ limit: 100 })).data as { data?: Record<string, unknown>[] },
+  });
+  const roles = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: async () => (await rolesApi.list()).data,
+  });
+  const rows = people.data?.data ?? [];
+
+  async function patchUser(id: string, data: Record<string, unknown>) {
+    try {
+      await usersApi.update(id, data);
+      toast.success(t.admin.roleUpdated);
+      await qc.invalidateQueries({ queryKey: ['admin-users'] });
+      await qc.invalidateQueries({ queryKey: ['admin-roles'] });
+    } catch {
+      toast.error(t.admin.updateFailed);
+    }
+  }
+
   return (
-    <AdminListPage
-      title={t.admin.users}
-      queryKey="admin-users"
-      fetcher={() => usersApi.list()}
-      columns={(row) => {
-        const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
-        return (
-          <span className="flex items-center gap-3">
-            <PersonAvatar name={name || String(row.email || '')} src={String(row.avatarUrl || '') || null} />
-            <span className="min-w-0">
-              <span className="block font-semibold text-fg">{name || String(row.email)}</span>
-              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                {name ? `${String(row.email)} · ` : ''}
-                {String((row.role as { code?: string })?.code || row.role || '')}
-              </span>
-            </span>
-          </span>
-        );
-      }}
-    />
+    <div className="space-y-5">
+      <PageHeader eyebrow={t.admin.groupSystem} title={t.admin.users} description={t.admin.rolesHint} />
+      {people.isLoading ? <LoadingState variant="table" /> : null}
+      <div className="space-y-3">
+        {rows.map((row) => {
+          const id = String(row.id);
+          const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
+          const role = row.role as { id?: string; code?: string } | undefined;
+          const mine = user?.id === id;
+          return (
+            <div key={id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
+              <PersonAvatar name={name || String(row.email || '')} src={String(row.avatarUrl || '') || null} />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-fg">{name || String(row.email)}</p>
+                <p className="truncate text-xs text-muted-foreground" dir="ltr">{String(row.email)}</p>
+              </div>
+              <Select
+                value={role?.id || ''}
+                disabled={mine || !roles.data}
+                title={mine ? t.admin.ownRoleLocked : undefined}
+                onChange={(e) => void patchUser(id, { roleId: e.target.value })}
+                className="sm:w-44"
+              >
+                {(roles.data ?? []).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {t.admin[ROLE_TITLE[item.code]]}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                value={String(row.status || 'ACTIVE')}
+                onChange={(e) => void patchUser(id, { status: e.target.value })}
+                className="sm:w-36"
+              >
+                <option value="ACTIVE">{statusLabel(locale, 'ACTIVE')}</option>
+                <option value="INACTIVE">{statusLabel(locale, 'INACTIVE')}</option>
+              </Select>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

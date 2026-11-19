@@ -255,6 +255,30 @@ export const customersApi = {
     }>(`/customers/${id}/history`),
 };
 
+export type StaffPermission = {
+  id: string;
+  code: string;
+  name: string;
+  module: string;
+  description?: string | null;
+};
+
+export type StaffRole = {
+  id: string;
+  code: 'ADMIN' | 'EMPLOYEE' | 'CUSTOMER';
+  name: string;
+  description: string | null;
+  userCount: number;
+  permissions: StaffPermission[];
+};
+
+export const rolesApi = {
+  list: () => api.get<StaffRole[]>('/roles'),
+  permissions: () => api.get<StaffPermission[]>('/roles/permissions'),
+  updatePermissions: (id: string, permissionIds: string[]) =>
+    api.put<StaffRole>(`/roles/${id}/permissions`, { permissionIds }),
+};
+
 export const usersApi = {
   list: (params?: Params) => api.get('/users', { params: cleanParams(params) }),
   get: (id: string) => api.get(`/users/${id}`),

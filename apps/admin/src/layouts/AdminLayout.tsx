@@ -13,6 +13,7 @@ import {
   File,
   Building2,
   UserCog,
+  Shield,
   ScrollText,
   Settings,
   LogOut,
@@ -48,10 +49,30 @@ type NavKey =
   | 'pages'
   | 'offices'
   | 'users'
+  | 'roles'
   | 'auditLogs'
   | 'settings';
 
 type GroupKey = 'groupMain' | 'groupSales' | 'groupContent' | 'groupSystem';
+
+const NAV_PERMISSION: Record<NavKey, string> = {
+  overview: 'dashboard:read',
+  products: 'products:read',
+  categories: 'categories:read',
+  orders: 'orders:read',
+  customers: 'customers:read',
+  quotes: 'quotes:read',
+  support: 'support:read',
+  services: 'services:read',
+  projects: 'projects:read',
+  brands: 'brands:read',
+  pages: 'pages:read',
+  offices: 'offices:read',
+  users: 'users:read',
+  roles: 'roles:read',
+  auditLogs: 'audit:read',
+  settings: 'settings:update',
+};
 
 const navGroups: {
   group: GroupKey;
@@ -91,6 +112,7 @@ const navGroups: {
     group: 'groupSystem',
     items: [
       { to: 'users', key: 'users', icon: UserCog },
+      { to: 'roles', key: 'roles', icon: Shield },
       { to: 'audit-logs', key: 'auditLogs', icon: ScrollText },
       { to: 'settings', key: 'settings', icon: Settings },
     ],
@@ -110,12 +132,18 @@ function SidebarNav({
 }) {
   const { t } = useI18n();
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, user, hasPermission } = useAuth();
 
   return (
     <div className={cn('flex h-full flex-col', className)}>
       <nav className="no-scrollbar flex flex-1 flex-col gap-5 overflow-y-auto px-2 py-4 text-[13px]">
-        {navGroups.map((section) => (
+        {navGroups.map((section) => {
+          const items = section.items.filter((item) => {
+            if (user?.role === 'ADMIN') return true;
+            return hasPermission(NAV_PERMISSION[item.key]);
+          });
+          if (!items.length) return null;
+          return (
           <div key={section.group}>
             {!collapsed ? (
               <p className="mb-1.5 px-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-sidebar-muted">
@@ -123,7 +151,7 @@ function SidebarNav({
               </p>
             ) : null}
             <div className="flex flex-col gap-0.5">
-              {section.items.map((item) => {
+              {items.map((item) => {
                 const Icon = item.icon;
                 return (
                   <NavLink
@@ -148,7 +176,8 @@ function SidebarNav({
               })}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       <div className="space-y-1 border-t border-sidebar-border p-2">

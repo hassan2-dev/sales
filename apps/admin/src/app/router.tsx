@@ -26,6 +26,7 @@ import {
 import { AdminProductFormPage } from '@/pages/admin/AdminProductFormPage';
 import { AdminCategoryFormPage } from '@/pages/admin/AdminCategoryFormPage';
 import { AdminBrandFormPage } from '@/pages/admin/AdminBrandFormPage';
+import { AdminRolesPage } from '@/pages/admin/AdminRolesPage';
 import { AdminServiceFormPage } from '@/pages/admin/AdminServiceFormPage';
 import { adminPath } from '@/lib/urls';
 
@@ -86,6 +87,7 @@ export function AppRouter() {
               <Route path="pages" element={<AdminPagesPage />} />
               <Route path="offices" element={<AdminOfficesPage />} />
               <Route path="users" element={<AdminUsersPage />} />
+              <Route path="roles" element={<AdminRolesPage />} />
               <Route path="audit-logs" element={<AdminAuditPage />} />
               <Route path="settings" element={<AdminSettingsPage />} />
             </Route>
