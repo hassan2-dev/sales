@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { LoadingState } from '@/components/ui/States';
-import { Field, FormSection } from '@/components/admin/Field';
+import { Field } from '@/components/admin/Field';
+import { StudioDock, StudioHero, StudioPanel } from '@/components/admin/FormStudio';
 import { useI18n } from '@/i18n/i18n-context';
 import { adminCmsApi } from '@/services/endpoints';
 import { adminPath } from '@/lib/urls';
@@ -21,7 +21,6 @@ const emptyForm = {
 
 export function AdminBrandFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const { t, dir } = useI18n();
-  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -77,25 +76,17 @@ export function AdminBrandFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div className="flex items-center gap-2">
-        <Link to={adminPath('brands')}>
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <BackIcon className="h-4 w-4" />
-            {t.admin.back}
-          </Button>
-        </Link>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-            {isEdit ? t.admin.editFlow : t.admin.createFlow}
-          </p>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">
-            {isEdit ? t.admin.editBrand : t.admin.newBrand}
-          </h1>
-        </div>
-      </div>
+      <StudioHero
+        backTo={adminPath('brands')}
+        backLabel={t.admin.back}
+        eyebrow={isEdit ? t.admin.editFlow : t.admin.createFlow}
+        title={isEdit ? form.name || t.admin.editBrand : t.admin.newBrand}
+        meta={t.admin.brandsBilingualHint}
+        dir={dir}
+      />
 
       <form onSubmit={onSubmit} className="space-y-5">
-        <FormSection title={t.admin.brandDetails} description={t.admin.brandsBilingualHint}>
+        <StudioPanel id="details" step="01" title={t.admin.brandDetails} description={t.admin.brandsBilingualHint}>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label={t.admin.nameEn} required>
               <Input
@@ -127,9 +118,9 @@ export function AdminBrandFormPage({ mode }: { mode: 'create' | 'edit' }) {
               />
             </Field>
           </div>
-        </FormSection>
+        </StudioPanel>
 
-        <div className="sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
+        <StudioDock>
           <Button type="submit" disabled={saving} className="min-w-[8rem]">
             {saving ? t.common.loading : isEdit ? t.common.save : t.common.create}
           </Button>
@@ -138,7 +129,7 @@ export function AdminBrandFormPage({ mode }: { mode: 'create' | 'edit' }) {
               {t.admin.cancel}
             </Button>
           </Link>
-        </div>
+        </StudioDock>
       </form>
     </div>
   );

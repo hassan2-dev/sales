@@ -20,7 +20,7 @@ export function Toaster({ className, ...props }: ToasterProps) {
       key={locale}
       theme={theme}
       dir={dir}
-      position={locale === 'ar' ? 'top-left' : 'top-right'}
+      position={locale === 'ar' ? 'bottom-left' : 'bottom-right'}
       className={cn('toaster group', className)}
       closeButton
       expand

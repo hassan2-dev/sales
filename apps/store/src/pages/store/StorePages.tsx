@@ -1553,8 +1553,7 @@ export function StoreLoginPage() {
   const [step, setStep] = useState<'details' | 'otp'>('details');
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+  const [fullName, setFullName] = useState('');
   const [devCode, setDevCode] = useState<string | undefined>();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -1565,11 +1564,12 @@ export function StoreLoginPage() {
 
   async function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length < 2 || !phone.trim()) {
       setError(
         locale === 'ar'
-          ? 'الاسم الكامل ورقم الهاتف مطلوبان'
-          : 'Full name and phone are required',
+          ? 'اكتب الاسم الكامل (الاسم واسم العائلة) ورقم الهاتف'
+          : 'Enter your full name and phone',
       );
       return;
     }
@@ -1593,11 +1593,12 @@ export function StoreLoginPage() {
     setBusy(true);
     setError('');
     try {
+      const parts = fullName.trim().split(/\s+/).filter(Boolean);
       await loginWithOtp({
         phone,
         code,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+        firstName: parts[0] || fullName.trim(),
+        lastName: parts.slice(1).join(' ') || parts[0] || fullName.trim(),
       });
       appToast.success('otpVerified');
       navigate(next);
@@ -1672,31 +1673,17 @@ export function StoreLoginPage() {
           <CardContent>
             {step === 'details' ? (
               <form id="store-otp-details" onSubmit={sendCode} className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">
-                      {locale === 'ar' ? 'الاسم الأول' : 'First name'}
-                    </Label>
-                    <Input
-                      id="firstName"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder={locale === 'ar' ? 'مثال: أحمد' : 'e.g. Ahmed'}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">
-                      {locale === 'ar' ? 'اسم العائلة' : 'Last name'}
-                    </Label>
-                    <Input
-                      id="lastName"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder={locale === 'ar' ? 'مثال: علي' : 'e.g. Ali'}
-                      required
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">
+                    {locale === 'ar' ? 'الاسم الكامل' : 'Full name'}
+                  </Label>
+                  <Input
+                    id="fullName"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder={locale === 'ar' ? 'حسن عدنان' : 'Hasan Adnan'}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">{locale === 'ar' ? 'رقم الهاتف' : 'Phone'}</Label>
@@ -1714,9 +1701,7 @@ export function StoreLoginPage() {
               </form>
             ) : (
               <form id="store-otp-verify" onSubmit={verify} className="space-y-4">
-                <p className="text-sm text-fg">
-                  {firstName} {lastName}
-                </p>
+                <p className="text-sm text-fg">{fullName}</p>
                 {devCode ? (
                   <div className="rounded-md border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-accent">
                     Dev OTP: <strong>{devCode}</strong>
@@ -1770,6 +1755,33 @@ export function StoreLoginPage() {
                     : locale === 'ar'
                       ? 'تأكيد وإنشاء حسابي'
                       : 'Verify & create My account'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="w-full"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    setError('');
+                    void requestOtp(phone)
+                      .then((res) => {
+                        setPhone(res.phone);
+                        setDevCode(res.devCode);
+                        setCode('');
+                        appToast.success('otpSent');
+                      })
+                      .catch(() => {
+                        setError(
+                          locale === 'ar'
+                            ? 'تعذّر إعادة إرسال الرمز.'
+                            : 'Could not resend the code.',
+                        );
+                      })
+                      .finally(() => setBusy(false));
+                  }}
+                >
+                  {locale === 'ar' ? 'إعادة إرسال الرمز' : 'Resend code'}
                 </Button>
                 <Button
                   type="button"

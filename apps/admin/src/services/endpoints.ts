@@ -234,7 +234,25 @@ export const customersApi = {
   list: (params?: Params) =>
     api.get<Paginated<Customer> | Customer[]>('/customers', { params: cleanParams(params) }),
   get: (id: string) => api.get<Customer>(`/customers/${id}`),
-  history: (id: string) => api.get(`/customers/${id}/history`),
+  update: (id: string, data: Record<string, unknown>) => api.patch<Customer>(`/customers/${id}`, data),
+  history: (id: string) =>
+    api.get<{
+      orders: Order[];
+      quotes: {
+        id: string;
+        quoteNumber: string;
+        status: string;
+        createdAt: string;
+        quotedAmount?: number | string | null;
+      }[];
+      tickets: {
+        id: string;
+        ticketNumber: string;
+        subject: string;
+        status: string;
+        createdAt: string;
+      }[];
+    }>(`/customers/${id}/history`),
 };
 
 export const usersApi = {

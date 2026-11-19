@@ -6,8 +6,6 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
-  ArrowRight,
   Copy,
   FileText,
   ImageIcon,
@@ -23,7 +21,9 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { LoadingState } from '@/components/ui/States';
-import { Field, FormSection } from '@/components/admin/Field';
+import { Field } from '@/components/admin/Field';
+import { StudioDock, StudioHero, StudioNav, StudioPanel } from '@/components/admin/FormStudio';
+import { confirmAction } from '@/components/admin/confirm';
 import { useI18n } from '@/i18n/i18n-context';
 import { statusLabel } from '@/i18n/dictionaries';
 import { catalogApi, mediaApi } from '@/services/endpoints';
@@ -66,6 +66,28 @@ function specsFromProduct(p?: Product | null): { variantLabel: string; rows: Spe
   return { variantLabel, rows };
 }
 
+function PendingThumb({ file, onRemove }: { file: File; onRemove: () => void }) {
+  const [url, setUrl] = useState('');
+  useEffect(() => {
+    const next = URL.createObjectURL(file);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [file]);
+  if (!url) return null;
+  return (
+    <div className="relative overflow-hidden rounded-xl border border-dashed border-accent">
+      <img src={url} alt="" className="aspect-square w-full object-cover" />
+      <button
+        type="button"
+        className="absolute end-2 top-2 inline-flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white"
+        onClick={onRemove}
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
 function buildSpecifications(variantLabel: string, rows: SpecRow[]) {
   const out: Record<string, string> = {};
   if (variantLabel.trim()) out.Variant = variantLabel.trim();
@@ -76,15 +98,14 @@ function buildSpecifications(variantLabel: string, rows: SpecRow[]) {
 }
 
 const EDIT_SECTIONS = [
+  { id: 'media', key: 'productMedia' as const },
   { id: 'basics', key: 'productBasics' as const },
   { id: 'pricing', key: 'productPricing' as const },
   { id: 'specs', key: 'productVariants' as const },
-  { id: 'media', key: 'productMedia' as const },
 ];
 
 export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const { t, locale, dir } = useI18n();
-  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const { id } = useParams();
   const isNew = mode === 'create';
   const navigate = useNavigate();
@@ -94,7 +115,9 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const [dragOver, setDragOver] = useState<'images' | 'sheets' | null>(null);
   const [variantLabel, setVariantLabel] = useState('');
   const [specRows, setSpecRows] = useState<SpecRow[]>([]);
-  const [activeSection, setActiveSection] = useState('basics');
+  const [activeSection, setActiveSection] = useState('media');
+  const [pendingImages, setPendingImages] = useState<File[]>([]);
+  const [pendingSheets, setPendingSheets] = useState<File[]>([]);
 
   const existing = useQuery({
     queryKey: ['admin-product', id],
@@ -169,7 +192,6 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   }, [existing.data?.id]);
 
   useEffect(() => {
-    if (isNew) return;
     const nodes = EDIT_SECTIONS.map((s) => document.getElementById(s.id)).filter(
       Boolean,
     ) as HTMLElement[];
@@ -213,6 +235,30 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
     try {
       if (isNew) {
         const { data } = await catalogApi.createProduct(payload);
+        for (let i = 0; i < pendingImages.length; i += 1) {
+          const file = pendingImages[i];
+          const { data: media } = await mediaApi.upload(file, {
+            alt: values.name || file.name,
+            folder: 'products/images',
+          });
+          await catalogApi.addProductImage(data.id, {
+            url: media.url,
+            alt: values.name || file.name,
+            isPrimary: i === 0,
+            sortOrder: i,
+          });
+        }
+        for (const file of pendingSheets) {
+          const { data: media } = await mediaApi.upload(file, {
+            folder: 'products/documents',
+          });
+          await catalogApi.addProductDocument(data.id, {
+            name: file.name,
+            url: media.url,
+            mimeType: media.mimeType || file.type,
+            size: media.size || file.size,
+          });
+        }
         toast.success(t.admin.productCreated);
         await qc.invalidateQueries({ queryKey: ['admin-products'] });
         navigate(adminPath(`products/${data.id}/edit`));
@@ -229,10 +275,15 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   }
 
   async function uploadImages(files: FileList | File[] | null) {
-    if (!files || !('length' in files) || !files.length || isNew || !id) return;
+    if (!files || !('length' in files) || !files.length) return;
+    const list = Array.from(files).filter((file) => file.type.startsWith('image/'));
+    if (!list.length) return;
+    if (isNew || !id) {
+      setPendingImages((prev) => [...prev, ...list]);
+      return;
+    }
     setUploading(true);
     try {
-      const list = Array.from(files);
       const hasPrimary = images.some((img) => img.isPrimary);
       for (let i = 0; i < list.length; i += 1) {
         const file = list[i];
@@ -258,10 +309,15 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   }
 
   async function uploadSheets(files: FileList | File[] | null) {
-    if (!files || !('length' in files) || !files.length || isNew || !id) return;
+    if (!files || !('length' in files) || !files.length) return;
+    const list = Array.from(files);
+    if (isNew || !id) {
+      setPendingSheets((prev) => [...prev, ...list]);
+      return;
+    }
     setUploading(true);
     try {
-      for (const file of Array.from(files)) {
+      for (const file of list) {
         const { data: media } = await mediaApi.upload(file, {
           folder: 'products/documents',
         });
@@ -312,7 +368,18 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   }
 
   async function onDelete() {
-    if (!id || !window.confirm(t.admin.confirmDeleteProduct)) return;
+    if (
+      !id ||
+      !(await confirmAction({
+        title: t.admin.delete,
+        description: t.admin.confirmDeleteProduct,
+        confirmLabel: t.admin.delete,
+        cancelLabel: t.admin.cancel,
+        danger: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.deleteProduct(id);
       toast.success(t.admin.productDeleted);
@@ -326,7 +393,17 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
   async function onToggleActive() {
     if (!id || !existing.data) return;
     const next = existing.data.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE';
-    if (next === 'ARCHIVED' && !window.confirm(t.admin.confirmDeactivate)) return;
+    if (
+      next === 'ARCHIVED' &&
+      !(await confirmAction({
+        title: t.admin.deactivate,
+        description: t.admin.confirmDeactivate,
+        confirmLabel: t.admin.deactivate,
+        cancelLabel: t.admin.cancel,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.updateProduct(id, { status: next });
       toast.success(next === 'ACTIVE' ? t.admin.productActivated : t.admin.productDeactivated);
@@ -462,6 +539,10 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   const specsFields = (
     <div className="space-y-4">
+      <div className="rounded-xl border border-[#0b1f3a]/10 bg-[#f4f7fb] px-4 py-3 dark:bg-white/5">
+        <p className="text-sm font-bold text-fg">{t.admin.variantGuideTitle}</p>
+        <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{t.admin.variantGuide}</p>
+      </div>
       <Field label={t.admin.variantLabel} hint={t.admin.variantLabelHint}>
         <Input
           value={variantLabel}
@@ -550,112 +631,58 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 sm:space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <Link to={adminPath('products')} className="shrink-0">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <BackIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">{t.admin.back}</span>
-            </Button>
-          </Link>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              {isNew ? t.admin.createFlow : t.admin.editFlow}
-            </p>
-            <h1 className="truncate text-xl font-bold text-fg sm:text-2xl">
-              {isNew ? t.admin.newProduct : t.admin.editProduct}
-            </h1>
-            {!isNew && existing.data ? (
-              <p className="mt-0.5 truncate font-mono text-xs text-muted">{existing.data.sku}</p>
-            ) : (
-              <p className="mt-0.5 text-sm text-muted-foreground">{t.admin.createProductHint}</p>
-            )}
-          </div>
-        </div>
-        {!isNew ? (
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-1.5 sm:flex-none"
-              onClick={() => void duplicateAsVariant()}
-            >
-              <Copy className="h-3.5 w-3.5" />
-              <span className="truncate">{t.admin.createVariant}</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-1.5 sm:flex-none"
-              onClick={() => void onToggleActive()}
-            >
-              <Power className="h-3.5 w-3.5" />
-              {existing.data?.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
-            </Button>
-            <Button variant="danger" size="sm" className="gap-1.5" onClick={() => void onDelete()}>
-              <Trash2 className="h-3.5 w-3.5" />
-              {t.admin.delete}
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      <StudioHero
+        backTo={adminPath('products')}
+        backLabel={t.admin.back}
+        eyebrow={isNew ? t.admin.createFlow : t.admin.editFlow}
+        title={isNew ? t.admin.newProduct : existing.data?.name || t.admin.editProduct}
+        meta={isNew ? t.admin.createProductHint : existing.data?.sku}
+        dir={dir}
+        actions={
+          !isNew ? (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-[#0b1f3a]"
+                onClick={() => void duplicateAsVariant()}
+              >
+                <Copy className="h-3.5 w-3.5" />
+                {t.admin.createVariant}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-[#0b1f3a]"
+                onClick={() => void onToggleActive()}
+              >
+                <Power className="h-3.5 w-3.5" />
+                {existing.data?.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
+              </Button>
+              <Button variant="danger" size="sm" onClick={() => void onDelete()}>
+                <Trash2 className="h-3.5 w-3.5" />
+                {t.admin.delete}
+              </Button>
+            </>
+          ) : null
+        }
+      />
 
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={cn(!isNew && 'lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-6')}
+        className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-6"
       >
-        {!isNew ? (
-          <aside className="mb-4 hidden lg:mb-0 lg:block">
-            <nav className="sticky top-24 space-y-1 rounded-2xl border border-border bg-card p-3">
-              {EDIT_SECTIONS.map((s) => (
-                <a
-                  key={s.id}
-                  href={`#${s.id}`}
-                  className={cn(
-                    'block rounded-lg px-3 py-2 text-sm font-semibold transition',
-                    activeSection === s.id
-                      ? 'bg-accent/10 text-accent'
-                      : 'text-muted-foreground hover:bg-muted hover:text-fg',
-                  )}
-                >
-                  {t.admin[s.key]}
-                </a>
-              ))}
-            </nav>
-          </aside>
-        ) : null}
+        <aside className="mb-4 lg:mb-0">
+          <StudioNav
+            active={activeSection}
+            items={EDIT_SECTIONS.map((s) => ({ id: s.id, label: t.admin[s.key] }))}
+          />
+        </aside>
 
         <div className="space-y-5">
-          {isNew ? (
-            <>
-              <FormSection title={t.admin.productBasics} description={t.admin.createBasicsHint}>
-                {basicsFields}
-              </FormSection>
-              <FormSection title={t.admin.productPricing}>{pricingFields}</FormSection>
-              <FormSection title={t.admin.productVariants} description={t.admin.variantLabelHint}>
-                {specsFields}
-              </FormSection>
-              <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
-                {t.admin.mediaAfterSave}
-              </div>
-            </>
-          ) : (
-            <>
-              <FormSection id="basics" title={t.admin.productBasics}>
-                {basicsFields}
-              </FormSection>
-              <FormSection id="pricing" title={t.admin.productPricing}>
-                {pricingFields}
-              </FormSection>
-              <FormSection
-                id="specs"
-                title={t.admin.productVariants}
-                description={t.admin.variantLabelHint}
-              >
-                {specsFields}
-              </FormSection>
-              <FormSection
+              <StudioPanel
                 id="media"
+                step="01"
                 title={t.admin.productMedia}
                 description={t.admin.productMediaHint}
               >
@@ -739,9 +766,22 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
                           </div>
                         ))}
                       </div>
-                    ) : (
+                    ) : pendingImages.length ? null : (
                       <p className="text-sm text-muted">{t.admin.noImagesYet}</p>
                     )}
+                    {pendingImages.length ? (
+                      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        {pendingImages.map((file, index) => (
+                          <PendingThumb
+                            key={`${file.name}-${file.size}-${index}`}
+                            file={file}
+                            onRemove={() =>
+                              setPendingImages((prev) => prev.filter((_, i) => i !== index))
+                            }
+                          />
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
 
                   <div className="space-y-4">
@@ -807,16 +847,45 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
                           </li>
                         ))}
                       </ul>
-                    ) : (
+                    ) : pendingSheets.length ? null : (
                       <p className="text-sm text-muted">{t.admin.noSheetsYet}</p>
                     )}
+                    {pendingSheets.length ? (
+                      <ul className="space-y-2">
+                        {pendingSheets.map((file, index) => (
+                          <li
+                            key={`${file.name}-${index}`}
+                            className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-accent px-3 py-2 text-sm"
+                          >
+                            <span className="truncate font-semibold">{file.name}</span>
+                            <Button
+                              type="button"
+                              variant="danger"
+                              size="sm"
+                              onClick={() =>
+                                setPendingSheets((prev) => prev.filter((_, i) => i !== index))
+                              }
+                            >
+                              {t.admin.removeDocument}
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                   </div>
                 </div>
-              </FormSection>
-            </>
-          )}
+              </StudioPanel>
+              <StudioPanel id="basics" step="02" title={t.admin.productBasics} description={t.admin.createBasicsHint}>
+                {basicsFields}
+              </StudioPanel>
+              <StudioPanel id="pricing" step="03" title={t.admin.productPricing}>
+                {pricingFields}
+              </StudioPanel>
+              <StudioPanel id="specs" step="04" title={t.admin.productVariants} description={t.admin.variantLabelHint}>
+                {specsFields}
+              </StudioPanel>
 
-          <div className="sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
+          <StudioDock>
             <Button type="submit" disabled={saving} className="min-w-[9rem]">
               {saving
                 ? t.common.loading
@@ -829,7 +898,7 @@ export function AdminProductFormPage({ mode }: { mode: 'create' | 'edit' }) {
                 {t.admin.cancel}
               </Button>
             </Link>
-          </div>
+          </StudioDock>
         </div>
       </form>
     </div>

@@ -23,7 +23,7 @@ export class CustomersService {
       ];
     }
 
-    const [items, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prisma.customer.findMany({
         where,
         skip,
@@ -40,7 +40,7 @@ export class CustomersService {
     ]);
 
     return {
-      items,
+      data,
       meta: {
         total,
         page,

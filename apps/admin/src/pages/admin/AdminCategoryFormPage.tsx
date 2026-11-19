@@ -2,13 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, ArrowRight, Trash2 } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { LoadingState } from '@/components/ui/States';
-import { Field, FormSection } from '@/components/admin/Field';
+import { Field } from '@/components/admin/Field';
+import { StudioDock, StudioHero, StudioPanel } from '@/components/admin/FormStudio';
+import { confirmAction } from '@/components/admin/confirm';
 import { useI18n } from '@/i18n/i18n-context';
 import { statusLabel } from '@/i18n/dictionaries';
 import { catalogApi } from '@/services/endpoints';
@@ -16,7 +18,6 @@ import { adminPath } from '@/lib/urls';
 
 export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
   const { t, locale, dir } = useI18n();
-  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -94,7 +95,18 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
   }
 
   async function onDelete() {
-    if (!id || !window.confirm(t.admin.confirmDeleteCategory)) return;
+    if (
+      !id ||
+      !(await confirmAction({
+        title: t.admin.delete,
+        description: t.admin.confirmDeleteCategory,
+        confirmLabel: t.admin.delete,
+        cancelLabel: t.admin.cancel,
+        danger: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.deleteCategory(id);
       toast.success(t.admin.categoryDeleted);
@@ -119,33 +131,27 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          <Link to={adminPath('categories')}>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <BackIcon className="h-4 w-4" />
-              {t.admin.back}
+      <StudioHero
+        backTo={adminPath('categories')}
+        backLabel={t.admin.back}
+        eyebrow={isEdit ? t.admin.editFlow : t.admin.createFlow}
+        title={isEdit ? t.admin.editCategory : t.admin.newCategory}
+        meta={isEdit ? existing.data?.slug : t.admin.categoryDetailsHint}
+        dir={dir}
+        actions={
+          isEdit ? (
+            <Button variant="danger" size="sm" className="gap-1.5" onClick={() => void onDelete()}>
+              <Trash2 className="h-3.5 w-3.5" />
+              {t.admin.delete}
             </Button>
-          </Link>
-          <div className="min-w-0">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-muted-foreground">
-              {t.admin.categories}
-            </p>
-            <h1 className="truncate text-xl font-bold text-fg sm:text-2xl">
-              {isEdit ? t.admin.editCategory : t.admin.newCategory}
-            </h1>
-          </div>
-        </div>
-        {isEdit ? (
-          <Button variant="danger" size="sm" className="gap-1.5" onClick={() => void onDelete()}>
-            <Trash2 className="h-3.5 w-3.5" />
-            {t.admin.delete}
-          </Button>
-        ) : null}
-      </div>
+          ) : null
+        }
+      />
 
       <form onSubmit={onSubmit} className="space-y-5">
-        <FormSection
+        <StudioPanel
+          id="details"
+          step="01"
           title={t.admin.categoryDetails}
           description={t.admin.categoryDetailsHint}
         >
@@ -191,9 +197,9 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
               />
             </Field>
           </div>
-        </FormSection>
+        </StudioPanel>
 
-        <div className="sticky bottom-3 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur">
+        <StudioDock>
           <Button type="submit" disabled={saving} className="min-w-[8rem]">
             {saving ? t.common.loading : isEdit ? t.common.save : t.common.create}
           </Button>
@@ -202,7 +208,7 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
               {t.admin.cancel}
             </Button>
           </Link>
-        </div>
+        </StudioDock>
       </form>
     </div>
   );

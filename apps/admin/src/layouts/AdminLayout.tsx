@@ -29,6 +29,7 @@ import { useAuth } from '@/stores/auth-context';
 import { useTheme } from '@/stores/theme-context';
 import { useI18n } from '@/i18n/i18n-context';
 import { LoadingState } from '@/components/ui/States';
+import { PersonAvatar } from '@/components/admin/PersonAvatar';
 import { Logo } from '@/components/Logo';
 import { adminPath, SITE_URL } from '@/lib/urls';
 import { cn } from '@/lib/cn';
@@ -200,11 +201,13 @@ function SidebarNav({
 
 function SidebarChrome({
   userLabel,
+  avatarUrl,
   children,
   collapsed,
   onClose,
 }: {
   userLabel: string;
+  avatarUrl?: string | null;
   children: ReactNode;
   collapsed?: boolean;
   onClose?: () => void;
@@ -236,14 +239,17 @@ function SidebarChrome({
             </button>
           ) : null}
         </div>
-        {!collapsed ? (
-          <>
-            <p className="mt-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-              {t.admin.brand}
-            </p>
-            <p className="mt-1 truncate text-xs text-sidebar-muted">{userLabel}</p>
-          </>
-        ) : null}
+        <div className={cn('mt-3 flex items-center gap-2.5', collapsed && 'justify-center')}>
+          <PersonAvatar name={userLabel} src={avatarUrl} size={collapsed ? 'sm' : 'md'} className="ring-white/15" />
+          {!collapsed ? (
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+                {t.admin.brand}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-sidebar-muted">{userLabel}</p>
+            </div>
+          ) : null}
+        </div>
       </div>
       {children}
     </>
@@ -290,7 +296,7 @@ export function AdminLayout() {
           collapsed ? 'w-[72px]' : 'w-64',
         )}
       >
-        <SidebarChrome userLabel={userLabel} collapsed={collapsed}>
+        <SidebarChrome userLabel={userLabel} avatarUrl={user?.avatarUrl} collapsed={collapsed}>
           <SidebarNav collapsed={collapsed} />
         </SidebarChrome>
       </aside>
@@ -343,6 +349,7 @@ export function AdminLayout() {
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </button>
+            <PersonAvatar name={userLabel} src={user?.avatarUrl} size="sm" />
             <button
               type="button"
               onClick={() => void logout()}
@@ -381,7 +388,7 @@ export function AdminLayout() {
                   : '-translate-x-full',
             )}
           >
-            <SidebarChrome userLabel={userLabel} onClose={() => setMobileOpen(false)}>
+            <SidebarChrome userLabel={userLabel} avatarUrl={user?.avatarUrl} onClose={() => setMobileOpen(false)}>
               <SidebarNav onNavigate={() => setMobileOpen(false)} />
             </SidebarChrome>
           </aside>

@@ -16,6 +16,8 @@ import {
   Moon,
   Sun,
   Pencil,
+  Phone,
+  Mail,
   Plus,
   ArrowLeft,
   ArrowRight,
@@ -27,6 +29,7 @@ import {
   Check,
   type LucideIcon,
 } from 'lucide-react';
+import { PersonAvatar } from '@/components/admin/PersonAvatar';
 import { Seo } from '@/lib/seo';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -42,6 +45,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { LoadingState, EmptyState, Pagination } from '@/components/ui/States';
+import { PageHeader, StudioHero } from '@/components/admin/FormStudio';
+import { confirmAction } from '@/components/admin/confirm';
+import { Field } from '@/components/admin/Field';
 import { RevenueTrendChart, OrdersStatusChart } from '@/components/admin/DashboardCharts';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/stores/auth-context';
@@ -703,7 +709,17 @@ export function AdminProductsPage() {
 
   async function toggleActive(p: Product) {
     const next = p.status === 'ACTIVE' ? 'ARCHIVED' : 'ACTIVE';
-    if (next === 'ARCHIVED' && !window.confirm(t.admin.confirmDeactivate)) return;
+    if (
+      next === 'ARCHIVED' &&
+      !(await confirmAction({
+        title: t.admin.deactivate,
+        description: t.admin.confirmDeactivate,
+        confirmLabel: t.admin.deactivate,
+        cancelLabel: t.admin.cancel,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.updateProduct(p.id, { status: next });
       toast.success(next === 'ACTIVE' ? t.admin.productActivated : t.admin.productDeactivated);
@@ -714,7 +730,17 @@ export function AdminProductsPage() {
   }
 
   async function onDelete(p: Product) {
-    if (!window.confirm(t.admin.confirmDeleteProduct)) return;
+    if (
+      !(await confirmAction({
+        title: t.admin.delete,
+        description: t.admin.confirmDeleteProduct,
+        confirmLabel: t.admin.delete,
+        cancelLabel: t.admin.cancel,
+        danger: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.deleteProduct(p.id);
       toast.success(t.admin.productDeleted);
@@ -728,11 +754,11 @@ export function AdminProductsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.products}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t.admin.quickActions}</p>
-        </div>
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.products}
+        description={t.admin.createProductHint}
+        actions={
         <div className="flex flex-wrap gap-2">
           <Select
             value={statusFilter}
@@ -762,7 +788,8 @@ export function AdminProductsPage() {
             </Button>
           </Link>
         </div>
-      </div>
+        }
+      />
       {query.isLoading ? <LoadingState variant="table" /> : null}
 
       {/* Mobile cards */}
@@ -952,7 +979,17 @@ export function AdminCategoriesPage() {
   });
 
   async function onDelete(id: string) {
-    if (!window.confirm(t.admin.confirmDeleteCategory)) return;
+    if (
+      !(await confirmAction({
+        title: t.admin.delete,
+        description: t.admin.confirmDeleteCategory,
+        confirmLabel: t.admin.delete,
+        cancelLabel: t.admin.cancel,
+        danger: true,
+      }))
+    ) {
+      return;
+    }
     try {
       await catalogApi.deleteCategory(id);
       toast.success(t.admin.categoryDeleted);
@@ -966,18 +1003,19 @@ export function AdminCategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.categories}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{t.admin.categoriesListHint}</p>
-        </div>
-        <Link to={adminPath('categories/new')}>
-          <Button className="w-full gap-2 sm:w-auto">
-            <Plus className="h-4 w-4" />
-            {t.admin.addCategory}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.categories}
+        description={t.admin.categoriesListHint}
+        actions={
+          <Link to={adminPath('categories/new')}>
+            <Button className="w-full gap-2 sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {t.admin.addCategory}
+            </Button>
+          </Link>
+        }
+      />
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
@@ -1037,7 +1075,7 @@ export function AdminOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.orders}</h1>
+      <PageHeader eyebrow={t.admin.groupSales} title={t.admin.orders} />
       {query.isLoading ? <LoadingState variant="table" /> : null}
 
       <div className="space-y-3 md:hidden">
@@ -1048,8 +1086,14 @@ export function AdminOrdersPage() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-semibold text-primary">{o.orderNumber}</p>
-                    <p className="mt-1 truncate text-sm">
-                      {o.customer?.firstName} {o.customer?.lastName}
+                    <p className="mt-1 flex items-center gap-2 truncate text-sm">
+                      <PersonAvatar
+                        size="sm"
+                        name={`${o.customer?.firstName ?? ''} ${o.customer?.lastName ?? ''}`}
+                      />
+                      <span className="truncate">
+                        {o.customer?.firstName} {o.customer?.lastName}
+                      </span>
                     </p>
                     <p className="ltr-isolate text-xs text-muted-foreground" dir="ltr">
                       {o.customer?.phone || o.customer?.email || '—'}
@@ -1097,13 +1141,19 @@ export function AdminOrdersPage() {
                       </Link>
                     </td>
                     <td className="px-4 py-3">
-                      <div>
-                        <p>
-                          {o.customer?.firstName} {o.customer?.lastName}
-                        </p>
-                        <p className="ltr-isolate text-xs text-muted-foreground" dir="ltr">
-                          {o.customer?.email}
-                        </p>
+                      <div className="flex items-center gap-2.5">
+                        <PersonAvatar
+                          size="sm"
+                          name={`${o.customer?.firstName ?? ''} ${o.customer?.lastName ?? ''}`}
+                        />
+                        <div className="min-w-0">
+                          <p>
+                            {o.customer?.firstName} {o.customer?.lastName}
+                          </p>
+                          <p className="ltr-isolate truncate text-xs text-muted-foreground" dir="ltr">
+                            {o.customer?.email}
+                          </p>
+                        </div>
                       </div>
                     </td>
                     <td className="ltr-isolate hidden px-4 py-3 text-muted-foreground lg:table-cell" dir="ltr">
@@ -1136,7 +1186,6 @@ export function AdminOrdersPage() {
 
 export function AdminOrderDetailPage() {
   const { t, locale, dir } = useI18n();
-  const BackIcon = dir === 'rtl' ? ArrowRight : ArrowLeft;
   const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
   const { id = '' } = useParams();
   const qc = useQueryClient();
@@ -1173,29 +1222,26 @@ export function AdminOrderDetailPage() {
     }
   }
 
+  const when = new Date(o.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB');
+  const HistoryArrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const customerName = [o.customer?.firstName, o.customer?.lastName].filter(Boolean).join(' ');
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
-          <Link to={adminPath('orders')}>
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <BackIcon className="h-4 w-4" />
-              {t.admin.back}
-            </Button>
-          </Link>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">
-            {t.admin.orderDetail} {o.orderNumber}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t.admin.orderDate}:{' '}
-            {new Date(o.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={o.status} />
-          {o.paymentStatus ? <StatusBadge status={o.paymentStatus} /> : null}
-        </div>
-      </div>
+    <div className="mx-auto max-w-6xl space-y-5">
+      <StudioHero
+        backTo={adminPath('orders')}
+        backLabel={t.admin.back}
+        eyebrow={t.admin.orderDetail}
+        title={o.orderNumber}
+        meta={`${t.admin.orderDate}: ${when}`}
+        dir={dir}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={o.status} />
+            {o.paymentStatus ? <StatusBadge status={o.paymentStatus} /> : null}
+          </div>
+        }
+      />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
@@ -1269,7 +1315,7 @@ export function AdminOrderDetailPage() {
             <div className="flex justify-between gap-3">
               <span className="text-muted-foreground">{t.admin.discount}</span>
               <span className="font-kpi">
-                âˆ’{formatMoney(discount, o.currency, moneyLocale)}
+                -{formatMoney(discount, o.currency, moneyLocale)}
               </span>
             </div>
             <div className="flex justify-between gap-3">
@@ -1289,75 +1335,96 @@ export function AdminOrderDetailPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t.common.customer}</CardTitle>
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center gap-3">
+            <PersonAvatar name={customerName} />
+            <CardTitle>{customerName || t.common.customer}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="font-semibold">
-              {o.customer?.firstName} {o.customer?.lastName}
-            </p>
-            {o.customer?.company ? (
-              <p>
-                {t.admin.company}: {o.customer.company}
-              </p>
-            ) : null}
-            {o.customer?.email ? (
-              <p className="ltr-isolate" dir="ltr">
-                {o.customer.email}
-              </p>
-            ) : null}
-            {o.customer?.phone ? (
-              <p className="ltr-isolate" dir="ltr">
-                {o.customer.phone}
-              </p>
-            ) : null}
-            {o.shippingAddress ? (
-              <div className="pt-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {t.admin.shippingAddress}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap">{o.shippingAddress}</p>
+          <CardContent className="pt-0">
+            <dl>
+              <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                  {t.common.name}
+                </dt>
+                <dd className="text-sm font-semibold text-fg">{customerName || '—'}</dd>
               </div>
-            ) : null}
-            {o.billingAddress ? (
-              <div className="pt-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {t.admin.billingAddress}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap">{o.billingAddress}</p>
-              </div>
-            ) : null}
-            {o.notes ? (
-              <div className="pt-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  {t.admin.customerNotes}
-                </p>
-                <p className="mt-1 whitespace-pre-wrap">{o.notes}</p>
-              </div>
-            ) : null}
+              {o.customer?.company ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.admin.company}
+                  </dt>
+                  <dd className="text-sm text-fg">{o.customer.company}</dd>
+                </div>
+              ) : null}
+              {o.customer?.email ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.common.email}
+                  </dt>
+                  <dd className="ltr-isolate text-sm text-fg" dir="ltr">
+                    {o.customer.email}
+                  </dd>
+                </div>
+              ) : null}
+              {o.customer?.phone ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.admin.phone}
+                  </dt>
+                  <dd className="ltr-isolate text-sm text-fg" dir="ltr">
+                    {o.customer.phone}
+                  </dd>
+                </div>
+              ) : null}
+              {o.shippingAddress ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.admin.shippingAddress}
+                  </dt>
+                  <dd className="whitespace-pre-wrap text-sm text-fg">{o.shippingAddress}</dd>
+                </div>
+              ) : null}
+              {o.billingAddress ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.admin.billingAddress}
+                  </dt>
+                  <dd className="whitespace-pre-wrap text-sm text-fg">{o.billingAddress}</dd>
+                </div>
+              ) : null}
+              {o.notes ? (
+                <div className="grid gap-1 py-3 sm:grid-cols-[9.5rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                    {t.admin.customerNotes}
+                  </dt>
+                  <dd className="whitespace-pre-wrap text-sm text-fg">{o.notes}</dd>
+                </div>
+              ) : null}
+            </dl>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>{t.admin.updateStatus}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <Select value={status || o.status} onChange={(e) => setStatus(e.target.value)}>
-              {ORDER_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {statusLabel(locale, s)}
-                </option>
-              ))}
-            </Select>
-            <Input
-              placeholder={t.admin.internalNote}
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-            <Button onClick={() => void saveStatus()}>{t.admin.updateStatus}</Button>
+          <CardContent className="space-y-4">
+            <Field label={t.common.status}>
+              <Select value={status || o.status} onChange={(e) => setStatus(e.target.value)}>
+                {ORDER_STATUSES.map((s) => (
+                  <option key={s} value={s}>
+                    {statusLabel(locale, s)}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t.admin.internalNote}>
+              <Textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} />
+            </Field>
+            <Button className="w-full" onClick={() => void saveStatus()}>
+              {t.admin.updateStatus}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -1368,21 +1435,32 @@ export function AdminOrderDetailPage() {
         </CardHeader>
         <CardContent>
           {(o.history ?? []).length ? (
-            <ol className="space-y-3">
-              {(o.history ?? []).map((h) => (
-                <li
-                  key={h.id}
-                  className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3 text-sm last:border-0"
-                >
-                  <div className="flex flex-wrap items-center gap-2">
-                    {h.fromStatus ? <StatusBadge status={h.fromStatus} /> : null}
-                    <span className="text-muted-foreground">â†’</span>
-                    <StatusBadge status={h.toStatus} />
-                    {h.note ? <span className="text-muted-foreground">· {h.note}</span> : null}
+            <ol className="space-y-0">
+              {(o.history ?? []).map((h, index) => (
+                <li key={h.id} className="grid grid-cols-[1.25rem_1fr] gap-3">
+                  <div className="flex flex-col items-center">
+                    <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-accent" />
+                    {index < (o.history?.length ?? 0) - 1 ? (
+                      <span className="mt-1 w-px flex-1 bg-border" />
+                    ) : null}
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
-                  </span>
+                  <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4 pt-0.5 last:border-0">
+                    <div className="min-w-0 space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {h.fromStatus ? (
+                          <>
+                            <StatusBadge status={h.fromStatus} />
+                            <HistoryArrow className="h-3.5 w-3.5 text-muted-foreground" />
+                          </>
+                        ) : null}
+                        <StatusBadge status={h.toStatus} />
+                      </div>
+                      {h.note ? <p className="text-sm text-muted-foreground">{h.note}</p> : null}
+                    </div>
+                    <time className="text-xs text-muted-foreground">
+                      {new Date(h.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+                    </time>
+                  </div>
                 </li>
               ))}
             </ol>
@@ -1415,20 +1493,26 @@ function AdminListPage({
       const res = await fetcher();
       const data = res.data as unknown;
       if (Array.isArray(data)) return data;
-      if (data && typeof data === 'object' && 'data' in data) return (data as { data: unknown[] }).data;
+      if (data && typeof data === 'object') {
+        const record = data as { data?: unknown; items?: unknown };
+        if (Array.isArray(record.data)) return record.data;
+        if (Array.isArray(record.items)) return record.items;
+      }
       return [];
     },
   });
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-fg">{title}</h1>
-        {newPath ? (
-          <Link to={newPath}>
-            <Button>{t.common.create}</Button>
-          </Link>
-        ) : null}
-      </div>
+      <PageHeader
+        title={title}
+        actions={
+          newPath ? (
+            <Link to={newPath}>
+              <Button>{t.common.create}</Button>
+            </Link>
+          ) : null
+        }
+      />
       {query.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
         {(query.data as Record<string, unknown>[] | undefined)?.map((row, i) => (
@@ -1451,48 +1535,275 @@ export function AdminCustomersPage() {
       title={t.admin.customers}
       queryKey="admin-customers"
       fetcher={() => customersApi.list()}
-      columns={(row) => (
-        <Link to={adminPath(`customers/${row.id}`)} className="font-medium text-accent">
-          {String(row.firstName)} {String(row.lastName)}
-          {row.email ? (
-            <>
-              {' · '}
-              <span dir="ltr" className="ltr-isolate">
-                {String(row.email)}
+      columns={(row) => {
+        const email = String(row.email || '');
+        const showEmail = email && !email.endsWith('@customers.local');
+        const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
+        const count = (row._count as { orders?: number } | undefined)?.orders;
+        return (
+          <Link to={adminPath(`customers/${row.id}`)} className="flex items-center gap-3">
+            <PersonAvatar name={name} />
+            <span className="min-w-0">
+              <span className="block font-semibold text-fg">{name}</span>
+              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                {row.phone ? <span dir="ltr" className="ltr-isolate">{String(row.phone)}</span> : null}
+                {showEmail ? ` · ${email}` : ''}
+                {row.company ? ` · ${String(row.company)}` : ''}
+                {typeof count === 'number' ? ` · ${count}` : ''}
               </span>
-            </>
-          ) : null}
-        </Link>
-      )}
+            </span>
+          </Link>
+        );
+      }}
     />
   );
 }
 
+function dialPhone(phone: string) {
+  let digits = phone.replace(/\D/g, '');
+  if (digits.startsWith('00')) digits = digits.slice(2);
+  if (digits.startsWith('0')) digits = `964${digits.slice(1)}`;
+  return digits;
+}
+
 export function AdminCustomerDetailPage() {
-  const { t } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
   const { id = '' } = useParams();
+  const qc = useQueryClient();
   const customer = useQuery({
     queryKey: ['admin-customer', id],
     queryFn: async () => (await customersApi.get(id)).data,
   });
+  const history = useQuery({
+    queryKey: ['admin-customer-history', id],
+    enabled: Boolean(id),
+    queryFn: async () => (await customersApi.history(id)).data,
+  });
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setNotes(customer.data?.notes ?? '');
+  }, [customer.data?.id, customer.data?.notes]);
+
   if (customer.isLoading) return <LoadingState variant="page" />;
   if (!customer.data) return <EmptyState title={t.admin.customerNotFound} />;
+
+  const c = customer.data;
+  const email = c.email && !c.email.endsWith('@customers.local') ? c.email : '';
+  const name = `${c.firstName} ${c.lastName}`.trim();
+  const phoneDigits = c.phone ? dialPhone(c.phone) : '';
+  const since = c.createdAt
+    ? new Date(c.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')
+    : '';
+
+  async function saveNotes() {
+    setSaving(true);
+    try {
+      await customersApi.update(id, { notes });
+      toast.success(t.admin.noteSaved);
+      await qc.invalidateQueries({ queryKey: ['admin-customer', id] });
+    } catch {
+      toast.error(t.admin.saveFailed);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-fg">
-        {customer.data.firstName} {customer.data.lastName}
-      </h1>
-      {customer.data.email ? (
-        <p className="ltr-isolate text-sm text-muted" dir="ltr">
-          {customer.data.email}
-        </p>
-      ) : null}
-      {customer.data.phone ? (
-        <p className="ltr-isolate text-sm text-muted" dir="ltr">
-          {customer.data.phone}
-        </p>
-      ) : null}
-      <p className="text-sm">{customer.data.company || ''}</p>
+    <div className="mx-auto max-w-6xl space-y-5">
+      <StudioHero
+        backTo={adminPath('customers')}
+        backLabel={t.admin.back}
+        eyebrow={t.admin.customers}
+        title={name}
+        meta={[c.company, since ? `${t.admin.customerSince} ${since}` : ''].filter(Boolean).join(' · ')}
+        dir={dir}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {phoneDigits ? (
+              <a href={`tel:+${phoneDigits}`}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-[#0b1f3a]"
+                >
+                  <Phone className="h-3.5 w-3.5" />
+                  {t.admin.call}
+                </Button>
+              </a>
+            ) : null}
+            {phoneDigits ? (
+              <a href={`https://wa.me/${phoneDigits}`} target="_blank" rel="noreferrer">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-[#0b1f3a]"
+                >
+                  {t.admin.whatsApp}
+                </Button>
+              </a>
+            ) : null}
+            {email ? (
+              <a href={`mailto:${email}`}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-[#0b1f3a]"
+                >
+                  <Mail className="h-3.5 w-3.5" />
+                  {t.common.email}
+                </Button>
+              </a>
+            ) : null}
+          </div>
+        }
+      />
+
+      <div className="grid gap-4 lg:grid-cols-5">
+        <Card className="lg:col-span-3">
+          <CardHeader className="flex flex-row items-center gap-4">
+            <PersonAvatar name={name} size="lg" />
+            <div>
+              <CardTitle>{name}</CardTitle>
+              <CardDescription>{t.admin.customerFollowUp}</CardDescription>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {t.admin.customerOrders}
+              </p>
+              <p className="mt-1 text-2xl font-bold">{c._count?.orders ?? history.data?.orders.length ?? 0}</p>
+            </div>
+            <div className="rounded-xl border border-border px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {t.admin.customerQuotes}
+              </p>
+              <p className="mt-1 text-2xl font-bold">{c._count?.quotes ?? history.data?.quotes.length ?? 0}</p>
+            </div>
+            <div className="rounded-xl border border-border px-3 py-3">
+              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+                {t.admin.customerTickets}
+              </p>
+              <p className="mt-1 text-2xl font-bold">{c._count?.tickets ?? history.data?.tickets.length ?? 0}</p>
+            </div>
+            <dl className="sm:col-span-3">
+              {c.phone ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t.admin.phone}</dt>
+                  <dd className="ltr-isolate text-sm" dir="ltr">{c.phone}</dd>
+                </div>
+              ) : null}
+              {email ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t.common.email}</dt>
+                  <dd className="ltr-isolate text-sm" dir="ltr">{email}</dd>
+                </div>
+              ) : null}
+              {c.company ? (
+                <div className="grid gap-1 border-b border-border py-3 sm:grid-cols-[9rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t.admin.company}</dt>
+                  <dd className="text-sm">{c.company}</dd>
+                </div>
+              ) : null}
+              {c.address || c.city ? (
+                <div className="grid gap-1 py-3 sm:grid-cols-[9rem_1fr]">
+                  <dt className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">{t.admin.shippingAddress}</dt>
+                  <dd className="text-sm">{[c.address, c.city, c.country].filter(Boolean).join(' · ')}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>{t.admin.internalNote}</CardTitle>
+            <CardDescription>{t.admin.customerNoteHint}</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Textarea rows={6} value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <Button className="w-full" disabled={saving} onClick={() => void saveNotes()}>
+              {saving ? t.common.loading : t.common.save}
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t.admin.customerOrders}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {(history.data?.orders ?? []).map((order) => (
+            <Link
+              key={order.id}
+              to={adminPath(`orders/${order.id}`)}
+              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border px-3 py-3 text-sm hover:border-accent/40"
+            >
+              <span className="font-semibold">{order.orderNumber}</span>
+              <span className="text-muted-foreground">
+                {formatMoney(order.total, order.currency, moneyLocale)}
+              </span>
+              <StatusBadge status={order.status} />
+              <span className="text-xs text-muted-foreground">
+                {new Date(order.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+              </span>
+            </Link>
+          ))}
+          {!history.isLoading && !(history.data?.orders ?? []).length ? (
+            <p className="text-sm text-muted-foreground">{t.admin.noCustomerOrders}</p>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.admin.customerQuotes}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(history.data?.quotes ?? []).map((quote) => (
+              <Link
+                key={quote.id}
+                to={adminPath(`quotes/${quote.id}`)}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3 text-sm hover:border-accent/40"
+              >
+                <span className="font-semibold">{quote.quoteNumber}</span>
+                <StatusBadge status={quote.status} />
+              </Link>
+            ))}
+            {!history.isLoading && !(history.data?.quotes ?? []).length ? (
+              <p className="text-sm text-muted-foreground">{t.admin.noCustomerQuotes}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>{t.admin.customerTickets}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(history.data?.tickets ?? []).map((ticket) => (
+              <Link
+                key={ticket.id}
+                to={adminPath(`support/${ticket.id}`)}
+                className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-3 text-sm hover:border-accent/40"
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold">{ticket.ticketNumber}</span>
+                  <span className="block truncate text-xs text-muted-foreground">{ticket.subject}</span>
+                </span>
+                <StatusBadge status={ticket.status} />
+              </Link>
+            ))}
+            {!history.isLoading && !(history.data?.tickets ?? []).length ? (
+              <p className="text-sm text-muted-foreground">{t.admin.noCustomerTickets}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }
@@ -1642,13 +1953,15 @@ export function AdminQuoteDetailPage() {
 
         <div className="space-y-4">
           <Card>
-            <CardHeader>
-              <CardTitle>{t.common.customer}</CardTitle>
+            <CardHeader className="flex flex-row items-center gap-3">
+              <PersonAvatar
+                name={`${q.customer?.firstName || q.firstName || ''} ${q.customer?.lastName || q.lastName || ''}`}
+              />
+              <CardTitle>
+                {q.customer?.firstName || q.firstName} {q.customer?.lastName || q.lastName}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-semibold">
-                {q.customer?.firstName || q.firstName} {q.customer?.lastName || q.lastName}
-              </p>
               {(q.customer?.company || q.company) ? (
                 <p>
                   {t.admin.company}: {q.customer?.company || q.company}
@@ -1780,12 +2093,15 @@ export function AdminSupportDetailPage() {
       <p className="text-sm text-muted">{ticket.data.description}</p>
       <div className="space-y-3">
         {(ticket.data.messages ?? []).map((m) => (
-          <div key={m.id} className="surface p-3 text-sm">
+          <div key={m.id} className="surface flex gap-3 p-3 text-sm">
+            <PersonAvatar size="sm" name={m.sender?.firstName || ''} />
+            <div className="min-w-0">
             <p className="text-xs text-muted">
               {m.sender?.firstName} ·{' '}
               {new Date(m.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
             </p>
             <p className="mt-1">{m.message}</p>
+            </div>
           </div>
         ))}
       </div>
@@ -1839,16 +2155,19 @@ function CmsCrudPage({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-fg">{title}</h1>
-      <form onSubmit={create} className="grid gap-2 surface p-4 md:grid-cols-2">
+      <PageHeader eyebrow={t.admin.groupContent} title={title} />
+      <form onSubmit={create} className="grid gap-3 surface p-4 md:grid-cols-2">
         {fields.map((f) => (
+          <label key={f.key} className="space-y-1.5">
+            <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+              {f.label}
+            </span>
           <Input
-            key={f.key}
-            placeholder={f.label}
             value={form[f.key] || ''}
             onChange={(e) => setForm({ ...form, [f.key]: e.target.value })}
             required={f.key === 'name' || f.key === 'title'}
           />
+          </label>
         ))}
         <Button type="submit" className="md:col-span-2">
           {t.common.create}
@@ -1878,18 +2197,19 @@ export function AdminServicesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.services}</h1>
-          <p className="mt-1 text-sm text-muted">{t.admin.servicesBilingualHint}</p>
-        </div>
-        <Link to={adminPath('services/new')}>
-          <Button className="w-full gap-2 sm:w-auto">
-            <Plus className="h-4 w-4" />
-            {t.admin.addService}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow={t.admin.groupContent}
+        title={t.admin.services}
+        description={t.admin.servicesBilingualHint}
+        actions={
+          <Link to={adminPath('services/new')}>
+            <Button className="w-full gap-2 sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {t.admin.addService}
+            </Button>
+          </Link>
+        }
+      />
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
@@ -1986,18 +2306,19 @@ export function AdminBrandsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-fg sm:text-2xl">{t.admin.brands}</h1>
-          <p className="mt-1 text-sm text-muted">{t.admin.brandsBilingualHint}</p>
-        </div>
-        <Link to={adminPath('brands/new')}>
-          <Button className="w-full gap-2 sm:w-auto">
-            <Plus className="h-4 w-4" />
-            {t.admin.addBrand}
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        eyebrow={t.admin.groupContent}
+        title={t.admin.brands}
+        description={t.admin.brandsBilingualHint}
+        actions={
+          <Link to={adminPath('brands/new')}>
+            <Button className="w-full gap-2 sm:w-auto">
+              <Plus className="h-4 w-4" />
+              {t.admin.addBrand}
+            </Button>
+          </Link>
+        }
+      />
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-2">
@@ -2083,11 +2404,21 @@ export function AdminUsersPage() {
       title={t.admin.users}
       queryKey="admin-users"
       fetcher={() => usersApi.list()}
-      columns={(row) => (
-        <span>
-          {String(row.email)} · {String((row.role as { code?: string })?.code || row.role || '')}
-        </span>
-      )}
+      columns={(row) => {
+        const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
+        return (
+          <span className="flex items-center gap-3">
+            <PersonAvatar name={name || String(row.email || '')} src={String(row.avatarUrl || '') || null} />
+            <span className="min-w-0">
+              <span className="block font-semibold text-fg">{name || String(row.email)}</span>
+              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                {name ? `${String(row.email)} · ` : ''}
+                {String((row.role as { code?: string })?.code || row.role || '')}
+              </span>
+            </span>
+          </span>
+        );
+      }}
     />
   );
 }
@@ -2170,10 +2501,11 @@ export function AdminSettingsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-fg">{t.admin.settings}</h1>
-        <p className="mt-1 text-sm text-muted">{t.admin.settingsBlurb}</p>
-      </div>
+      <PageHeader
+        eyebrow={t.admin.groupSystem}
+        title={t.admin.settings}
+        description={t.admin.settingsBlurb}
+      />
 
       <form onSubmit={saveCommerce} className="surface max-w-lg space-y-4 p-4">
         <h2 className="text-lg font-bold text-fg">{t.admin.commerceSettings}</h2>

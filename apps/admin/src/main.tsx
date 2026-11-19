@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/stores/theme-context';
 import { I18nProvider } from '@/i18n/i18n-context';
 import { CommerceSettingsProvider } from '@/stores/commerce-settings-context';
 import { AppToaster } from '@/components/AppToaster';
+import { ConfirmHost } from '@/components/admin/confirm';
 import { AppRouter } from '@/app/router';
 import './index.css';
 
@@ -30,6 +31,7 @@ createRoot(document.getElementById('root')!).render(
               <AuthProvider>
                 <AppRouter />
                 <AppToaster />
+                <ConfirmHost />
               </AuthProvider>
             </CommerceSettingsProvider>
           </I18nProvider>
