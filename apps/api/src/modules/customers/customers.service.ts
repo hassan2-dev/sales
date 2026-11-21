@@ -11,33 +11,46 @@ export class CustomersService {
     const page = query.page ?? 1;
     const limit = Math.min(query.limit ?? 20, 100);
     const skip = (page - 1) * limit;
+    const where = this.customerWhere(query);
+    const search = query.search;
+    const activity = query.activity;
+    const account = query.account;
 
-    const where: Prisma.CustomerWhereInput = {};
-    if (query.search) {
-      where.OR = [
-        { firstName: { contains: query.search, mode: 'insensitive' } },
-        { lastName: { contains: query.search, mode: 'insensitive' } },
-        { email: { contains: query.search, mode: 'insensitive' } },
-        { company: { contains: query.search, mode: 'insensitive' } },
-        { phone: { contains: query.search, mode: 'insensitive' } },
-      ];
-    }
-
-    const [data, total] = await Promise.all([
-      this.prisma.customer.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          user: {
-            select: { id: true, email: true, status: true },
+    const [data, total, all, orders, quotes, tickets, idle, registered, guest] =
+      await Promise.all([
+        this.prisma.customer.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: { id: true, email: true, status: true },
+            },
+            _count: { select: { orders: true, quotes: true, tickets: true } },
           },
-          _count: { select: { orders: true, quotes: true, tickets: true } },
-        },
-      }),
-      this.prisma.customer.count({ where }),
-    ]);
+        }),
+        this.prisma.customer.count({ where }),
+        this.prisma.customer.count({ where: this.customerWhere({ search, account }) }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, account, activity: 'orders' }),
+        }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, account, activity: 'quotes' }),
+        }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, account, activity: 'tickets' }),
+        }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, account, activity: 'idle' }),
+        }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, activity, account: 'registered' }),
+        }),
+        this.prisma.customer.count({
+          where: this.customerWhere({ search, activity, account: 'guest' }),
+        }),
+      ]);
 
     return {
       data,
@@ -46,8 +59,39 @@ export class CustomersService {
         page,
         limit,
         totalPages: Math.ceil(total / limit) || 1,
+        customerFacets: { all, orders, quotes, tickets, idle, registered, guest },
       },
     };
+  }
+
+  private customerWhere(query: {
+    search?: string;
+    activity?: CustomerQueryDto['activity'];
+    account?: CustomerQueryDto['account'];
+  }): Prisma.CustomerWhereInput {
+    const where: Prisma.CustomerWhereInput = {};
+    const term = query.search?.trim();
+    if (term) {
+      where.OR = [
+        { firstName: { contains: term, mode: 'insensitive' } },
+        { lastName: { contains: term, mode: 'insensitive' } },
+        { email: { contains: term, mode: 'insensitive' } },
+        { company: { contains: term, mode: 'insensitive' } },
+        { phone: { contains: term, mode: 'insensitive' } },
+        { city: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+    if (query.activity === 'orders') where.orders = { some: {} };
+    else if (query.activity === 'quotes') where.quotes = { some: {} };
+    else if (query.activity === 'tickets') where.tickets = { some: {} };
+    else if (query.activity === 'idle') {
+      where.orders = { none: {} };
+      where.quotes = { none: {} };
+      where.tickets = { none: {} };
+    }
+    if (query.account === 'registered') where.userId = { not: null };
+    else if (query.account === 'guest') where.userId = null;
+    return where;
   }
 
   async findOne(id: string) {

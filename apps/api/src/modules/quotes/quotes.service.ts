@@ -185,15 +185,38 @@ export class QuotesService {
     const where: Prisma.QuoteRequestWhereInput = {};
     if (query.status) where.status = query.status;
     if (query.assignedToId) where.assignedToId = query.assignedToId;
-    if (query.search) {
+    const term = query.search?.trim();
+    if (term) {
       where.OR = [
-        { quoteNumber: { contains: query.search, mode: 'insensitive' } },
-        { customer: { email: { contains: query.search, mode: 'insensitive' } } },
-        { customer: { company: { contains: query.search, mode: 'insensitive' } } },
+        { quoteNumber: { contains: term, mode: 'insensitive' } },
+        {
+          customer: {
+            OR: [
+              { email: { contains: term, mode: 'insensitive' } },
+              { firstName: { contains: term, mode: 'insensitive' } },
+              { lastName: { contains: term, mode: 'insensitive' } },
+              { phone: { contains: term, mode: 'insensitive' } },
+              { company: { contains: term, mode: 'insensitive' } },
+            ],
+          },
+        },
+        {
+          items: {
+            some: {
+              OR: [
+                { productName: { contains: term, mode: 'insensitive' } },
+                { sku: { contains: term, mode: 'insensitive' } },
+              ],
+            },
+          },
+        },
       ];
     }
 
-    const [data, total] = await Promise.all([
+    const countWhere: Prisma.QuoteRequestWhereInput = { ...where };
+    delete countWhere.status;
+
+    const [data, total, grouped] = await Promise.all([
       this.prisma.quoteRequest.findMany({
         where,
         skip,
@@ -209,11 +232,22 @@ export class QuotesService {
         },
       }),
       this.prisma.quoteRequest.count({ where }),
+      this.prisma.quoteRequest.groupBy({
+        by: ['status'],
+        where: countWhere,
+        _count: { _all: true },
+      }),
     ]);
 
     return {
       data,
-      meta: { total, page, limit, totalPages: Math.ceil(total / limit) || 1 },
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit) || 1,
+        statusCounts: Object.fromEntries(grouped.map((row) => [row.status, row._count._all])),
+      },
     };
   }
 

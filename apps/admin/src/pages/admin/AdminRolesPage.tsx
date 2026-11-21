@@ -10,7 +10,7 @@ import { useI18n } from '@/i18n/i18n-context';
 import { cn } from '@/lib/cn';
 import { rolesApi, type StaffPermission, type StaffRole } from '@/services/endpoints';
 
-const ROLE_ORDER = ['ADMIN', 'EMPLOYEE', 'CUSTOMER'] as const;
+const ROLE_ORDER = ['ADMIN', 'SALES', 'DATA_ENTRY', 'EMPLOYEE', 'CUSTOMER'] as const;
 
 const MODULE_LABEL: Record<string, keyof ReturnType<typeof useI18n>['t']['admin']> = {
   products: 'moduleProducts',
@@ -37,6 +37,8 @@ const MODULE_LABEL: Record<string, keyof ReturnType<typeof useI18n>['t']['admin'
 
 function roleCopy(code: string, t: ReturnType<typeof useI18n>['t']) {
   if (code === 'ADMIN') return { title: t.admin.roleAdmin, description: t.admin.roleAdminDesc };
+  if (code === 'SALES') return { title: t.admin.roleSales, description: t.admin.roleSalesDesc };
+  if (code === 'DATA_ENTRY') return { title: t.admin.roleDataEntry, description: t.admin.roleDataEntryDesc };
   if (code === 'CUSTOMER') return { title: t.admin.roleCustomer, description: t.admin.roleCustomerDesc };
   return { title: t.admin.roleEmployee, description: t.admin.roleEmployeeDesc };
 }

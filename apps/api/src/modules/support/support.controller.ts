@@ -15,6 +15,7 @@ import {
   AssignTicketDto,
   ChangePriorityDto,
   ChangeStatusDto,
+  CreateCustomerTicketDto,
   CreateMessageDto,
   CreateTicketDto,
   TicketQueryDto,
@@ -29,6 +30,16 @@ import type { AuthUser } from '../auth/types/jwt-payload.type.js';
 @Controller('tickets')
 export class SupportController {
   constructor(private readonly supportService: SupportService) {}
+
+  @Post('me')
+  createMine(@CurrentUser() user: AuthUser, @Body() dto: CreateCustomerTicketDto) {
+    return this.supportService.createForUser(user.id, dto);
+  }
+
+  @Get('me')
+  myTickets(@CurrentUser() user: AuthUser) {
+    return this.supportService.listForUser(user.id);
+  }
 
   @RequirePermissions('support:create')
   @Post()

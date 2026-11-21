@@ -1,10 +1,11 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { Prisma, UserStatus } from '@prisma/client';
+import { Prisma, RoleCode, UserStatus } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service.js';
 import { PaginationDto } from '../../common/dto/pagination.dto.js';
 import { CreateUserDto } from './dto/create-user.dto.js';
@@ -36,15 +37,17 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll(query: PaginationDto) {
-    const where: Prisma.UserWhereInput = query.search
-      ? {
-          OR: [
-            { email: { contains: query.search, mode: 'insensitive' } },
-            { firstName: { contains: query.search, mode: 'insensitive' } },
-            { lastName: { contains: query.search, mode: 'insensitive' } },
-          ],
-        }
-      : {};
+    const where: Prisma.UserWhereInput = {
+      role: { code: { not: RoleCode.CUSTOMER } },
+    };
+    if (query.search) {
+      where.OR = [
+        { email: { contains: query.search, mode: 'insensitive' } },
+        { firstName: { contains: query.search, mode: 'insensitive' } },
+        { lastName: { contains: query.search, mode: 'insensitive' } },
+        { phone: { contains: query.search, mode: 'insensitive' } },
+      ];
+    }
 
     const allowedSort = new Set([
       'createdAt',
@@ -134,6 +137,9 @@ export class UsersService {
     if (!role) {
       throw new NotFoundException(`Role ${dto.roleId} not found`);
     }
+    if (role.code === RoleCode.CUSTOMER) {
+      throw new BadRequestException('Store customers are not staff accounts');
+    }
 
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
@@ -170,6 +176,9 @@ export class UsersService {
       });
       if (!role) {
         throw new NotFoundException(`Role ${dto.roleId} not found`);
+      }
+      if (role.code === RoleCode.CUSTOMER) {
+        throw new BadRequestException('Store customers are not staff accounts');
       }
     }
 

@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Min, MinLength } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateCustomerDto {
@@ -57,4 +57,12 @@ export class CustomerQueryDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @IsOptional()
+  @IsIn(['orders', 'quotes', 'tickets', 'idle'])
+  activity?: 'orders' | 'quotes' | 'tickets' | 'idle';
+
+  @IsOptional()
+  @IsIn(['registered', 'guest'])
+  account?: 'registered' | 'guest';
 }

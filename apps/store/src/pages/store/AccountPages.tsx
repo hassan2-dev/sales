@@ -1,6 +1,6 @@
 import { Link, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState, type FormEvent } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bell,
   FileText,
@@ -21,9 +21,10 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useAuth } from '@/stores/auth-context';
 import { useFavorites } from '@/stores/favorites-context';
 import { useI18n } from '@/i18n/i18n-context';
-import { customersApi, ordersApi, quotesApi } from '@/services/endpoints';
+import { customersApi, ordersApi, quotesApi, supportApi } from '@/services/endpoints';
 import { storePath } from '@/lib/urls';
 import { formatMoney, cn } from '@/lib/cn';
+import { toast } from 'sonner';
 import { appToast } from '@/lib/toast';
 import { QuoteExplainSection } from '@/pages/store/RequestQuotePage';
 
@@ -619,6 +620,32 @@ export function AccountQuotesPage() {
 
 export function AccountSupportPage() {
   const { locale } = useI18n();
+  const qc = useQueryClient();
+  const [subject, setSubject] = useState('');
+  const [description, setDescription] = useState('');
+  const [sending, setSending] = useState(false);
+  const tickets = useQuery({
+    queryKey: ['my-tickets'],
+    queryFn: async () => (await supportApi.mine()).data.data,
+  });
+
+  async function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    setSending(true);
+    try {
+      await customersApi.me();
+      await supportApi.createMine({ subject: subject.trim(), description: description.trim() });
+      setSubject('');
+      setDescription('');
+      toast.success(locale === 'ar' ? 'تم فتح التذكرة' : 'Ticket opened');
+      await qc.invalidateQueries({ queryKey: ['my-tickets'] });
+    } catch {
+      toast.error(locale === 'ar' ? 'تعذر فتح التذكرة' : 'Could not open the ticket');
+    } finally {
+      setSending(false);
+    }
+  }
+
   return (
     <>
       <Seo title={locale === 'ar' ? 'الدعم' : 'Support'} path={storePath('account/support')} />
@@ -628,16 +655,48 @@ export function AccountSupportPage() {
         </h2>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
           {locale === 'ar'
-            ? 'للت지원 الفني أو استفسارات المشاريع، تواصل مع فريق افاق الطاقة عبر الموقع الرئيسي أو اطلب عرض سعر لمنتجاتك.'
-            : 'For technical or project support, contact Energy Horizon via the corporate site or request a quote for your products.'}
+            ? 'افتح تذكرة بحسابك. الفريق يرد من لوحة التحكم، وتظهر الحالة هنا.'
+            : 'Open a ticket from your account. The team replies in the staff console, and the status shows up here.'}
         </p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Link
-            to={storePath('cart')}
-            className="inline-flex h-10 w-full items-center justify-center rounded-xl bg-accent px-4 text-sm font-bold text-white hover:bg-accent-soft sm:w-auto"
-          >
-            {locale === 'ar' ? 'الذهاب للسلة' : 'Go to cart'}
-          </Link>
+        <form onSubmit={(e) => void onSubmit(e)} className="mt-5 grid gap-3">
+          <div className="space-y-1.5">
+            <Label>{locale === 'ar' ? 'الموضوع' : 'Subject'}</Label>
+            <Input value={subject} onChange={(e) => setSubject(e.target.value)} required minLength={3} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>{locale === 'ar' ? 'التفاصيل' : 'Details'}</Label>
+            <Textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+              minLength={3}
+              rows={4}
+            />
+          </div>
+          <Button type="submit" disabled={sending} className="w-full sm:w-auto">
+            {sending
+              ? locale === 'ar'
+                ? 'جاري الإرسال…'
+                : 'Sending…'
+              : locale === 'ar'
+                ? 'فتح تذكرة'
+                : 'Open ticket'}
+          </Button>
+        </form>
+        {tickets.isLoading ? <LoadingState /> : null}
+        <div className="mt-4 space-y-2.5">
+          {(tickets.data ?? []).map((ticket) => (
+            <div
+              key={ticket.id}
+              className="flex flex-col gap-2 rounded-xl border border-border px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-semibold text-fg">{ticket.ticketNumber}</p>
+                <p className="mt-1 truncate text-xs text-muted">{ticket.subject}</p>
+              </div>
+              <StatusBadge status={ticket.status} />
+            </div>
+          ))}
         </div>
       </div>
     </>

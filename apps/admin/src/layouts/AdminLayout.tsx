@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { NavLink, Navigate, Outlet } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -10,8 +10,6 @@ import {
   Briefcase,
   FolderKanban,
   Award,
-  File,
-  Building2,
   UserCog,
   Shield,
   ScrollText,
@@ -46,8 +44,6 @@ type NavKey =
   | 'services'
   | 'projects'
   | 'brands'
-  | 'pages'
-  | 'offices'
   | 'users'
   | 'roles'
   | 'auditLogs'
@@ -66,8 +62,6 @@ const NAV_PERMISSION: Record<NavKey, string> = {
   services: 'services:read',
   projects: 'projects:read',
   brands: 'brands:read',
-  pages: 'pages:read',
-  offices: 'offices:read',
   users: 'users:read',
   roles: 'roles:read',
   auditLogs: 'audit:read',
@@ -104,8 +98,6 @@ const navGroups: {
       { to: 'services', key: 'services', icon: Briefcase },
       { to: 'projects', key: 'projects', icon: FolderKanban },
       { to: 'brands', key: 'brands', icon: Award },
-      { to: 'pages', key: 'pages', icon: File },
-      { to: 'offices', key: 'offices', icon: Building2 },
     ],
   },
   {
@@ -286,7 +278,8 @@ function SidebarChrome({
 }
 
 export function AdminLayout() {
-  const { user, loading, isAuthenticated, logout } = useAuth();
+  const { user, loading, isAuthenticated, logout, hasPermission } = useAuth();
+  const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { t, locale, toggleLocale, dir } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -311,9 +304,23 @@ export function AdminLayout() {
     };
   }, [mobileOpen]);
 
-  if (loading) return <LoadingState variant="page" />;
+  useEffect(() => {
+    if (user?.role === 'CUSTOMER') void logout();
+  }, [user?.role, logout]);
+
+  if (loading || user?.role === 'CUSTOMER') return <LoadingState variant="page" />;
   if (!isAuthenticated) return <Navigate to={adminPath('login')} replace />;
-  if (user?.role === 'CUSTOMER') return <Navigate to="/" replace />;
+  const canOpenDashboard = user?.role === 'ADMIN' || hasPermission('dashboard:read');
+  if (!canOpenDashboard && location.pathname === '/') {
+    const next = hasPermission('products:read')
+      ? 'products'
+      : hasPermission('orders:read')
+        ? 'orders'
+        : hasPermission('quotes:read')
+          ? 'quotes'
+          : 'support';
+    return <Navigate to={adminPath(next)} replace />;
+  }
 
   const userLabel = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 

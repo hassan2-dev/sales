@@ -85,8 +85,7 @@ export class AuthService {
       data: { consumedAt: new Date() },
     });
 
-    // Fixed until OTP IQ is connected.
-    const code = '123456';
+    const code = String(Math.floor(100000 + Math.random() * 900000));
     const codeHash = await bcrypt.hash(code, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 

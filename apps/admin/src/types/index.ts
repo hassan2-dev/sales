@@ -16,6 +16,16 @@ export interface PaginatedMeta {
   page: number;
   limit: number;
   totalPages: number;
+  statusCounts?: Record<string, number>;
+  customerFacets?: {
+    all: number;
+    orders: number;
+    quotes: number;
+    tickets: number;
+    idle: number;
+    registered: number;
+    guest: number;
+  };
 }
 
 export interface Paginated<T> {
@@ -65,6 +75,7 @@ export interface Category {
   sortOrder?: number;
   parent?: Category | null;
   children?: Category[];
+  _count?: { products: number };
 }
 
 export interface Brand {
@@ -159,6 +170,7 @@ export interface Order {
     product?: { id?: string; slug?: string; name?: string; sku?: string } | null;
   }[];
   history?: OrderStatusHistory[];
+  _count?: { items: number };
   orderNotes?: {
     id: string;
     note: string;
@@ -196,9 +208,12 @@ export interface QuoteRequest {
   items?: {
     id?: string;
     productId: string;
+    productName?: string;
+    sku?: string;
     quantity: number;
     product?: Product | null;
   }[];
+  _count?: { items: number };
   attachments?: { id: string; url: string; fileName?: string | null; name?: string | null }[];
   currency?: string;
   assignedTo?: {
@@ -291,6 +306,15 @@ export interface SupportTicket {
   description: string;
   status: string;
   priority?: string;
+  createdAt?: string;
+  customer?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string | null;
+    company?: string | null;
+  } | null;
+  _count?: { messages: number };
   messages?: {
     id: string;
     message: string;

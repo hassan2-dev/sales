@@ -101,6 +101,16 @@ export class CreateMessageDto {
   attachments?: MessageAttachmentDto[];
 }
 
+export class CreateCustomerTicketDto {
+  @IsString()
+  @MinLength(3)
+  subject!: string;
+
+  @IsString()
+  @MinLength(3)
+  description!: string;
+}
+
 export class TicketQueryDto extends PaginationDto {
   @IsOptional()
   @IsEnum(TicketStatus)

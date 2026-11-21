@@ -27,6 +27,7 @@ import {
   Power,
   ChevronDown,
   Check,
+  Search,
   type LucideIcon,
 } from 'lucide-react';
 import { PersonAvatar } from '@/components/admin/PersonAvatar';
@@ -71,7 +72,7 @@ import {
 import { cn, formatMoney } from '@/lib/cn';
 import { adminPath, SITE_URL } from '@/lib/urls';
 import { usdToIqd, useCommerceSettings } from '@/stores/commerce-settings-context';
-import type { Order, Product, QuoteRequest } from '@/types';
+import type { Customer, Order, Product, QuoteRequest, SupportTicket } from '@/types';
 
 const ORDER_STATUSES = [
   'PENDING',
@@ -81,6 +82,14 @@ const ORDER_STATUSES = [
   'SHIPPED',
   'COMPLETED',
   'CANCELLED',
+] as const;
+
+const TICKET_STATUSES = [
+  'OPEN',
+  'IN_PROGRESS',
+  'WAITING_FOR_CUSTOMER',
+  'RESOLVED',
+  'CLOSED',
 ] as const;
 
 const QUOTE_STATUSES = [
@@ -125,7 +134,7 @@ export function AdminLoginPage() {
     <div className="relative flex min-h-screen items-center justify-center bg-page px-4" dir={dir}>
       <div className="pointer-events-none absolute inset-0 hero-void opacity-95" />
       <Seo title={t.admin.brand} path={adminPath('login')} />
-      <div className="absolute end-4 top-4 z-20 flex items-center gap-1">
+      <div className="absolute inset-e-4 top-4 z-20 flex items-center gap-1">
         <button
           type="button"
           onClick={toggleLocale}
@@ -421,7 +430,7 @@ export function AdminDashboardPage() {
           <Button
             type="button"
             variant="outline"
-            className="w-full min-w-0 justify-between gap-2 sm:min-w-[12rem] sm:w-auto"
+            className="w-full min-w-0 justify-between gap-2 sm:min-w-48 sm:w-auto"
             aria-expanded={rangeOpen}
             aria-haspopup="listbox"
             onClick={() => setRangeOpen((o) => !o)}
@@ -688,6 +697,52 @@ export function AdminDashboardPage() {
   );
 }
 
+const productIconBtn =
+  'h-8 w-8 shrink-0 rounded-lg border border-transparent p-0 text-muted-foreground shadow-none hover:translate-y-0 hover:border-border hover:bg-muted hover:text-fg';
+
+function CategoryThumb({ url }: { url?: string | null }) {
+  return (
+    <span className="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+      {url ? (
+        <img src={url} alt="" className="h-full w-full object-cover" />
+      ) : (
+        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+      )}
+    </span>
+  );
+}
+
+function CategoryRowActions({
+  editTo,
+  editLabel,
+  deleteLabel,
+  onDelete,
+}: {
+  editTo: string;
+  editLabel: string;
+  deleteLabel: string;
+  onDelete: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-end gap-1">
+      <Link to={editTo}>
+        <Button variant="ghost" size="sm" className={productIconBtn} title={editLabel}>
+          <Pencil className="h-4 w-4" />
+        </Button>
+      </Link>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={cn(productIconBtn, 'text-red-600 hover:bg-red-50 hover:text-red-700')}
+        title={deleteLabel}
+        onClick={onDelete}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function AdminProductsPage() {
   const { t, locale } = useI18n();
   const navigate = useNavigate();
@@ -757,7 +812,6 @@ export function AdminProductsPage() {
       <PageHeader
         eyebrow={t.admin.groupSales}
         title={t.admin.products}
-        description={t.admin.createProductHint}
         actions={
         <div className="flex flex-wrap gap-2">
           <Select
@@ -828,32 +882,29 @@ export function AdminProductsPage() {
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-1.5">
+                <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
                   <Link to={adminPath(`products/${p.id}/edit`)}>
-                    <Button variant="outline" size="sm" className="w-full gap-1 px-2">
-                      <Pencil className="h-3.5 w-3.5" />
-                      {t.admin.edit}
+                    <Button variant="ghost" size="sm" className={productIconBtn} title={t.admin.edit}>
+                      <Pencil className="h-4 w-4" />
                     </Button>
                   </Link>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    className="w-full gap-1 px-2"
+                    className={productIconBtn}
+                    title={p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
                     onClick={() => void toggleActive(p)}
                   >
-                    <Power className="h-3.5 w-3.5" />
-                    <span className="truncate">
-                      {p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
-                    </span>
+                    <Power className="h-4 w-4" />
                   </Button>
                   <Button
-                    variant="danger"
+                    variant="ghost"
                     size="sm"
-                    className="w-full gap-1 px-2"
+                    className={cn(productIconBtn, 'text-red-600 hover:bg-red-50 hover:text-red-700')}
+                    title={t.admin.delete}
                     onClick={() => void onDelete(p)}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {t.admin.delete}
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -866,78 +917,85 @@ export function AdminProductsPage() {
       <Card className="hidden overflow-hidden py-0 md:block">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="min-w-[720px] w-full text-start text-sm">
-              <thead className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">
+            <table className="w-full text-start text-sm">
+              <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 text-start">{t.common.name}</th>
-                  <th className="px-4 py-3 text-start">{t.common.sku}</th>
                   <th className="hidden px-4 py-3 text-start lg:table-cell">{t.admin.category}</th>
-                  <th className="px-4 py-3 text-start">{t.common.price}</th>
-                  <th className="px-4 py-3 text-start">{t.common.stock}</th>
+                  <th className="px-4 py-3 text-end">{t.common.price}</th>
+                  <th className="px-4 py-3 text-end">{t.common.stock}</th>
                   <th className="px-4 py-3 text-start">{t.common.status}</th>
-                  <th className="px-4 py-3 text-start">{t.admin.actions}</th>
+                  <th className="px-4 py-3 text-end">{t.admin.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {products.map((p) => {
                   const thumb = p.images?.[0]?.url || p.imageUrl;
                   return (
-                    <tr key={p.id} className="border-b border-border hover:bg-muted/40">
+                    <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/30">
                       <td className="px-4 py-3">
                         <Link
                           to={adminPath(`products/${p.id}/edit`)}
-                          className="flex items-center gap-3 font-medium text-primary hover:underline"
+                          className="flex items-center gap-3"
                         >
-                          <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-border bg-muted">
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
                             {thumb ? (
                               <img src={thumb} alt="" className="h-full w-full object-cover" />
                             ) : (
                               <ImageIcon className="h-4 w-4 text-muted-foreground" />
                             )}
                           </span>
-                          <span className="line-clamp-2 max-w-[14rem]">{p.name}</span>
+                          <span className="min-w-0">
+                            <span className="line-clamp-1 block font-medium text-fg hover:text-primary">
+                              {p.name}
+                            </span>
+                            <span className="mt-0.5 block font-mono text-xs text-muted-foreground">
+                              {p.sku}
+                            </span>
+                          </span>
                         </Link>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">{p.sku}</td>
                       <td className="hidden px-4 py-3 text-muted-foreground lg:table-cell">
                         {p.category?.name || t.admin.noCategory}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-4 py-3 text-end font-medium tabular-nums whitespace-nowrap">
                         {formatMoney(p.price, p.currency, moneyLocale)}
                       </td>
-                      <td className="px-4 py-3">{p.stock}</td>
+                      <td
+                        className={cn(
+                          'px-4 py-3 text-end tabular-nums',
+                          p.stock <= 0 ? 'font-semibold text-red-600' : 'text-fg',
+                        )}
+                      >
+                        {p.stock}
+                      </td>
                       <td className="px-4 py-3">
                         <StatusBadge status={p.status} />
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex flex-nowrap gap-1.5">
+                        <div className="flex items-center justify-end gap-1">
                           <Link to={adminPath(`products/${p.id}/edit`)}>
-                            <Button variant="outline" size="sm" className="gap-1.5" title={t.admin.edit}>
-                              <Pencil className="h-3.5 w-3.5" />
-                              <span className="hidden xl:inline">{t.admin.edit}</span>
+                            <Button variant="ghost" size="sm" className={productIconBtn} title={t.admin.edit}>
+                              <Pencil className="h-4 w-4" />
                             </Button>
                           </Link>
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            className="gap-1.5"
+                            className={productIconBtn}
                             title={p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
                             onClick={() => void toggleActive(p)}
                           >
-                            <Power className="h-3.5 w-3.5" />
-                            <span className="hidden xl:inline">
-                              {p.status === 'ACTIVE' ? t.admin.deactivate : t.admin.activate}
-                            </span>
+                            <Power className="h-4 w-4" />
                           </Button>
                           <Button
-                            variant="danger"
+                            variant="ghost"
                             size="sm"
-                            className="gap-1.5"
+                            className={cn(productIconBtn, 'text-red-600 hover:bg-red-50 hover:text-red-700')}
                             title={t.admin.delete}
                             onClick={() => void onDelete(p)}
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                            <span className="hidden xl:inline">{t.admin.delete}</span>
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </td>
@@ -1000,6 +1058,27 @@ export function AdminCategoriesPage() {
   }
 
   const rows = list.data ?? [];
+  const childrenByParent = new Map<string, typeof rows>();
+  const roots = rows.filter((row) => !row.parentId);
+  for (const row of rows) {
+    if (!row.parentId) continue;
+    const bucket = childrenByParent.get(row.parentId) ?? [];
+    bucket.push(row);
+    childrenByParent.set(row.parentId, bucket);
+  }
+  const seen = new Set<string>();
+  const ordered: { row: (typeof rows)[number]; depth: number }[] = [];
+  for (const root of roots) {
+    seen.add(root.id);
+    ordered.push({ row: root, depth: 0 });
+    for (const child of childrenByParent.get(root.id) ?? []) {
+      seen.add(child.id);
+      ordered.push({ row: child, depth: 1 });
+    }
+  }
+  for (const row of rows) {
+    if (!seen.has(row.id)) ordered.push({ row, depth: row.parentId ? 1 : 0 });
+  }
 
   return (
     <div className="space-y-6">
@@ -1018,38 +1097,85 @@ export function AdminCategoriesPage() {
       />
 
       {list.isLoading ? <LoadingState variant="table" /> : null}
-      <div className="space-y-2">
-        {rows.map((row) => (
-          <Card key={row.id} size="sm">
-            <CardContent className="flex flex-wrap items-center justify-between gap-3 py-0">
-              <div className="min-w-0">
-                <p className="font-medium text-fg">
-                  {row.parent ? (
-                    <span className="text-muted-foreground">{row.parent.name} / </span>
-                  ) : null}
+
+      <div className="space-y-3 md:hidden">
+        {ordered.map(({ row, depth }) => (
+          <Card key={row.id} size="sm" className={depth ? 'ms-4' : undefined}>
+            <CardContent className="flex items-center gap-3 py-0">
+              <CategoryThumb url={row.imageUrl} />
+              <div className="min-w-0 flex-1">
+                <Link
+                  to={adminPath(`categories/${row.id}/edit`)}
+                  className="line-clamp-1 font-semibold text-fg"
+                >
                   {row.name}
-                </p>
-                <p className="truncate text-xs text-muted-foreground">
-                  {row.slug}
-                  {row.description ? ` · ${row.description}` : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={String(row.status || 'PUBLISHED')} />
-                <Link to={adminPath(`categories/${row.id}/edit`)}>
-                  <Button variant="outline" size="sm" className="gap-1.5">
-                    <Pencil className="h-3.5 w-3.5" />
-                    {t.admin.edit}
-                  </Button>
                 </Link>
-                <Button variant="danger" size="sm" onClick={() => void onDelete(row.id)}>
-                  {t.admin.delete}
-                </Button>
+                <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                  {row.parent?.name ? `${row.parent.name} · ` : ''}
+                  {row._count?.products ?? 0} {t.admin.products}
+                </p>
               </div>
+              <StatusBadge status={String(row.status || 'PUBLISHED')} />
+              <CategoryRowActions
+                editTo={adminPath(`categories/${row.id}/edit`)}
+                editLabel={t.admin.edit}
+                deleteLabel={t.admin.delete}
+                onDelete={() => void onDelete(row.id)}
+              />
             </CardContent>
           </Card>
         ))}
       </div>
+
+      <Card className="hidden overflow-hidden py-0 md:block">
+        <CardContent className="p-0">
+          <table className="w-full text-start text-sm">
+            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-start">{t.admin.category}</th>
+                <th className="px-4 py-3 text-end">{t.admin.products}</th>
+                <th className="px-4 py-3 text-start">{t.common.status}</th>
+                <th className="px-4 py-3 text-end">{t.admin.actions}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ordered.map(({ row, depth }) => (
+                <tr key={row.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <Link
+                      to={adminPath(`categories/${row.id}/edit`)}
+                      className="flex items-center gap-3"
+                      style={{ paddingInlineStart: depth ? '1.75rem' : undefined }}
+                    >
+                      <CategoryThumb url={row.imageUrl} />
+                      <span className="min-w-0">
+                        <span className="line-clamp-1 block font-medium text-fg">{row.name}</span>
+                        <span className="mt-0.5 line-clamp-1 block text-xs text-muted-foreground">
+                          {row.description || row.slug}
+                        </span>
+                      </span>
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-end tabular-nums text-muted-foreground">
+                    {row._count?.products ?? 0}
+                  </td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={String(row.status || 'PUBLISHED')} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <CategoryRowActions
+                      editTo={adminPath(`categories/${row.id}/edit`)}
+                      editLabel={t.admin.edit}
+                      deleteLabel={t.admin.delete}
+                      onDelete={() => void onDelete(row.id)}
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
       {!list.isLoading && !rows.length ? (
         <EmptyState
           title={t.admin.emptyList}
@@ -1064,81 +1190,173 @@ export function AdminCategoriesPage() {
 }
 
 export function AdminOrdersPage() {
-  const { t, locale } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const navigate = useNavigate();
   const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const dateLocale = locale === 'ar' ? 'ar-IQ' : 'en-GB';
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
   const query = useQuery({
-    queryKey: ['admin-orders', page],
-    queryFn: async () => (await ordersApi.list({ page, limit: 20 })).data,
+    queryKey: ['admin-orders', page, statusFilter, search],
+    queryFn: async () =>
+      (
+        await ordersApi.list({
+          page,
+          limit: 20,
+          status: statusFilter || undefined,
+          search: search || undefined,
+        })
+      ).data,
   });
   const orders = query.data?.data ?? [];
+  const counts = query.data?.meta.statusCounts ?? {};
+  const allCount = ORDER_STATUSES.reduce((sum, status) => sum + (counts[status] ?? 0), 0);
+  const OpenIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
+  function pickStatus(next: string) {
+    setStatusFilter(next);
+    setPage(1);
+  }
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={t.admin.groupSales} title={t.admin.orders} />
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.orders}
+        actions={
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={t.admin.searchOrders}
+              className="ps-9"
+            />
+          </div>
+        }
+      />
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => pickStatus('')}
+          className={cn(
+            'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+            statusFilter === ''
+              ? 'border-accent bg-accent text-white'
+              : 'border-border bg-card text-muted-foreground hover:text-fg',
+          )}
+        >
+          {t.admin.allStatuses}
+          <span className="tabular-nums">{allCount}</span>
+        </button>
+        {ORDER_STATUSES.map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => pickStatus(status)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+              statusFilter === status
+                ? 'border-accent bg-accent text-white'
+                : 'border-border bg-card text-muted-foreground hover:text-fg',
+            )}
+          >
+            {statusLabel(locale, status)}
+            <span className="tabular-nums">{counts[status] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
       {query.isLoading ? <LoadingState variant="table" /> : null}
 
       <div className="space-y-3 md:hidden">
-        {orders.map((o) => (
-          <Link key={o.id} to={adminPath(`orders/${o.id}`)} className="block">
-            <Card size="sm">
-              <CardContent className="space-y-2 py-0">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-primary">{o.orderNumber}</p>
-                    <p className="mt-1 flex items-center gap-2 truncate text-sm">
-                      <PersonAvatar
-                        size="sm"
-                        name={`${o.customer?.firstName ?? ''} ${o.customer?.lastName ?? ''}`}
-                      />
-                      <span className="truncate">
-                        {o.customer?.firstName} {o.customer?.lastName}
-                      </span>
-                    </p>
-                    <p className="ltr-isolate text-xs text-muted-foreground" dir="ltr">
-                      {o.customer?.phone || o.customer?.email || '—'}
-                    </p>
+        {orders.map((o) => {
+          const count = o._count?.items ?? o.items?.length ?? 0;
+          return (
+            <Link key={o.id} to={adminPath(`orders/${o.id}`)} className="block">
+              <Card size="sm">
+                <CardContent className="space-y-2 py-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-fg">{o.orderNumber}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {new Date(o.createdAt).toLocaleString(dateLocale, {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    <StatusBadge status={o.status} />
                   </div>
-                  <StatusBadge status={o.status} />
-                </div>
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="font-kpi font-bold">
-                    {formatMoney(o.total, o.currency, moneyLocale)}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {new Date(o.createdAt).toLocaleDateString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                  <p className="truncate text-sm">
+                    {o.customer?.firstName} {o.customer?.lastName}
+                    <span className="ltr-isolate text-muted-foreground" dir="ltr">
+                      {' '}
+                      · {o.customer?.phone || o.customer?.email || '—'}
+                    </span>
+                  </p>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium tabular-nums">
+                      {formatMoney(o.total, o.currency, moneyLocale)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {count} {t.admin.orderItems}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
       </div>
 
       <Card className="hidden overflow-hidden py-0 md:block">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="min-w-[720px] w-full text-sm">
-              <thead className="border-b border-border bg-muted/50 text-xs uppercase text-muted-foreground">
-                <tr>
-                  <th className="px-4 py-3 text-start">{t.common.order}</th>
-                  <th className="px-4 py-3 text-start">{t.common.customer}</th>
-                  <th className="hidden px-4 py-3 text-start lg:table-cell">{t.admin.phone}</th>
-                  <th className="px-4 py-3 text-start">{t.common.total}</th>
-                  <th className="px-4 py-3 text-start">{t.common.status}</th>
-                  <th className="hidden px-4 py-3 text-start xl:table-cell">{t.admin.orderDate}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <tr key={o.id} className="border-b border-border hover:bg-muted/40">
+          <table className="w-full text-start text-sm">
+            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-start">{t.common.order}</th>
+                <th className="px-4 py-3 text-start">{t.common.customer}</th>
+                <th className="px-4 py-3 text-end">{t.admin.orderItems}</th>
+                <th className="px-4 py-3 text-end">{t.common.total}</th>
+                <th className="px-4 py-3 text-start">{t.common.status}</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((o) => {
+                const count = o._count?.items ?? o.items?.length ?? 0;
+                const firstItem = o.items?.[0]?.productName;
+                return (
+                  <tr
+                    key={o.id}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30"
+                    onClick={() => navigate(adminPath(`orders/${o.id}`))}
+                  >
                     <td className="px-4 py-3">
-                      <Link
-                        className="font-medium text-primary hover:underline"
-                        to={adminPath(`orders/${o.id}`)}
-                      >
-                        {o.orderNumber}
-                      </Link>
+                      <p className="font-medium text-fg">{o.orderNumber}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {new Date(o.createdAt).toLocaleString(dateLocale, {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </p>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
@@ -1147,34 +1365,39 @@ export function AdminOrdersPage() {
                           name={`${o.customer?.firstName ?? ''} ${o.customer?.lastName ?? ''}`}
                         />
                         <div className="min-w-0">
-                          <p>
+                          <p className="line-clamp-1">
                             {o.customer?.firstName} {o.customer?.lastName}
                           </p>
                           <p className="ltr-isolate truncate text-xs text-muted-foreground" dir="ltr">
-                            {o.customer?.email}
+                            {o.customer?.phone || o.customer?.email || '—'}
                           </p>
                         </div>
                       </div>
                     </td>
-                    <td className="ltr-isolate hidden px-4 py-3 text-muted-foreground lg:table-cell" dir="ltr">
-                      {o.customer?.phone || '—'}
+                    <td className="px-4 py-3 text-end">
+                      <p className="tabular-nums">{count}</p>
+                      {firstItem ? (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{firstItem}</p>
+                      ) : null}
                     </td>
-                    <td className="px-4 py-3 font-kpi font-semibold whitespace-nowrap">
+                    <td className="px-4 py-3 text-end font-medium tabular-nums whitespace-nowrap">
                       {formatMoney(o.total, o.currency, moneyLocale)}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={o.status} />
                     </td>
-                    <td className="hidden px-4 py-3 text-xs text-muted-foreground xl:table-cell">
-                      {new Date(o.createdAt).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+                    <td className="px-4 py-3 text-end text-muted-foreground">
+                      <OpenIcon className="ms-auto h-4 w-4" />
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                );
+              })}
+            </tbody>
+          </table>
         </CardContent>
       </Card>
+
+      {!query.isLoading && !orders.length ? <EmptyState title={t.admin.emptyList} /> : null}
       <Pagination
         page={query.data?.meta.page ?? 1}
         totalPages={query.data?.meta.totalPages ?? 1}
@@ -1528,34 +1751,228 @@ function AdminListPage({
   );
 }
 
+function customerEmail(email?: string | null) {
+  if (!email || email.endsWith('@customers.local')) return '';
+  return email;
+}
+
 export function AdminCustomersPage() {
-  const { t } = useI18n();
+  const { t, dir } = useI18n();
+  const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const [activity, setActivity] = useState('');
+  const [account, setAccount] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const query = useQuery({
+    queryKey: ['admin-customers', page, activity, account, search],
+    queryFn: async () =>
+      (
+        await customersApi.list({
+          page,
+          limit: 20,
+          search: search || undefined,
+          activity: activity || undefined,
+          account: account || undefined,
+        })
+      ).data,
+  });
+
+  const payload = query.data;
+  const customers: Customer[] = Array.isArray(payload) ? payload : (payload?.data ?? []);
+  const meta = payload && !Array.isArray(payload) ? payload.meta : undefined;
+  const facets = meta?.customerFacets;
+  const OpenIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
+  function pickActivity(next: string) {
+    setActivity(next);
+    setPage(1);
+  }
+
+  const activityFilters = [
+    { id: '', label: t.admin.allStatuses, count: facets?.all },
+    { id: 'orders', label: t.admin.withOrders, count: facets?.orders },
+    { id: 'quotes', label: t.admin.withQuotes, count: facets?.quotes },
+    { id: 'tickets', label: t.admin.withTickets, count: facets?.tickets },
+    { id: 'idle', label: t.admin.customerIdle, count: facets?.idle },
+  ];
+
   return (
-    <AdminListPage
-      title={t.admin.customers}
-      queryKey="admin-customers"
-      fetcher={() => customersApi.list()}
-      columns={(row) => {
-        const email = String(row.email || '');
-        const showEmail = email && !email.endsWith('@customers.local');
-        const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
-        const count = (row._count as { orders?: number } | undefined)?.orders;
-        return (
-          <Link to={adminPath(`customers/${row.id}`)} className="flex items-center gap-3">
-            <PersonAvatar name={name} />
-            <span className="min-w-0">
-              <span className="block font-semibold text-fg">{name}</span>
-              <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                {row.phone ? <span dir="ltr" className="ltr-isolate">{String(row.phone)}</span> : null}
-                {showEmail ? ` · ${email}` : ''}
-                {row.company ? ` · ${String(row.company)}` : ''}
-                {typeof count === 'number' ? ` · ${count}` : ''}
-              </span>
-            </span>
-          </Link>
-        );
-      }}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.customers}
+        actions={
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="relative sm:w-80">
+              <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder={t.admin.searchCustomers}
+                className="ps-9"
+              />
+            </div>
+            <Select
+              value={account}
+              onChange={(e) => {
+                setAccount(e.target.value);
+                setPage(1);
+              }}
+              className="sm:w-44"
+            >
+              <option value="">{t.admin.allAccounts}</option>
+              <option value="registered">
+                {t.admin.registeredAccount}
+                {facets ? ` (${facets.registered})` : ''}
+              </option>
+              <option value="guest">
+                {t.admin.guestAccount}
+                {facets ? ` (${facets.guest})` : ''}
+              </option>
+            </Select>
+          </div>
+        }
+      />
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {activityFilters.map((filter) => (
+          <button
+            key={filter.id || 'all'}
+            type="button"
+            onClick={() => pickActivity(filter.id)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+              activity === filter.id
+                ? 'border-accent bg-accent text-white'
+                : 'border-border bg-card text-muted-foreground hover:text-fg',
+            )}
+          >
+            {filter.label}
+            <span className="tabular-nums">{filter.count ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {query.isLoading ? <LoadingState variant="table" /> : null}
+
+      <div className="space-y-3 md:hidden">
+        {customers.map((customer) => {
+          const name = `${customer.firstName} ${customer.lastName}`.trim();
+          const email = customerEmail(customer.email);
+          return (
+            <Link key={customer.id} to={adminPath(`customers/${customer.id}`)} className="block">
+              <Card size="sm">
+                <CardContent className="space-y-3 py-0">
+                  <div className="flex items-center gap-3">
+                    <PersonAvatar name={name} />
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold text-fg">{name}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {customer.company || customer.city || '—'}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="ltr-isolate truncate text-xs text-muted-foreground" dir="ltr">
+                    {customer.phone || '—'}
+                    {email ? ` · ${email}` : ''}
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <CustomerStat label={t.admin.orders} value={customer._count?.orders ?? 0} />
+                    <CustomerStat label={t.admin.quotes} value={customer._count?.quotes ?? 0} />
+                    <CustomerStat label={t.admin.support} value={customer._count?.tickets ?? 0} />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      <Card className="hidden overflow-hidden py-0 md:block">
+        <CardContent className="p-0">
+          <table className="w-full text-start text-sm">
+            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-start">{t.common.customer}</th>
+                <th className="px-4 py-3 text-start">{t.admin.phone}</th>
+                <th className="px-4 py-3 text-end">{t.admin.orders}</th>
+                <th className="px-4 py-3 text-end">{t.admin.quotes}</th>
+                <th className="px-4 py-3 text-end">{t.admin.support}</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((customer) => {
+                const name = `${customer.firstName} ${customer.lastName}`.trim();
+                const email = customerEmail(customer.email);
+                const place = [customer.company, customer.city].filter(Boolean).join(' · ');
+                return (
+                  <tr
+                    key={customer.id}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30"
+                    onClick={() => navigate(adminPath(`customers/${customer.id}`))}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <PersonAvatar name={name} />
+                        <div className="min-w-0">
+                          <p className="line-clamp-1 font-medium text-fg">{name}</p>
+                          <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                            {place || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="ltr-isolate text-fg" dir="ltr">
+                        {customer.phone || '—'}
+                      </p>
+                      {email ? (
+                        <p className="ltr-isolate mt-0.5 truncate text-xs text-muted-foreground" dir="ltr">
+                          {email}
+                        </p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-end tabular-nums">{customer._count?.orders ?? 0}</td>
+                    <td className="px-4 py-3 text-end tabular-nums">{customer._count?.quotes ?? 0}</td>
+                    <td className="px-4 py-3 text-end tabular-nums">{customer._count?.tickets ?? 0}</td>
+                    <td className="px-4 py-3 text-end text-muted-foreground">
+                      <OpenIcon className="ms-auto h-4 w-4" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {!query.isLoading && !customers.length ? <EmptyState title={t.admin.emptyList} /> : null}
+      <Pagination
+        page={meta?.page ?? 1}
+        totalPages={meta?.totalPages ?? 1}
+        onChange={setPage}
+      />
+    </div>
+  );
+}
+
+function CustomerStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-lg bg-muted/50 px-2 py-1.5">
+      <p className="font-semibold tabular-nums text-fg">{value}</p>
+      <p className="truncate text-muted-foreground">{label}</p>
+    </div>
   );
 }
 
@@ -1809,19 +2226,209 @@ export function AdminCustomerDetailPage() {
 }
 
 export function AdminQuotesPage() {
-  const { t } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const navigate = useNavigate();
+  const moneyLocale = locale === 'ar' ? 'ar-IQ' : 'en-US';
+  const dateLocale = locale === 'ar' ? 'ar-IQ' : 'en-GB';
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const query = useQuery({
+    queryKey: ['admin-quotes', page, statusFilter, search],
+    queryFn: async () =>
+      (
+        await quotesApi.list({
+          page,
+          limit: 20,
+          status: statusFilter || undefined,
+          search: search || undefined,
+        })
+      ).data,
+  });
+
+  const payload = query.data;
+  const quotes: QuoteRequest[] = Array.isArray(payload) ? payload : (payload?.data ?? []);
+  const meta = payload && !Array.isArray(payload) ? payload.meta : undefined;
+  const counts = meta?.statusCounts ?? {};
+  const allCount = QUOTE_STATUSES.reduce((sum, status) => sum + (counts[status] ?? 0), 0);
+  const OpenIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+
+  function pickStatus(next: string) {
+    setStatusFilter(next);
+    setPage(1);
+  }
+
   return (
-    <AdminListPage
-      title={t.admin.quoteRequests}
-      queryKey="admin-quotes"
-      fetcher={() => quotesApi.list()}
-      columns={(row) => (
-        <Link to={adminPath(`quotes/${row.id}`)} className="flex justify-between">
-          <span className="font-medium text-accent">{String(row.quoteNumber)}</span>
-          <StatusBadge status={String(row.status)} />
-        </Link>
-      )}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.quoteRequests}
+        actions={
+          <div className="relative w-full sm:w-80">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={t.admin.searchQuotes}
+              className="ps-9"
+            />
+          </div>
+        }
+      />
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => pickStatus('')}
+          className={cn(
+            'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+            statusFilter === ''
+              ? 'border-accent bg-accent text-white'
+              : 'border-border bg-card text-muted-foreground hover:text-fg',
+          )}
+        >
+          {t.admin.allStatuses}
+          <span className="tabular-nums">{allCount}</span>
+        </button>
+        {QUOTE_STATUSES.map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => pickStatus(status)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+              statusFilter === status
+                ? 'border-accent bg-accent text-white'
+                : 'border-border bg-card text-muted-foreground hover:text-fg',
+            )}
+          >
+            {statusLabel(locale, status)}
+            <span className="tabular-nums">{counts[status] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {query.isLoading ? <LoadingState variant="table" /> : null}
+
+      <div className="space-y-3 md:hidden">
+        {quotes.map((quote) => {
+          const customer = quote.customer;
+          const name = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ');
+          const count = quote._count?.items ?? quote.items?.length ?? 0;
+          return (
+            <Link key={quote.id} to={adminPath(`quotes/${quote.id}`)} className="block">
+              <Card size="sm">
+                <CardContent className="space-y-2 py-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-fg">{quote.quoteNumber}</p>
+                      <p className="mt-0.5 truncate text-sm">{name || customer?.company || '—'}</p>
+                    </div>
+                    <StatusBadge status={quote.status} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium tabular-nums">
+                      {quote.quotedAmount != null
+                        ? formatMoney(quote.quotedAmount, quote.currency, moneyLocale)
+                        : '—'}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {count} {t.admin.quoteItems}
+                    </span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      <Card className="hidden overflow-hidden py-0 md:block">
+        <CardContent className="p-0">
+          <table className="w-full text-start text-sm">
+            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-start">{t.admin.quoteDetail}</th>
+                <th className="px-4 py-3 text-start">{t.common.customer}</th>
+                <th className="px-4 py-3 text-end">{t.admin.quoteItems}</th>
+                <th className="px-4 py-3 text-end">{t.admin.quotedAmount}</th>
+                <th className="px-4 py-3 text-start">{t.common.status}</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {quotes.map((quote) => {
+                const customer = quote.customer;
+                const name = [customer?.firstName, customer?.lastName].filter(Boolean).join(' ');
+                const count = quote._count?.items ?? quote.items?.length ?? 0;
+                const firstItem = quote.items?.[0]?.productName;
+                const when = quote.createdAt
+                  ? new Date(quote.createdAt).toLocaleString(dateLocale, {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '';
+                return (
+                  <tr
+                    key={quote.id}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30"
+                    onClick={() => navigate(adminPath(`quotes/${quote.id}`))}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-fg">{quote.quoteNumber}</p>
+                      {when ? <p className="mt-0.5 text-xs text-muted-foreground">{when}</p> : null}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <PersonAvatar name={name || customer?.company || ''} />
+                        <div className="min-w-0">
+                          <p className="line-clamp-1">{name || '—'}</p>
+                          <p className="ltr-isolate truncate text-xs text-muted-foreground" dir="ltr">
+                            {customer?.phone || customer?.email || customer?.company || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-end">
+                      <p className="tabular-nums">{count}</p>
+                      {firstItem ? (
+                        <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">{firstItem}</p>
+                      ) : null}
+                    </td>
+                    <td className="px-4 py-3 text-end font-medium tabular-nums whitespace-nowrap">
+                      {quote.quotedAmount != null
+                        ? formatMoney(quote.quotedAmount, quote.currency, moneyLocale)
+                        : '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={quote.status} />
+                    </td>
+                    <td className="px-4 py-3 text-end text-muted-foreground">
+                      <OpenIcon className="ms-auto h-4 w-4" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {!query.isLoading && !quotes.length ? <EmptyState title={t.admin.emptyList} /> : null}
+      <Pagination page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} onChange={setPage} />
+    </div>
   );
 }
 
@@ -2036,21 +2643,202 @@ export function AdminQuoteDetailPage() {
 }
 
 export function AdminSupportPage() {
-  const { t } = useI18n();
+  const { t, locale, dir } = useI18n();
+  const navigate = useNavigate();
+  const dateLocale = locale === 'ar' ? 'ar-IQ' : 'en-GB';
+  const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 300);
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
+
+  const query = useQuery({
+    queryKey: ['admin-tickets', page, statusFilter, search],
+    queryFn: async () =>
+      (
+        await supportApi.list({
+          page,
+          limit: 20,
+          status: statusFilter || undefined,
+          search: search || undefined,
+        })
+      ).data,
+  });
+
+  const payload = query.data;
+  const tickets: SupportTicket[] = Array.isArray(payload) ? payload : (payload?.data ?? []);
+  const meta = payload && !Array.isArray(payload) ? payload.meta : undefined;
+  const counts = meta?.statusCounts ?? {};
+  const allCount = TICKET_STATUSES.reduce((sum, status) => sum + (counts[status] ?? 0), 0);
+  const OpenIcon = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const steps = [t.admin.supportHow1, t.admin.supportHow2, t.admin.supportHow3];
+
+  function pickStatus(next: string) {
+    setStatusFilter(next);
+    setPage(1);
+  }
+
   return (
-    <AdminListPage
-      title={t.admin.support}
-      queryKey="admin-tickets"
-      fetcher={() => supportApi.list()}
-      columns={(row) => (
-        <Link to={adminPath(`support/${row.id}`)} className="flex justify-between gap-3">
-          <span className="font-medium text-accent">
-            {String(row.ticketNumber)} — {String(row.subject)}
-          </span>
-          <StatusBadge status={String(row.status)} />
-        </Link>
-      )}
-    />
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={t.admin.groupSales}
+        title={t.admin.support}
+        actions={
+          <div className="relative w-full sm:w-80">
+            <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder={t.admin.searchTickets}
+              className="ps-9"
+            />
+          </div>
+        }
+      />
+
+      <Card>
+        <CardContent className="space-y-3 py-0">
+          <p className="text-sm font-semibold text-fg">{t.admin.supportHowTitle}</p>
+          <ol className="grid gap-3 md:grid-cols-3">
+            {steps.map((step, index) => (
+              <li key={step} className="flex gap-3 text-sm text-muted-foreground">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                  {index + 1}
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
+
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => pickStatus('')}
+          className={cn(
+            'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+            statusFilter === ''
+              ? 'border-accent bg-accent text-white'
+              : 'border-border bg-card text-muted-foreground hover:text-fg',
+          )}
+        >
+          {t.admin.allStatuses}
+          <span className="tabular-nums">{allCount}</span>
+        </button>
+        {TICKET_STATUSES.map((status) => (
+          <button
+            key={status}
+            type="button"
+            onClick={() => pickStatus(status)}
+            className={cn(
+              'inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold',
+              statusFilter === status
+                ? 'border-accent bg-accent text-white'
+                : 'border-border bg-card text-muted-foreground hover:text-fg',
+            )}
+          >
+            {statusLabel(locale, status)}
+            <span className="tabular-nums">{counts[status] ?? 0}</span>
+          </button>
+        ))}
+      </div>
+
+      {query.isLoading ? <LoadingState variant="table" /> : null}
+
+      <div className="space-y-3 md:hidden">
+        {tickets.map((ticket) => {
+          const name = [ticket.customer?.firstName, ticket.customer?.lastName].filter(Boolean).join(' ');
+          return (
+            <Link key={ticket.id} to={adminPath(`support/${ticket.id}`)} className="block">
+              <Card size="sm">
+                <CardContent className="space-y-2 py-0">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-fg">{ticket.ticketNumber}</p>
+                      <p className="mt-0.5 line-clamp-2 text-sm">{ticket.subject}</p>
+                    </div>
+                    <StatusBadge status={ticket.status} />
+                  </div>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {name || '—'}
+                    {ticket.priority ? ` · ${statusLabel(locale, ticket.priority)}` : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      <Card className="hidden overflow-hidden py-0 md:block">
+        <CardContent className="p-0">
+          <table className="w-full text-start text-sm">
+            <thead className="border-b border-border bg-muted/40 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-3 text-start">{t.admin.support}</th>
+                <th className="px-4 py-3 text-start">{t.common.customer}</th>
+                <th className="px-4 py-3 text-start">{t.common.status}</th>
+                <th className="px-4 py-3" />
+              </tr>
+            </thead>
+            <tbody>
+              {tickets.map((ticket) => {
+                const name = [ticket.customer?.firstName, ticket.customer?.lastName]
+                  .filter(Boolean)
+                  .join(' ');
+                const when = ticket.createdAt
+                  ? new Date(ticket.createdAt).toLocaleString(dateLocale, {
+                      day: '2-digit',
+                      month: 'short',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })
+                  : '';
+                return (
+                  <tr
+                    key={ticket.id}
+                    className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/30"
+                    onClick={() => navigate(adminPath(`support/${ticket.id}`))}
+                  >
+                    <td className="px-4 py-3">
+                      <p className="font-medium text-fg">{ticket.ticketNumber}</p>
+                      <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{ticket.subject}</p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <p className="line-clamp-1">{name || '—'}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {when}
+                        {ticket.priority ? ` · ${statusLabel(locale, ticket.priority)}` : ''}
+                        {typeof ticket._count?.messages === 'number'
+                          ? ` · ${ticket._count.messages}`
+                          : ''}
+                      </p>
+                    </td>
+                    <td className="px-4 py-3">
+                      <StatusBadge status={ticket.status} />
+                    </td>
+                    <td className="px-4 py-3 text-end text-muted-foreground">
+                      <OpenIcon className="ms-auto h-4 w-4" />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+
+      {!query.isLoading && !tickets.length ? <EmptyState title={t.admin.emptyList} /> : null}
+      <Pagination page={meta?.page ?? 1} totalPages={meta?.totalPages ?? 1} onChange={setPage} />
+    </div>
   );
 }
 
@@ -2058,6 +2846,7 @@ export function AdminSupportDetailPage() {
   const { t, locale } = useI18n();
   const { id = '' } = useParams();
   const [message, setMessage] = useState('');
+  const [status, setStatus] = useState('');
   const qc = useQueryClient();
   const ticket = useQuery({
     queryKey: ['admin-ticket', id],
@@ -2076,9 +2865,26 @@ export function AdminSupportDetailPage() {
       await supportApi.reply(id, message);
       setMessage('');
       toast.success(t.admin.replySent);
-      await qc.invalidateQueries({ queryKey: ['admin-ticket', id] });
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin-ticket', id] }),
+        qc.invalidateQueries({ queryKey: ['admin-tickets'] }),
+      ]);
     } catch {
       toast.error(t.admin.replyFailed);
+    }
+  }
+
+  async function saveStatus(next: string) {
+    setStatus(next);
+    try {
+      await supportApi.update(id, { status: next });
+      toast.success(t.admin.statusUpdated);
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ['admin-ticket', id] }),
+        qc.invalidateQueries({ queryKey: ['admin-tickets'] }),
+      ]);
+    } catch {
+      toast.error(t.admin.updateFailed);
     }
   }
 
@@ -2089,7 +2895,20 @@ export function AdminSupportDetailPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{ticket.data.ticketNumber}</h1>
       <p className="font-medium">{ticket.data.subject}</p>
-      <StatusBadge status={ticket.data.status} />
+      <div className="flex flex-wrap items-center gap-3">
+        <StatusBadge status={ticket.data.status} />
+        <Select
+          value={status || ticket.data.status}
+          onChange={(e) => void saveStatus(e.target.value)}
+          className="w-52"
+        >
+          {TICKET_STATUSES.map((item) => (
+            <option key={item} value={item}>
+              {statusLabel(locale, item)}
+            </option>
+          ))}
+        </Select>
+      </div>
       <p className="text-sm text-muted">{ticket.data.description}</p>
       <div className="space-y-3">
         {(ticket.data.messages ?? []).map((m) => (
@@ -2354,59 +3173,26 @@ export function AdminBrandsPage() {
   );
 }
 
-export function AdminPagesPage() {
-  const { t } = useI18n();
-  return (
-    <CmsCrudPage
-      title={t.admin.pages}
-      listKey="admin-pages"
-      listFn={() => cmsApi.pages()}
-      createFn={(d) =>
-        adminCmsApi.createPage({
-          ...d,
-          title: d.title,
-          status: 'PUBLISHED',
-          slug: d.title.toLowerCase().replace(/\s+/g, '-'),
-        })
-      }
-      fields={[
-        { key: 'title', label: t.admin.title },
-        { key: 'excerpt', label: t.admin.excerpt },
-        { key: 'content', label: t.admin.content },
-      ]}
-    />
-  );
-}
+const STAFF_ROLES = ['ADMIN', 'SALES', 'DATA_ENTRY'] as const;
 
-export function AdminOfficesPage() {
-  const { t } = useI18n();
-  return (
-    <CmsCrudPage
-      title={t.admin.offices}
-      listKey="admin-offices"
-      listFn={() => cmsApi.offices()}
-      createFn={(d) => adminCmsApi.createOffice({ ...d, status: 'PUBLISHED' })}
-      fields={[
-        { key: 'name', label: t.common.name },
-        { key: 'city', label: t.admin.city },
-        { key: 'phone', label: t.admin.phone },
-        { key: 'contactPerson', label: t.admin.contactPerson },
-        { key: 'email', label: t.common.email },
-      ]}
-    />
-  );
+function staffRoleLabel(code: string, t: ReturnType<typeof useI18n>['t']) {
+  if (code === 'ADMIN') return t.admin.roleAdmin;
+  if (code === 'SALES') return t.admin.roleSales;
+  if (code === 'DATA_ENTRY') return t.admin.roleDataEntry;
+  if (code === 'CUSTOMER') return t.admin.roleCustomer;
+  return t.admin.roleEmployee;
 }
-
-const ROLE_TITLE = {
-  ADMIN: 'roleAdmin',
-  EMPLOYEE: 'roleEmployee',
-  CUSTOMER: 'roleCustomer',
-} as const;
 
 export function AdminUsersPage() {
   const { t, locale } = useI18n();
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [roleId, setRoleId] = useState('');
+  const [creating, setCreating] = useState(false);
   const people = useQuery({
     queryKey: ['admin-users'],
     queryFn: async () => (await usersApi.list({ limit: 100 })).data as { data?: Record<string, unknown>[] },
@@ -2415,7 +3201,13 @@ export function AdminUsersPage() {
     queryKey: ['admin-roles'],
     queryFn: async () => (await rolesApi.list()).data,
   });
-  const rows = people.data?.data ?? [];
+  const staffRoles = (roles.data ?? []).filter((item) =>
+    (STAFF_ROLES as readonly string[]).includes(item.code),
+  );
+  const rows = (people.data?.data ?? []).filter((row) => {
+    const code = (row.role as { code?: string } | undefined)?.code;
+    return code !== 'CUSTOMER';
+  });
 
   async function patchUser(id: string, data: Record<string, unknown>) {
     try {
@@ -2428,22 +3220,77 @@ export function AdminUsersPage() {
     }
   }
 
+  async function createUser(e: React.FormEvent) {
+    e.preventDefault();
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    const firstName = parts[0] || '';
+    const lastName = parts.slice(1).join(' ') || firstName;
+    if (!firstName || !email.trim() || !phone.trim() || password.length < 8 || !roleId) {
+      toast.error(t.admin.saveFailed);
+      return;
+    }
+    setCreating(true);
+    try {
+      await usersApi.create({
+        firstName,
+        lastName,
+        email: email.trim(),
+        phone: phone.trim(),
+        password,
+        roleId,
+      });
+      setName('');
+      setPhone('');
+      setEmail('');
+      setPassword('');
+      toast.success(t.admin.staffCreated);
+      await qc.invalidateQueries({ queryKey: ['admin-users'] });
+    } catch {
+      toast.error(t.admin.createFailed);
+    } finally {
+      setCreating(false);
+    }
+  }
+
   return (
     <div className="space-y-5">
       <PageHeader eyebrow={t.admin.groupSystem} title={t.admin.users} description={t.admin.rolesHint} />
+      <form onSubmit={(e) => void createUser(e)} className="grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-2">
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.admin.staffName} required />
+        <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.admin.staffPhone} required dir="ltr" />
+        <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.common.email} type="email" required dir="ltr" />
+        <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t.admin.staffPassword} type="password" required minLength={8} dir="ltr" />
+        <Select value={roleId} onChange={(e) => setRoleId(e.target.value)} required className="md:col-span-2">
+          <option value="">{t.admin.rolePeople}</option>
+          {staffRoles.map((item) => (
+            <option key={item.id} value={item.id}>
+              {staffRoleLabel(item.code, t)}
+            </option>
+          ))}
+        </Select>
+        <Button type="submit" disabled={creating} className="md:col-span-2 md:w-fit">
+          {creating ? t.common.loading : t.admin.addStaff}
+        </Button>
+      </form>
       {people.isLoading ? <LoadingState variant="table" /> : null}
       <div className="space-y-3">
         {rows.map((row) => {
           const id = String(row.id);
-          const name = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
+          const person = `${String(row.firstName || '')} ${String(row.lastName || '')}`.trim();
           const role = row.role as { id?: string; code?: string } | undefined;
           const mine = user?.id === id;
+          const options = staffRoles.some((item) => item.id === role?.id) || !role
+            ? staffRoles
+            : [...staffRoles, { id: String(role.id), code: String(role.code), name: String(role.code) }];
           return (
             <div key={id} className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center">
-              <PersonAvatar name={name || String(row.email || '')} src={String(row.avatarUrl || '') || null} />
+              <PersonAvatar name={person || String(row.email || '')} src={String(row.avatarUrl || '') || null} />
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-fg">{name || String(row.email)}</p>
-                <p className="truncate text-xs text-muted-foreground" dir="ltr">{String(row.email)}</p>
+                <p className="font-semibold text-fg">{person || String(row.email)}</p>
+                <p className="truncate text-xs text-muted-foreground" dir="ltr">
+                  {row.phone ? `${String(row.phone)} · ` : ''}
+                  {String(row.email)}
+                </p>
               </div>
               <Select
                 value={role?.id || ''}
@@ -2452,9 +3299,9 @@ export function AdminUsersPage() {
                 onChange={(e) => void patchUser(id, { roleId: e.target.value })}
                 className="sm:w-44"
               >
-                {(roles.data ?? []).map((item) => (
+                {options.map((item) => (
                   <option key={item.id} value={item.id}>
-                    {t.admin[ROLE_TITLE[item.code]]}
+                    {staffRoleLabel(item.code, t)}
                   </option>
                 ))}
               </Select>
@@ -2481,12 +3328,22 @@ export function AdminAuditPage() {
       title={t.admin.auditLogs}
       queryKey="admin-audit"
       fetcher={() => auditApi.list()}
-      columns={(row) => (
-        <span className="text-sm">
-          {String(row.action)} · {String(row.entity)} ·{' '}
-          {new Date(String(row.createdAt)).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
-        </span>
-      )}
+      columns={(row) => {
+        const user = row.user as { firstName?: string; lastName?: string; email?: string } | undefined;
+        const name = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || '—';
+        return (
+          <span className="flex flex-wrap items-center justify-between gap-2 text-sm">
+            <span>
+              <span className="font-medium text-fg">{String(row.action)}</span>
+              <span className="text-muted-foreground"> · {String(row.entity)}</span>
+              <span className="text-muted-foreground"> · {name}</span>
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {new Date(String(row.createdAt)).toLocaleString(locale === 'ar' ? 'ar-IQ' : 'en-GB')}
+            </span>
+          </span>
+        );
+      }}
     />
   );
 }

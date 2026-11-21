@@ -90,6 +90,7 @@ export const catalogApi = {
 export type MediaFolder =
   | 'products/images'
   | 'products/documents'
+  | 'categories/images'
   | 'brands/logos'
   | 'services/images'
   | 'projects/images'
@@ -214,6 +215,9 @@ export const adminCmsApi = {
 
 export const supportApi = {
   create: (data: Record<string, unknown>) => api.post<SupportTicket>('/tickets', data),
+  createMine: (data: { subject: string; description: string }) =>
+    api.post<SupportTicket>('/tickets/me', data),
+  mine: () => api.get<{ data: SupportTicket[] }>('/tickets/me'),
   list: (params?: Params) =>
     api.get<Paginated<SupportTicket> | SupportTicket[]>('/tickets', {
       params: cleanParams(params),
@@ -240,7 +244,7 @@ export const usersApi = {
 };
 
 export const auditApi = {
-  list: (params?: Params) => api.get('/audit', { params: cleanParams(params) }),
+  list: (params?: Params) => api.get('/audit-logs', { params: cleanParams(params) }),
 };
 
 export type DashboardRangeParams = {

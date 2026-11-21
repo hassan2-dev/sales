@@ -17,8 +17,6 @@ import {
   AdminServicesPage,
   AdminProjectsPage,
   AdminBrandsPage,
-  AdminPagesPage,
-  AdminOfficesPage,
   AdminUsersPage,
   AdminAuditPage,
   AdminSettingsPage,
@@ -84,8 +82,6 @@ export function AppRouter() {
               <Route path="brands/new" element={<AdminBrandFormPage mode="create" />} />
               <Route path="brands/:id/edit" element={<AdminBrandFormPage mode="edit" />} />
               <Route path="brands/:id" element={<RedirectBrandEdit />} />
-              <Route path="pages" element={<AdminPagesPage />} />
-              <Route path="offices" element={<AdminOfficesPage />} />
               <Route path="users" element={<AdminUsersPage />} />
               <Route path="roles" element={<AdminRolesPage />} />
               <Route path="audit-logs" element={<AdminAuditPage />} />

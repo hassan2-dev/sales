@@ -7,6 +7,7 @@
 export const STORAGE_FOLDERS = [
   'products/images',
   'products/documents',
+  'categories/images',
   'brands/logos',
   'services/images',
   'projects/images',
@@ -32,6 +33,10 @@ export const STORAGE_FOLDER_META: Record<
   'products/documents': {
     en: 'Product datasheets / PDFs',
     ar: 'كتالوجات وملفات المنتجات',
+  },
+  'categories/images': {
+    en: 'Category covers',
+    ar: 'صور الأقسام',
   },
   'brands/logos': {
     en: 'Brand logos',

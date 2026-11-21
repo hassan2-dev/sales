@@ -91,6 +91,7 @@ export const catalogApi = {
 export type MediaFolder =
   | 'products/images'
   | 'products/documents'
+  | 'categories/images'
   | 'brands/logos'
   | 'services/images'
   | 'projects/images'
@@ -265,7 +266,7 @@ export type StaffPermission = {
 
 export type StaffRole = {
   id: string;
-  code: 'ADMIN' | 'EMPLOYEE' | 'CUSTOMER';
+  code: 'ADMIN' | 'EMPLOYEE' | 'SALES' | 'DATA_ENTRY' | 'CUSTOMER';
   name: string;
   description: string | null;
   userCount: number;
@@ -287,7 +288,7 @@ export const usersApi = {
 };
 
 export const auditApi = {
-  list: (params?: Params) => api.get('/audit', { params: cleanParams(params) }),
+  list: (params?: Params) => api.get('/audit-logs', { params: cleanParams(params) }),
 };
 
 export type DashboardRangeParams = {

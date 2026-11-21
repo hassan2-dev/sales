@@ -258,28 +258,28 @@ export class OrdersService {
     const where: Prisma.OrderWhereInput = {};
     if (query.status) where.status = query.status;
     if (query.customerId) where.customerId = query.customerId;
-    if (query.search) {
+    const term = query.search?.trim();
+    if (term) {
       where.OR = [
-        { orderNumber: { contains: query.search, mode: 'insensitive' } },
+        { orderNumber: { contains: term, mode: 'insensitive' } },
         {
           customer: {
-            email: { contains: query.search, mode: 'insensitive' },
-          },
-        },
-        {
-          customer: {
-            firstName: { contains: query.search, mode: 'insensitive' },
-          },
-        },
-        {
-          customer: {
-            lastName: { contains: query.search, mode: 'insensitive' },
+            OR: [
+              { email: { contains: term, mode: 'insensitive' } },
+              { firstName: { contains: term, mode: 'insensitive' } },
+              { lastName: { contains: term, mode: 'insensitive' } },
+              { phone: { contains: term, mode: 'insensitive' } },
+              { company: { contains: term, mode: 'insensitive' } },
+            ],
           },
         },
       ];
     }
 
-    const [data, total] = await Promise.all([
+    const countWhere: Prisma.OrderWhereInput = { ...where };
+    delete countWhere.status;
+
+    const [data, total, grouped] = await Promise.all([
       this.prisma.order.findMany({
         where,
         skip,
@@ -292,7 +292,16 @@ export class OrdersService {
         },
       }),
       this.prisma.order.count({ where }),
+      this.prisma.order.groupBy({
+        by: ['status'],
+        where: countWhere,
+        _count: { _all: true },
+      }),
     ]);
+
+    const statusCounts = Object.fromEntries(
+      grouped.map((row) => [row.status, row._count._all]),
+    );
 
     return {
       data,
@@ -301,6 +310,7 @@ export class OrdersService {
         page,
         limit,
         totalPages: Math.ceil(total / limit) || 1,
+        statusCounts,
       },
     };
   }

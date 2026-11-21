@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
+import { ImageIcon, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -13,7 +13,7 @@ import { StudioDock, StudioHero, StudioPanel } from '@/components/admin/FormStud
 import { confirmAction } from '@/components/admin/confirm';
 import { useI18n } from '@/i18n/i18n-context';
 import { statusLabel } from '@/i18n/dictionaries';
-import { catalogApi } from '@/services/endpoints';
+import { catalogApi, mediaApi } from '@/services/endpoints';
 import { adminPath } from '@/lib/urls';
 
 export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
@@ -25,10 +25,13 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [parentId, setParentId] = useState('');
   const [sortOrder, setSortOrder] = useState(0);
   const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED' | 'ARCHIVED'>('PUBLISHED');
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const imageInput = useRef<HTMLInputElement>(null);
 
   const existing = useQuery({
     queryKey: ['admin-category', id],
@@ -50,6 +53,7 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
     if (!existing.data) return;
     setName(existing.data.name ?? '');
     setDescription(existing.data.description ?? '');
+    setImageUrl(existing.data.imageUrl ?? '');
     setParentId(existing.data.parentId ?? existing.data.parent?.id ?? '');
     setSortOrder(existing.data.sortOrder ?? 0);
     const st = existing.data.status;
@@ -66,6 +70,7 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
     const payload = {
       name: name.trim(),
       description: description.trim() || null,
+      imageUrl: imageUrl.trim() || null,
       parentId: parentId || null,
       sortOrder: Number.isFinite(sortOrder) ? sortOrder : 0,
       status,
@@ -117,6 +122,22 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
     }
   }
 
+  async function onImage(file: File | undefined) {
+    if (!file || !file.type.startsWith('image/')) return;
+    setUploading(true);
+    try {
+      const { data } = await mediaApi.upload(file, {
+        alt: name.trim() || file.name,
+        folder: 'categories/images',
+      });
+      setImageUrl(data.url);
+    } catch {
+      toast.error(t.admin.uploadFailed);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   if (isEdit && existing.isLoading) return <LoadingState variant="form" />;
   if (isEdit && (existing.isError || !existing.data)) {
     return (
@@ -156,6 +177,43 @@ export function AdminCategoryFormPage({ mode }: { mode: 'create' | 'edit' }) {
           description={t.admin.categoryDetailsHint}
         >
           <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={t.admin.categoryImage} hint={t.admin.categoryImageHint} className="sm:col-span-2">
+              <div className="flex items-center gap-4">
+                <span className="flex h-20 w-32 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted">
+                  {imageUrl ? (
+                    <img src={imageUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                  )}
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => imageInput.current?.click()}
+                  >
+                    {uploading ? t.common.loading : t.admin.uploadImage}
+                  </Button>
+                  {imageUrl ? (
+                    <Button type="button" variant="ghost" size="sm" onClick={() => setImageUrl('')}>
+                      {t.admin.removeImage}
+                    </Button>
+                  ) : null}
+                  <input
+                    ref={imageInput}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    onChange={(e) => {
+                      void onImage(e.target.files?.[0]);
+                      e.target.value = '';
+                    }}
+                  />
+                </div>
+              </div>
+            </Field>
             <Field label={t.common.name} required className="sm:col-span-2">
               <Input value={name} onChange={(e) => setName(e.target.value)} required />
             </Field>

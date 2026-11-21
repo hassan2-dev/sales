@@ -122,6 +122,26 @@ async function main() {
     },
   });
 
+  const salesRole = await prisma.role.upsert({
+    where: { code: RoleCode.SALES },
+    update: {},
+    create: {
+      code: RoleCode.SALES,
+      name: 'Sales',
+      description: 'Orders, quotes, customers, and support.',
+    },
+  });
+
+  const dataEntryRole = await prisma.role.upsert({
+    where: { code: RoleCode.DATA_ENTRY },
+    update: {},
+    create: {
+      code: RoleCode.DATA_ENTRY,
+      name: 'Data entry',
+      description: 'Products and categories only.',
+    },
+  });
+
   await prisma.role.upsert({
     where: { code: RoleCode.CUSTOMER },
     update: {},
@@ -148,6 +168,42 @@ async function main() {
       roleId: employeeRole.id,
       permissionId: perm.id,
     })),
+    skipDuplicates: true,
+  });
+
+  const salesCodes = [
+    'dashboard:read',
+    'orders:read',
+    'orders:update',
+    'quotes:read',
+    'quotes:update',
+    'customers:read',
+    'customers:update',
+    'support:read',
+    'support:update',
+    'support:reply',
+    'notifications:read',
+  ];
+  const dataEntryCodes = [
+    'products:read',
+    'products:create',
+    'products:update',
+    'products:delete',
+    'categories:read',
+    'categories:create',
+    'categories:update',
+    'categories:delete',
+    'media:read',
+    'media:create',
+    'media:delete',
+  ];
+  const salesPerms = allPermissions.filter((p) => salesCodes.includes(p.code));
+  const dataEntryPerms = allPermissions.filter((p) => dataEntryCodes.includes(p.code));
+  await prisma.rolePermission.createMany({
+    data: [
+      ...salesPerms.map((perm) => ({ roleId: salesRole.id, permissionId: perm.id })),
+      ...dataEntryPerms.map((perm) => ({ roleId: dataEntryRole.id, permissionId: perm.id })),
+    ],
     skipDuplicates: true,
   });
 
