@@ -18,6 +18,7 @@ import {
   normalizePhone,
   phoneToSyntheticEmail,
 } from '../../common/utils/phone.util.js';
+import { OtpiqService } from './otpiq.service.js';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
+    private readonly otpiq: OtpiqService,
   ) {}
 
   async login(dto: LoginDto) {
@@ -89,7 +91,7 @@ export class AuthService {
     const codeHash = await bcrypt.hash(code, 10);
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    await this.prisma.otpChallenge.create({
+    const challenge = await this.prisma.otpChallenge.create({
       data: {
         phone,
         codeHash,
@@ -98,14 +100,28 @@ export class AuthService {
       },
     });
 
-    this.logger.log(`OTP for ${phone}: ${code}`);
+    if (this.otpiq.isConfigured()) {
+      try {
+        const sent = await this.otpiq.sendVerificationCode(phone, code);
+        this.logger.log(`OTP sent to ${phone} via OTPIQ (${sent.smsId})`);
+      } catch (err) {
+        await this.prisma.otpChallenge.update({
+          where: { id: challenge.id },
+          data: { consumedAt: new Date() },
+        });
+        const message = err instanceof Error ? err.message : 'Failed to send OTP';
+        throw new BadRequestException(message);
+      }
+    } else {
+      this.logger.warn(`OTPIQ_API_KEY is not set. OTP for ${phone}: ${code}`);
+    }
 
     const isDev = this.config.get<string>('NODE_ENV') !== 'production';
     return {
       ok: true,
       phone,
       expiresInSec: 300,
-      ...(isDev ? { devCode: code } : {}),
+      ...(isDev && !this.otpiq.isConfigured() ? { devCode: code } : {}),
     };
   }
 
