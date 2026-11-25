@@ -115,7 +115,7 @@ npx tsx prisma/seed.ts
 ```
 
 (or run seed from a machine that can reach the same `DATABASE_URL`).  
-Admin: `admin@energy-horizon.net` / `Admin@12345` — change after first login.
+Admin: `super@admin.com` — change the password after first login.
 
 ### 5) Vercel frontends (3 projects)
 

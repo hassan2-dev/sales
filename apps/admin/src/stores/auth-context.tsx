@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   api,
   clearTokens,
@@ -39,6 +40,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   const refreshUser = useCallback(async () => {
     const access = getAccessToken();
@@ -67,8 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (email: string, password: string) => {
     const { data } = await authApi.login(email, password);
     setTokens(data.accessToken, data.refreshToken);
+    queryClient.clear();
     setUser(data.user);
-  }, []);
+  }, [queryClient]);
 
   const requestOtp = useCallback(async (phone: string) => {
     const { data } = await authApi.requestOtp(phone);
@@ -84,9 +87,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }) => {
       const { data } = await authApi.verifyOtp(payload);
       setTokens(data.accessToken, data.refreshToken);
+      queryClient.clear();
       setUser(data.user);
     },
-    [],
+    [queryClient],
   );
 
   const logout = useCallback(async () => {
@@ -97,9 +101,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // ignore
     } finally {
       clearTokens();
+      queryClient.clear();
       setUser(null);
     }
-  }, []);
+  }, [queryClient]);
 
   const hasPermission = useCallback(
     (code: string) => {

@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { NavLink, Navigate, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Package,
@@ -31,6 +31,7 @@ import { LoadingState } from '@/components/ui/States';
 import { PersonAvatar } from '@/components/admin/PersonAvatar';
 import { Logo } from '@/components/Logo';
 import { adminPath, SITE_URL } from '@/lib/urls';
+import { adminHomePath } from '@/lib/admin-home';
 import { cn } from '@/lib/cn';
 
 type NavKey =
@@ -280,6 +281,7 @@ function SidebarChrome({
 export function AdminLayout() {
   const { user, loading, isAuthenticated, logout, hasPermission } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
   const { t, locale, toggleLocale, dir } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -308,19 +310,17 @@ export function AdminLayout() {
     if (user?.role === 'CUSTOMER') void logout();
   }, [user?.role, logout]);
 
+  const home = adminHomePath(user);
+  useEffect(() => {
+    if (!user || user.role === 'CUSTOMER') return;
+    if (location.pathname === '/' && home !== '/') {
+      navigate(home, { replace: true });
+    }
+  }, [home, location.pathname, navigate, user]);
+
   if (loading || user?.role === 'CUSTOMER') return <LoadingState variant="page" />;
   if (!isAuthenticated) return <Navigate to={adminPath('login')} replace />;
-  const canOpenDashboard = user?.role === 'ADMIN' || hasPermission('dashboard:read');
-  if (!canOpenDashboard && location.pathname === '/') {
-    const next = hasPermission('products:read')
-      ? 'products'
-      : hasPermission('orders:read')
-        ? 'orders'
-        : hasPermission('quotes:read')
-          ? 'quotes'
-          : 'support';
-    return <Navigate to={adminPath(next)} replace />;
-  }
+  if (location.pathname === '/' && home !== '/') return <LoadingState variant="page" />;
 
   const userLabel = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.trim();
 

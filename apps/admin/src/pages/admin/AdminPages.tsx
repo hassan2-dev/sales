@@ -51,6 +51,7 @@ import { Field } from '@/components/admin/Field';
 import { RevenueTrendChart, OrdersStatusChart } from '@/components/admin/DashboardCharts';
 import { Logo } from '@/components/Logo';
 import { useAuth } from '@/stores/auth-context';
+import { adminHomePath } from '@/lib/admin-home';
 import { useI18n } from '@/i18n/i18n-context';
 import { useTheme } from '@/stores/theme-context';
 import { statusLabel } from '@/i18n/dictionaries';
@@ -104,17 +105,20 @@ const QUOTE_STATUSES = [
 const PRODUCT_STATUSES = ['DRAFT', 'ACTIVE', 'ARCHIVED'] as const;
 
 export function AdminLoginPage() {
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const { t, locale, toggleLocale, dir } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('admin@energy-horizon.net');
+  const [email, setEmail] = useState('super@admin.com');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
+  const sentHome = useRef(false);
 
-  if (isAuthenticated) {
-    navigate(adminPath());
-  }
+  useEffect(() => {
+    if (!isAuthenticated || !user || sentHome.current) return;
+    sentHome.current = true;
+    navigate(adminHomePath(user), { replace: true });
+  }, [isAuthenticated, navigate, user]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -122,7 +126,6 @@ export function AdminLoginPage() {
     try {
       await login(email, password);
       toast.success(t.admin.welcome);
-      navigate(adminPath());
     } catch {
       toast.error(t.admin.invalidCreds);
     } finally {

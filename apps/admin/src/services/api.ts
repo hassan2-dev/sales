@@ -38,6 +38,16 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   return config;
 });
 
+function bearerFrom(headers: InternalAxiosRequestConfig['headers'] | undefined) {
+  if (!headers) return '';
+  const bag = headers as InternalAxiosRequestConfig['headers'] & {
+    get?: (name: string) => unknown;
+  };
+  const raw = typeof bag.get === 'function' ? bag.get('Authorization') : bag.Authorization;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  return typeof value === 'string' ? value.replace(/^Bearer\s+/i, '') : '';
+}
+
 let refreshPromise: Promise<string | null> | null = null;
 
 async function refreshAccessToken() {
@@ -58,6 +68,13 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const original = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
     if (error.response?.status === 401 && original && !original._retry) {
+      const failedToken = bearerFrom(original.headers);
+      const currentToken = getAccessToken();
+      // A request from the previous account finished after login. Leave the new session alone.
+      if (failedToken && currentToken && failedToken !== currentToken) {
+        return Promise.reject(error);
+      }
+
       original._retry = true;
       refreshPromise ??= refreshAccessToken().finally(() => {
         refreshPromise = null;
@@ -66,6 +83,9 @@ api.interceptors.response.use(
       if (newToken) {
         original.headers.Authorization = `Bearer ${newToken}`;
         return api(original);
+      }
+      if (getAccessToken() && getAccessToken() !== failedToken) {
+        return Promise.reject(error);
       }
       if (typeof window !== 'undefined') {
         const surfaceAdmin =

@@ -207,33 +207,28 @@ async function main() {
     skipDuplicates: true,
   });
 
-  const adminHash = await bcrypt.hash('Admin@12345', 10);
-  const employeeHash = await bcrypt.hash('Employee@12345', 10);
+  const adminHash = await bcrypt.hash('Ttbat16@2026', 10);
 
   await prisma.user.upsert({
-    where: { email: 'admin@energy-horizon.net' },
-    update: {},
-    create: {
-      email: 'admin@energy-horizon.net',
+    where: { email: 'super@admin.com' },
+    update: {
       passwordHash: adminHash,
-      firstName: 'System',
+      firstName: 'Super',
       lastName: 'Admin',
       roleId: adminRole.id,
+      status: 'ACTIVE',
     },
-  });
-
-  await prisma.user.upsert({
-    where: { email: 'employee@energy-horizon.net' },
-    update: {},
     create: {
-      email: 'employee@energy-horizon.net',
-      passwordHash: employeeHash,
-      firstName: 'Operations',
-      lastName: 'Staff',
-      roleId: employeeRole.id,
+      email: 'super@admin.com',
+      passwordHash: adminHash,
+      firstName: 'Super',
+      lastName: 'Admin',
+      roleId: adminRole.id,
+      status: 'ACTIVE',
     },
   });
 
+  if (process.env.SEED_DEMO === 'true') {
   const services = [
     {
       name: 'Drilling',
@@ -1339,6 +1334,7 @@ async function main() {
     where: { slug: 'erbil-office-open' },
     data: { status: ContentStatus.ARCHIVED },
   });
+  }
 
   await prisma.siteSettings.upsert({
     where: { id: 'default' },
@@ -1347,8 +1343,7 @@ async function main() {
   });
 
   console.log('Seed completed successfully.');
-  console.log('Admin: admin@energy-horizon.net / Admin@12345');
-  console.log('Employee: employee@energy-horizon.net / Employee@12345');
+  console.log('Admin: super@admin.com');
 }
 
 main()
